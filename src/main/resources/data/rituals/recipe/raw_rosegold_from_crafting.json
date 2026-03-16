@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "group": "rosegold_ingot",
+  "ingredients": [
+    "minecraft:gold_block",
+    "minecraft:gold_block",
+    "minecraft:gold_block",
+    "minecraft:gold_block",
+    "minecraft:copper_block",
+    "minecraft:copper_block",
+    "minecraft:copper_block",
+    "minecraft:copper_block"
+  ],
+  "result": {
+    "count": 1,
+    "id": "rituals:raw_rosegold"
+  }
+}

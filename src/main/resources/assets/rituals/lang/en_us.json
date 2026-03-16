@@ -1,0 +1,26 @@
+{
+  "item.rituals.handle": "Handle",
+  "item.rituals.rosegold_pickaxe": "Rosegold Pickaxe",
+  "item.rituals.block_test": "Block Test",
+  "item.rituals.ritual_pedestal": "Ritual Pedestal",
+  "item.rituals.rosegold_ingot": "Rosegold Ingot",
+  "item.rituals.raw_rosegold": "Raw Rosegold",
+  "item.rituals.rosegold_block": "Rosegold Block",
+  "item.rituals.raw_rosegold_block": "Raw Rosegold Block",
+  "item.rituals.pulse_blaster": "Pulse Blaster",
+
+
+  "itemgroup.rituals.rituals_items": "Rituals",
+
+  "tooltip.rituals.handle": "desc",
+
+
+  "tooltip.rituals.block_test": "desc",
+
+
+  "tooltip.rituals.rosegold_pickaxe": "desc",
+
+
+  "tooltip.rituals.ritual_pedestal": "Your not supposed to have this..."
+
+}

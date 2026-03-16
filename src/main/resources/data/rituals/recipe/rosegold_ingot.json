@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "rituals:rosegold_block"
+  ],
+  "result": {
+    "count": 9,
+    "id": "rituals:rosegold_ingot"
+  }
+}
