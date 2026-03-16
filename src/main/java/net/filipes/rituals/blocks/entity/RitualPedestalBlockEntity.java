@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class RitualPedestalBlockEntity extends BlockEntity implements Inventory {
-    private final DefaultedList<ItemStack> items = DefaultedList.ofSize(9999, ItemStack.EMPTY);
+    private final DefaultedList<ItemStack> items = DefaultedList.ofSize(32, ItemStack.EMPTY);
 
     @Nullable
     private UUID displayEntityUuid = null;

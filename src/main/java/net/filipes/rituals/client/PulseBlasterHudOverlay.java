@@ -33,7 +33,18 @@ public class PulseBlasterHudOverlay {
         // Receive live ammo updates from the server
         ClientPlayNetworking.registerGlobalReceiver(
                 PulseBlasterAmmoPayload.ID,
-                (payload, context) -> liveAmmo = payload.ammo()
+                (payload, context) -> {
+                    int newAmmo = payload.ammo();
+
+                    // A shot was fired when ammo decreased by 1 (both values valid/non-negative).
+                    // This is the reliable trigger for the cylinder spin because the server sends
+                    // a packet after every single shot.
+                    if (newAmmo >= 0 && liveAmmo > newAmmo) {
+                        PulseBlasterCylinderState.onShot();
+                    }
+
+                    liveAmmo = newAmmo;
+                }
         );
 
         HudRenderCallback.EVENT.register((drawContext, tickDelta) -> {

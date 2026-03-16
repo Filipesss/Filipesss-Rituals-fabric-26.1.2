@@ -1,3 +1,12 @@
 {
-  "parent": "minecraft:builtin/entity"
+  "model": {
+    "type": "minecraft:special",
+    "model": {
+      "type": "rituals:pulse_blaster"
+    },
+    "base": "minecraft:item/generated",
+    "textures": {
+      "layer0": "rituals:item/pulse_blaster"
+    }
+  }
 }
