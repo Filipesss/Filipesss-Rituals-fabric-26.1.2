@@ -58,7 +58,7 @@ public class PulseBlasterGunModel {
                         .uv(0,  0).cuboid(-4f, -2f, -8f,  8, 4, 12)   // main housing
                         .uv(0, 20).cuboid(-2f,  2f, -6f,  4, 8,  3),  // grip
                 ModelTransform.NONE);
-
+//dolezity koment
         /*
          * "barrel" — static front barrel tube.
          *
