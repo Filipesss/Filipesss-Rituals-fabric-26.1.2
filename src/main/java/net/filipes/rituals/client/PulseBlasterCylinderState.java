@@ -18,7 +18,7 @@ public final class PulseBlasterCylinderState {
     private static float velocity = 0f;   // angular velocity  (rad/tick)
 
     // ── Public API ────────────────────────────────────────────────────────────
-//asd
+//important comment
     /**
      * Called by the HUD overlay whenever the server confirms a shot fired
      * (i.e. the live-ammo count just decreased by 1).
