@@ -1,6 +1,12 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "rituals:item/pulse_blaster"
+    "type": "minecraft:special",
+    "model": {
+      "type": "rituals:pulse_blaster"
+    },
+    "base": "rituals:item/pulse_blaster_transforms",
+    "textures": {
+      "layer0": "rituals:item/pulse_blaster"
+    }
   }
 }

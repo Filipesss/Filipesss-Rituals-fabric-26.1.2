@@ -22,6 +22,7 @@ public class RitualsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
 
+
         // ── Block entity renderers ─────────────────────────────────────────────
         BlockEntityRendererFactories.register(
                 ModBlockEntities.RITUAL_PEDESTAL_BE,
