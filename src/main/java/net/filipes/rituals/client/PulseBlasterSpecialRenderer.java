@@ -34,23 +34,15 @@ public class PulseBlasterSpecialRenderer implements SpecialModelRenderer<Unit> {
     }
 
     @Override
-    public void render(
-            @Nullable Unit data,
-            ItemDisplayContext displayContext,
-            MatrixStack matrices,
-            OrderedRenderCommandQueue queue,
-            int light,
-            int overlay,
-            boolean glint,
-            int i
-    ) {
+    public void render(@Nullable Unit data, ItemDisplayContext displayContext,
+                       MatrixStack matrices, OrderedRenderCommandQueue queue,
+                       int light, int overlay, boolean glint, int i) {
         matrices.push();
-
         matrices.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90f));
 
         float cylinderAngle = PulseBlasterCylinderState.getAngle();
-        model.render(matrices, queue, light, overlay, cylinderAngle);
+        model.render(matrices, queue, light, overlay, cylinderAngle, PulseBlasterCylinderState.isGlowing());
 
         matrices.pop();
     }

@@ -123,12 +123,14 @@ public class PulseBlasterGunModel {
     }
 
     public void render(MatrixStack matrices, OrderedRenderCommandQueue queue,
-                       int light, int overlay, float cylinderAngle) {
+                       int light, int overlay, float cylinderAngle, boolean glowCylinder) {
         cylinder.yaw = cylinderAngle;
 
         queue.submitModelPart(bb_main, matrices,
                 RenderLayers.entityCutoutNoCull(TEXTURE), light, overlay, null);
+
+        int cylinderLight = glowCylinder ? 0xF000F0 : light;
         queue.submitModelPart(cylinder, matrices,
-                RenderLayers.entityCutoutNoCull(TEXTURE), light, overlay, null);
+                RenderLayers.entityCutoutNoCull(TEXTURE), cylinderLight, overlay, null);
     }
 }

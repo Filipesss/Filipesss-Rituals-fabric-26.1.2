@@ -1,0 +1,6 @@
+{
+  "pulse_blaster_shot": {
+    "subtitle": "sound.rituals.pulse_blaster_shot",
+    "sounds": ["rituals:pulse_blaster_shot"]
+  }
+}
