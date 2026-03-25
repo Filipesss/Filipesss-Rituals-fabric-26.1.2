@@ -16,13 +16,20 @@ import net.filipes.rituals.entity.client.PulseBlasterBeamRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.client.render.item.model.special.SpecialModelTypes;
 import net.minecraft.util.Identifier;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.filipes.rituals.util.TooltipStyleHolder;
 
 public class RitualsClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
 
-
+        // Rituals custom tooltip API — sets active style before border is drawn
+        // In RitualsClient.onInitializeClient() — replace the previous line:
+        ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipType, lines) -> {
+            TooltipStyleHolder.clear();   // wipe previous item's style first
+            TooltipStyleHolder.set(stack); // apply this item's style
+        });
         // ── Block entity renderers ─────────────────────────────────────────────
         BlockEntityRendererFactories.register(
                 ModBlockEntities.RITUAL_PEDESTAL_BE,

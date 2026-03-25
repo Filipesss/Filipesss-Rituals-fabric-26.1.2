@@ -8,6 +8,7 @@
   "item.rituals.rosegold_block": "Rosegold Block",
   "item.rituals.raw_rosegold_block": "Raw Rosegold Block",
   "item.rituals.pulse_blaster": "Pulse Blaster",
+  "item.rituals.lightning_rapier": "Lightning Rapier",
 
 
   "itemgroup.rituals.rituals_items": "Rituals",
@@ -19,6 +20,8 @@
 
 
   "tooltip.rituals.rosegold_pickaxe": "desc",
+  "tooltip.rituals.pulse_blaster": "desc",
+  "tooltip.rituals.lightning_rapier": "desc",
 
 
   "tooltip.rituals.ritual_pedestal": "Your not supposed to have this..."

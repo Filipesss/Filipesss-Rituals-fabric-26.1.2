@@ -1,31 +1,19 @@
 package net.filipes.rituals.item;
 
 import net.filipes.rituals.Rituals;
+import net.filipes.rituals.item.custom.LightningRapierItem;
 import net.filipes.rituals.item.custom.PulseBlasterItem;
 import net.filipes.rituals.item.custom.RosegoldPickaxeItem;
 
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.registry.*;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import net.minecraft.component.type.LoreComponent;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.text.Text;
 import java.util.List;
-import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
-import net.minecraft.text.Style;
-import net.minecraft.util.Formatting;
-import net.minecraft.component.type.LoreComponent;
-import net.minecraft.component.DataComponentTypes;
-import java.util.List;
-
 import java.util.function.Function;
 
 public class ModItems {
@@ -51,6 +39,17 @@ public class ModItems {
             settings -> new RosegoldPickaxeItem(ModToolMaterials.ROSEGOLD, 1.0F, -2.8F, settings),
             new Item.Settings().component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE).fireproof().component(DataComponentTypes.LORE,
                     new LoreComponent(List.of(Text.translatable("tooltip.rituals.handle").styled(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
+
+    public static final Item LIGHTNING_RAPIER = registerItem("lightning_rapier",
+            settings -> new LightningRapierItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
+            new Item.Settings()
+                    .maxCount(1)
+                    .component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponentTypes.LORE,
+                            new LoreComponent(List.of(
+                                    Text.translatable("tooltip.rituals.lightning_rapier")
+                                            .styled(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
+                            ))));
 
     // add this import at top near your other imports
 

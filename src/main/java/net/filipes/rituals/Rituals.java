@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.filipes.rituals.blocks.ModBlocks;
 import net.filipes.rituals.blocks.entity.ModBlockEntities;
+import net.filipes.rituals.effect.ModStatusEffects;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.item.ModItemGroups;
 import net.filipes.rituals.item.ModItems;
@@ -22,6 +23,7 @@ public class Rituals implements ModInitializer {
 	public void onInitialize() {
 		ModBlocks.registerModBlocks();
 		ModItems.registerModItems();
+		ModStatusEffects.registerModStatusEffects();
 		ModBlockEntities.registerModBlockEntities(); // ADD THIS
 		ModItemGroups.registerItemGroups();
 		ModEntities.registerModEntities();

@@ -1,5 +1,8 @@
 {
   "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rituals:item/pulse_blaster"
+  },
   "display": {
     "firstperson_righthand": {
       "rotation": [0, 0, 90],

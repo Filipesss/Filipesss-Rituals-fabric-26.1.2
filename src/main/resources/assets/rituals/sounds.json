@@ -2,5 +2,13 @@
   "pulse_blaster_shot": {
     "subtitle": "sound.rituals.pulse_blaster_shot",
     "sounds": ["rituals:pulse_blaster_shot"]
+  },
+  "lightning_rapier_attack1": {
+    "subtitle": "Lightning chains",
+    "sounds": ["rituals:lightning_rapier_attack1"]
+  },
+  "lightning_rapier_attack2": {
+    "subtitle": "Lightning chains",
+    "sounds": ["rituals:lightning_rapier_attack2"]
   }
 }
