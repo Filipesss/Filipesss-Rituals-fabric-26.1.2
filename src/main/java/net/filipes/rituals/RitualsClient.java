@@ -56,7 +56,7 @@ public class RitualsClient implements ClientModInitializer {
 
         // 2. Register the special model type via ID_MAPPER (the correct API in 1.21.11)
         //    Referenced from items/pulse_blaster.json as "type": "rituals:pulse_blaster"
-        SpecialModelTypes.ID_MAPPER.put(
+        SpecialModelTyper.ID_MAPPER.put(
                 Identifier.of("rituals", "pulse_blaster"),
                 PulseBlasterSpecialRenderer.Unbaked.CODEC
         );

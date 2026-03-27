@@ -1,5 +1,6 @@
 package net.filipes.rituals.client;
 
+import com.mojang.authlib.minecraft.client.MinecraftClient;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.filipes.rituals.item.custom.PulseBlasterItem;

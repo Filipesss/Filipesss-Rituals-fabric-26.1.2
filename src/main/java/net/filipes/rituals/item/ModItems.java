@@ -9,7 +9,7 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.Item;
 import net.minecraft.registry.*;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Unit;
+import net.minecraft.class_3902;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.text.Text;
 import java.util.List;
@@ -37,14 +37,14 @@ public class ModItems {
 
     public static final Item ROSEGOLD_PICKAXE = registerItem("rosegold_pickaxe",
             settings -> new RosegoldPickaxeItem(ModToolMaterials.ROSEGOLD, 1.0F, -2.8F, settings),
-            new Item.Settings().component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE).fireproof().component(DataComponentTypes.LORE,
+            new Item.Settings().component(DataComponentTypes.UNBREAKABLE, class_3902.field_17274).fireproof().component(DataComponentTypes.LORE,
                     new LoreComponent(List.of(Text.translatable("tooltip.rituals.handle").styled(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
 
     public static final Item LIGHTNING_RAPIER = registerItem("lightning_rapier",
             settings -> new LightningRapierItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Settings()
                     .maxCount(1)
-                    .component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponentTypes.UNBREAKABLE, class_3902.field_17274)
                     .component(DataComponentTypes.LORE,
                             new LoreComponent(List.of(
                                     Text.translatable("tooltip.rituals.lightning_rapier")
@@ -60,7 +60,7 @@ public class ModItems {
             new Item.Settings()
                     .maxCount(1) // single-handed, non-stackable
                     .fireproof() // optional: keep same as your other special items if desired
-                    .component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponentTypes.UNBREAKABLE, class_3902.field_17274)
                     .component(DataComponentTypes.LORE,
                             new LoreComponent(List.of(
                                     Text.translatable("tooltip.rituals.pulse_blaster")

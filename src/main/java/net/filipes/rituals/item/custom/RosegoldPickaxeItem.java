@@ -1,26 +1,28 @@
 package net.filipes.rituals.item.custom;
 
-
 import net.filipes.rituals.util.RitualsTooltipStyle;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;           // was Text
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.server.level.ServerPlayer;        // was ServerPlayerEntity
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.phys.HitResult;             // was util.hit.HitResult
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class RosegoldPickaxeItem extends Item implements RitualsTooltipStyle {
 
-    public RosegoldPickaxeItem(ToolMaterial material, float attackDamage, float attackSpeed, Settings settings) {
-        // apply the pickaxe properties to the settings and pass the resulting Settings to super
-        super(settings.pickaxe(material, attackDamage, attackSpeed));
+    public RosegoldPickaxeItem(ToolMaterial material, float attackDamage, float attackSpeed, Properties properties) {
+        super(properties.pickaxe(material, attackDamage, attackSpeed)); // Properties was Settings
     }
-    public static List<BlockPos> getBlocksToBeDestroyed(int range, BlockPos initialBlockPos, ServerPlayerEntity player) {
+
+    public static List<BlockPos> getBlocksToBeDestroyed(int range, BlockPos initialBlockPos, ServerPlayer player) {
         List<BlockPos> positions = new ArrayList<>();
-        HitResult hit = player.raycast(20, 0, false);
+        HitResult hit = player.pick(20, 0, false);    // was raycast()
         if (hit.getType() != HitResult.Type.BLOCK) {
             return positions;
         }
@@ -38,12 +40,16 @@ public class RosegoldPickaxeItem extends Item implements RitualsTooltipStyle {
         }
         return positions;
     }
+
     @Override
-    public Text getName(ItemStack stack) {
-        return Text.translatable(getTranslationKey())
-                .styled(s -> s.withColor(getNameColor()).withItalic(false));
+    public Component getName(ItemStack stack) {
+        return Component.translatable(getDescriptionId())  // was Text.translatable + getTranslationKey()
+                .withStyle(Style.EMPTY
+                        .withColor(TextColor.fromRgb(getNameColor()))
+                        .withItalic(false));
     }
-    @Override public int getNameColor()              { return 0xFFFFB6C1; } // rose pink
-    @Override public int getTooltipBorderColor()     { return 0xFFFF80AA; } // bright rose border
-    @Override public int getTooltipBackgroundColor() { return 0xE51A0510; } // dark red, slightly transparent (E5 = ~90% opaque)
+
+    @Override public int getNameColor()              { return 0xFFFFB6C1; }
+    @Override public int getTooltipBorderColor()     { return 0xFFFF80AA; }
+    @Override public int getTooltipBackgroundColor() { return 0xE51A0510; }
 }

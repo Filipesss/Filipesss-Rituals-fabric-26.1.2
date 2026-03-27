@@ -1,6 +1,7 @@
 package net.filipes.rituals.anim;
 
-import net.minecraft.util.math.MathHelper;
+
+
 import org.joml.Vector3f;
 
 import java.util.HashMap;

@@ -8,14 +8,14 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Unit;
+import net.minecraft.class_3902;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3fc;
 
 import java.util.function.Consumer;
 
-public class PulseBlasterSpecialRenderer implements SpecialModelRenderer<Unit> {
+public class PulseBlasterSpecialRenderer implements SpecialModelRenderer<class_3902> {
 
     private static final Identifier TEXTURE =
             Identifier.of("rituals", "textures/item/pulse_blaster.png");
@@ -29,12 +29,12 @@ public class PulseBlasterSpecialRenderer implements SpecialModelRenderer<Unit> {
     }
 
     @Override
-    public @Nullable Unit getData(ItemStack stack) {
-        return Unit.INSTANCE;
+    public @Nullable class_3902 getData(ItemStack stack) {
+        return class_3902.field_17274;
     }
 
     @Override
-    public void render(@Nullable Unit data, ItemDisplayContext displayContext,
+    public void render(@Nullable class_3902 data, ItemDisplayContext displayContext,
                        MatrixStack matrices, OrderedRenderCommandQueue queue,
                        int light, int overlay, boolean glint, int i) {
         matrices.push();
