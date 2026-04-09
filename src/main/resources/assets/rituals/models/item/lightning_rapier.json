@@ -4,7 +4,7 @@
 	"texture_size": [32, 32],
 	"textures": {
 		"1": "rituals:item/lightning_rapier",
-		"particle": "minecraft:item/diamond_sword"
+		"particle": "minecraft:item/netherite_sword"
 	},
 	"elements": [
 		{

@@ -31,11 +31,29 @@ public class TooltipBackgroundRendererMixin {
         RitualsTooltipStyle style = TooltipStyleHolder.currentStyle;
         if (style != null) {
             if (texture.getPath().contains("background")) {
+                // Background
                 graphics.fill(x + 9, y + 9, x + width - 9, y + height - 9,
                         style.getTooltipBackgroundColor());
             } else {
-                graphics.outline(x + 9, y + 9, width - 18, height - 18,
-                        style.getTooltipBorderColor());
+                int bx = x + 9;
+                int by = y + 9;
+                int bw = width - 18;
+                int bh = height - 18;
+
+                int topColor = style.getTooltipBorderColorTop();
+                int bottomColor = style.getTooltipBorderColorBottom();
+
+                // 1. Top Edge
+                graphics.fill(bx, by, bx + bw, by + 1, topColor);
+
+                // 2. Bottom Edge
+                graphics.fill(bx, by + bh - 1, bx + bw, by + bh, bottomColor);
+
+                // 3. Left Edge
+                graphics.fillGradient(bx, by + 1, bx + 1, by + bh - 1, topColor, bottomColor);
+
+                // 4. Right Edge
+                graphics.fillGradient(bx + bw - 1, by + 1, bx + bw, by + bh - 1, topColor, bottomColor);
             }
         } else {
             graphics.blitSprite(pipeline, texture, x, y, width, height);

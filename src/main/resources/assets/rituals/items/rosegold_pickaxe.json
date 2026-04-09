@@ -1,6 +1,29 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "rituals:item/rosegold_pickaxe"
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "rituals:item/rosegold_pickaxe"
+    },
+    "entries": [
+      {
+        "threshold": 2.0,
+        "model": { "type": "minecraft:model", "model": "rituals:item/rosegold_pickaxe_stage2" }
+      },
+      {
+        "threshold": 3.0,
+        "model": { "type": "minecraft:model", "model": "rituals:item/rosegold_pickaxe_stage3" }
+      },
+      {
+        "threshold": 4.0,
+        "model": { "type": "minecraft:model", "model": "rituals:item/rosegold_pickaxe_stage4" }
+      },
+      {
+        "threshold": 5.0,
+        "model": { "type": "minecraft:model", "model": "rituals:item/rosegold_pickaxe_stage5" }
+      }
+    ]
   }
 }

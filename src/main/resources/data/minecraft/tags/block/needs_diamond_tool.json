@@ -1,7 +1,6 @@
 {
   "replace": false,
   "values": [
-    "rituals:block_test",
     "rituals:raw_rosegold_block",
     "rituals:rosegold_block"
   ]

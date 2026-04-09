@@ -16,20 +16,32 @@ public class ModItemGroups {
             BuiltInRegistries.CREATIVE_MODE_TAB,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "rituals_items"),
             FabricCreativeModeTab.builder()
-                    .icon(() -> new ItemStack(ModItems.HANDLE))
+                    .icon(() -> new ItemStack(ModBlocks.RITUAL_PEDESTAL))
                     .title(Component.translatable("itemgroup.rituals.rituals_items"))
                     .displayItems((parameters, output) -> {
 
-                        output.accept(ModItems.HANDLE);
-                        output.accept(ModBlocks.BLOCK_TEST);
                         output.accept(ModBlocks.RITUAL_PEDESTAL);
                         output.accept(ModBlocks.RAW_ROSEGOLD_BLOCK);
                         output.accept(ModBlocks.ROSEGOLD_BLOCK);
+                        output.accept(ModBlocks.AMETHYST_HOURGLASS);
                         output.accept(ModItems.ROSEGOLD_INGOT);
-                        output.accept(ModItems.ROSEGOLD_PICKAXE);
                         output.accept(ModItems.RAW_ROSEGOLD);
                     })
                     .build());
+
+    public static final CreativeModeTab RITUALS_SPECIAL_ITEMS = Registry.register(
+            BuiltInRegistries.CREATIVE_MODE_TAB,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "rituals_special_items"),
+            FabricCreativeModeTab.builder()
+                    .icon(() -> new ItemStack(ModItems.ROSEGOLD_PICKAXE))
+                    .title(Component.translatable("itemgroup.rituals.rituals_items"))
+                    .displayItems((parameters, output) -> {
+
+                        output.accept(ModItems.ROSEGOLD_PICKAXE);
+
+                    })
+                    .build());
+
 
     public static void registerItemGroups() {
         Rituals.LOGGER.info("Registering creative tabs for " + Rituals.MOD_ID);

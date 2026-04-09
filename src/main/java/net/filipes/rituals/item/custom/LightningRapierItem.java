@@ -138,7 +138,24 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
                 .withStyle(s -> s.withColor(getNameColor()).withItalic(false));
     }
 
-    @Override public int getNameColor()              { return 0xFF9B6DFF; }
-    @Override public int getTooltipBorderColor()     { return 0xFFBB99FF; }
-    @Override public int getTooltipBackgroundColor() { return 0xE5080020; }
+
+    @Override
+    public int getNameColor() {
+        return 0;
+    }
+
+    @Override
+    public int getTooltipBorderColorTop() {
+        return 0;
+    }
+
+    @Override
+    public int getTooltipBorderColorBottom() {
+        return 0;
+    }
+
+    @Override
+    public int getTooltipBackgroundColor() {
+        return 0xFF550000;
+    }
 }

@@ -3,7 +3,9 @@
   "package": "net.filipes.rituals.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "ExampleMixin"
+    "ExampleMixin",
+    "AnvilMenuMixin",
+    "ItemStackMixin"
 
   ],
   "injectors": {

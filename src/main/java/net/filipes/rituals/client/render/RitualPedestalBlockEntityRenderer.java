@@ -31,10 +31,6 @@ public class RitualPedestalBlockEntityRenderer
         this.font = ctx.font();
     }
 
-    // ------------
-    // Render state
-    // ------------
-
     public static class PedestalRenderState extends BlockEntityRenderState {
         public final List<FormattedCharSequence> lines = new ArrayList<>();
     }
@@ -71,10 +67,6 @@ public class RitualPedestalBlockEntityRenderer
             state.lines.add(line.getVisualOrderText());
         }
     }
-
-    // ---------
-    // Rendering
-    // ---------
 
     @Override
     public void submit(PedestalRenderState state,

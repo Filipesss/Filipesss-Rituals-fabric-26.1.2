@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "rituals:item/handle"
+    "model": "rituals:block/amethyst_hourglass"
   }
 }

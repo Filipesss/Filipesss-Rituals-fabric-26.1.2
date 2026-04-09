@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "#": "minecraft:amethyst_shard",
+    "!": "minecraft:amethyst_block",
+    "€": "minecraft:calcite",
+    "*": "minecraft:stone_brick_wall",
+    "+": "minecraft:chiseled_stone_bricks"
+
+  },
+  "pattern": [
+    "###",
+    "*!*",
+    "€+€"
+
+  ],
+  "result": {
+    "count": 1,
+    "id": "rituals:amethyst_hourglass"
+  }
+}

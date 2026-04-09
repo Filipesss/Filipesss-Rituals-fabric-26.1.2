@@ -26,10 +26,11 @@ public class RitualPedestalBlock extends BaseEntityBlock {
         super(properties);
     }
 
+    private static final MapCodec<RitualPedestalBlock> CODEC =
+            simpleCodec(RitualPedestalBlock::new);
+
     @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return null;
-    }
+    protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
@@ -84,9 +85,11 @@ public class RitualPedestalBlock extends BaseEntityBlock {
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (!(level.getBlockEntity(pos) instanceof RitualPedestalBlockEntity pedestal)) {
+        if (!(level.getBlockEntity(pos) instanceof RitualPedestalBlockEntity pedestal))
+        {
             return InteractionResult.PASS;
         }
+        if (pedestal.isFulfilled()) return InteractionResult.PASS;
 
         ItemStack heldStack = player.getMainHandItem();
 

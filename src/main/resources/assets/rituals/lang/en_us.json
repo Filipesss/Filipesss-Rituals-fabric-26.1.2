@@ -1,5 +1,4 @@
 {
-  "item.rituals.handle": "Handle",
   "item.rituals.rosegold_pickaxe": "Rosegold Pickaxe",
   "item.rituals.block_test": "Block Test",
   "item.rituals.ritual_pedestal": "Ritual Pedestal",
@@ -9,6 +8,8 @@
   "item.rituals.raw_rosegold_block": "Raw Rosegold Block",
   "item.rituals.pulse_blaster": "Pulse Blaster",
   "item.rituals.lightning_rapier": "Lightning Rapier",
+  "item.rituals.solar_blade": "Solar Blade",
+  "item.rituals.lunar_blade": "Lunar Blade",
 
 
   "itemgroup.rituals.rituals_items": "Rituals",
@@ -23,7 +24,12 @@
   "tooltip.rituals.pulse_blaster": "desc",
   "tooltip.rituals.lightning_rapier": "desc",
 
+  "block.rituals.amethyst_hourglass": "Amethyst Hourglass",
 
-  "tooltip.rituals.ritual_pedestal": "Your not supposed to have this..."
+  "tooltip.rituals.ritual_pedestal": "Your not supposed to have this...",
+  "key.category.rituals": "Rituals",
+  "key.rituals.action_one":   "Action 1",
+  "key.rituals.action_two":   "Action 2",
+  "key.rituals.action_three": "Action 3"
 
 }

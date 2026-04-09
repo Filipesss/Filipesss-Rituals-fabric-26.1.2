@@ -20,6 +20,7 @@ public class ModBlockEntities {
                     ).build()
             );
 
+
     public static void registerModBlockEntities() {
         Rituals.LOGGER.info("Registering Block Entities for " + Rituals.MOD_ID);
     }

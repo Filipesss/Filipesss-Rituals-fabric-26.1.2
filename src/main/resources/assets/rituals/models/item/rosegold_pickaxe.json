@@ -1,5 +1,5 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "minecraft:item/handheld",
   "textures": {
     "layer0": "rituals:item/rosegold_pickaxe"
   }
