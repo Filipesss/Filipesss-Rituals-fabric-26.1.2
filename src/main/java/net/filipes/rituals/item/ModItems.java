@@ -112,7 +112,7 @@ public class ModItems {
                                     Attributes.ATTACK_DAMAGE,
                                     new AttributeModifier(
                                             Identifier.withDefaultNamespace("base_attack_damage"),
-                                            5.0,  // same as vanilla mace (1 base + 5 = 6 total)
+                                            5.0,
                                             AttributeModifier.Operation.ADD_VALUE
                                     ),
                                     EquipmentSlotGroup.MAINHAND
@@ -121,7 +121,7 @@ public class ModItems {
                                     Attributes.ATTACK_SPEED,
                                     new AttributeModifier(
                                             Identifier.withDefaultNamespace("base_attack_speed"),
-                                            -3.4, // vanilla mace attack speed (4.0 - 3.4 = 0.6/s)
+                                            -3.4,
                                             AttributeModifier.Operation.ADD_VALUE
                                     ),
                                     EquipmentSlotGroup.MAINHAND
@@ -145,9 +145,6 @@ public class ModItems {
             ),
             new Item.Properties().stacksTo(1).component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
     );
-
-
-// ...
 
     public static final Item ROSEGOLD_HELMET = registerItem("rosegold_helmet",
             settings -> new RosegoldHelmetItem(ModArmorMaterials.ROSEGOLD, settings),
@@ -181,15 +178,18 @@ public class ModItems {
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
                                     .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
 
-    // Inside your ModItems.java
-
     public static final Item POLARITY_BOW = registerItem("polarity_bow",
-            settings -> new BowItem(settings),
+            settings -> new PolarityBowItem(settings),
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-            // Add your lore/tooltip component here just like your other items
-    );
+                    .component(DataComponents.LORE,
+                            new ItemLore(List.of(
+                                    Component.translatable("tooltip.rituals.polarity_bow")
+                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x00FFFF)).withItalic(false))
+                            ))));
+
+
 
     private static Item registerItem(String name, Function<Item.Properties, Item> creator, Item.Properties settings) {
         Identifier id = Identifier.fromNamespaceAndPath(Rituals.MOD_ID, name);

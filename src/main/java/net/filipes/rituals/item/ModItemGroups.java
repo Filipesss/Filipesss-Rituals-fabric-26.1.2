@@ -38,6 +38,17 @@ public class ModItemGroups {
                     .displayItems((parameters, output) -> {
 
                         output.accept(ModItems.ROSEGOLD_PICKAXE);
+                        output.accept(ModItems.BLIGHTSPEAR);
+                        output.accept(ModItems.LUNAR_BLADE);
+                        output.accept(ModItems.SOLAR_BLADE);
+                        output.accept(ModItems.VORTEX_EDGE);
+                        output.accept(ModItems.SHADOWGUARD);
+                        output.accept(ModItems.LIGHTNING_RAPIER);
+                        output.accept(ModItems.PULSE_BLASTER);
+                        output.accept(ModItems.ROSEGOLD_BOOTS);
+                        output.accept(ModItems.ROSEGOLD_LEGGINGS);
+                        output.accept(ModItems.ROSEGOLD_CHESTPLATE);
+                        output.accept(ModItems.ROSEGOLD_HELMET);
 
                     })
                     .build());

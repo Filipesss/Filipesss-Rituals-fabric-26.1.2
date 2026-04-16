@@ -8,6 +8,8 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.model.loading.v1.ExtraModelKey;
+import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
@@ -45,6 +47,7 @@ public class RitualsClient implements ClientModInitializer {
     public static KeyMapping actionOne;
     public static KeyMapping actionTwo;
     public static KeyMapping actionThree;
+
 
     @Override
     public void onInitializeClient() {
@@ -98,6 +101,9 @@ public class RitualsClient implements ClientModInitializer {
                 Identifier.fromNamespaceAndPath("rituals", "pulse_blaster"),
                 (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PulseBlasterSpecialRenderer.Unbaked.CODEC
         );
+
+
+
         MenuScreens.register(ModMenuTypes.AMETHYST_HOURGLASS, AmethystHourglassScreen::new);
         RosegoldPickaxeHudOverlay.register();
         CooldownManager.register("pickaxe_test", "Test Ability", 15_000, 0xFF66FF);
