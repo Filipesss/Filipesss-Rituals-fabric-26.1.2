@@ -365,9 +365,6 @@ public class ElectricBoltEntityRenderer extends EntityRenderer<ElectricBoltEntit
                 double remain = visibleLength - travelled;
                 double ratio = remain / segLen;
 
-                // Prevent the bolt from ending on a tiny, obvious stub.
-                // It will either show a meaningful portion of the segment,
-                // or keep the segment intact until there is enough length.
                 if (ratio < MIN_VISIBLE_SEGMENT_RATIO) {
                     return out;
                 }
@@ -428,7 +425,6 @@ public class ElectricBoltEntityRenderer extends EntityRenderer<ElectricBoltEntit
         Vec3 b3 = b.subtract(rB).subtract(uB);
         Vec3 b4 = b.add(rB).subtract(uB);
 
-        // Side faces only; no end caps, so adjacent segments do not stack at joins.
         drawQuad(pose, vertices, a1, a2, b2, b1, color);
         drawQuad(pose, vertices, a2, a3, b3, b2, color);
         drawQuad(pose, vertices, a3, a4, b4, b3, color);

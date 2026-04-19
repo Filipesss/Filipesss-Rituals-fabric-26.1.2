@@ -15,11 +15,14 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.config.RitualConfig;
 import net.filipes.rituals.effect.ModStatusEffects;
 import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.entity.custom.DeathLaserEntity;
 import net.filipes.rituals.event.PlayerKillListener;
 import net.filipes.rituals.item.ModItemGroups;
 import net.filipes.rituals.item.ModItems;
+import net.filipes.rituals.item.custom.PulseBlasterItem;
 import net.filipes.rituals.item.custom.RosegoldPickaxeItem;
 import net.filipes.rituals.item.custom.ShadowguardItem;
+import net.filipes.rituals.network.FireDeathLaserPacket;
 import net.filipes.rituals.network.PulseBlasterAmmoPayload;
 import net.filipes.rituals.network.ShadowguardInvisiblePacket;
 import net.filipes.rituals.network.TogglePickaxeMiningPacket;
@@ -31,11 +34,20 @@ import net.filipes.rituals.util.RosegoldPickaxeUsageEvent;
 import net.filipes.rituals.worldgen.RitualWorldGen;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 public class Rituals implements ModInitializer {
 	public static final String MOD_ID = "rituals";
@@ -79,6 +91,72 @@ public class Rituals implements ModInitializer {
 				ShadowguardItem.markInvisible(attacker.getUUID());
 				ServerPlayNetworking.send(attacker, new ShadowguardInvisiblePacket());
 			}
+		});
+
+		PayloadTypeRegistry.serverboundPlay().register(FireDeathLaserPacket.TYPE, FireDeathLaserPacket.CODEC);
+
+// 2. Register the receiver
+		ServerPlayNetworking.registerGlobalReceiver(FireDeathLaserPacket.TYPE, (payload, context) -> {
+			ServerPlayer player = context.player();
+			ServerLevel level = (ServerLevel) player.level();
+
+			context.server().execute(() -> {
+				ItemStack stack = player.getMainHandItem();
+
+				// Ensure they are actually holding the blaster
+				if (!(stack.getItem() instanceof PulseBlasterItem)) return;
+
+				// Optional: Check Ammo. Let's say the Death Laser requires at least 3 ammo.
+				int ammo = PulseBlasterItem.getAmmo(stack);
+				if (ammo < 3) {
+					level.playSound(null, player.getX(), player.getY(), player.getZ(),
+							SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 0.5f, 1.0f);
+					return;
+				}
+
+				// Consume ammo (Cost: 3)
+				PulseBlasterItem.setAmmo(stack, ammo - 0);
+				// Note: You might want to call your syncAmmo method here to update the client HUD
+
+				// --- Calculate Raycast ---
+				double maxDist = 40.0;
+				// Start slightly lower than eye level so it lines up with the gun
+				Vec3 start = player.getEyePosition().subtract(0, 0.2, 0);
+				Vec3 look = player.getViewVector(1.0f);
+				Vec3 end = start.add(look.scale(maxDist));
+
+				// Raycast against blocks to find the hit point
+				HitResult hitResult = level.clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+				Vec3 actualEnd = hitResult.getLocation();
+				float actualDist = (float) start.distanceTo(actualEnd);
+
+				// --- Spawn Visual Laser ---
+				// Color is ARGB hex. Let's make it an angry red/orange: 0xFFFF2222
+				DeathLaserEntity.spawn(
+						level, start, actualEnd,
+						4.0f,      // Speed
+						0.35f,     // Width
+						0xFFFF2222, // Color
+						25,        // Hold Ticks
+						actualDist // Hit Distance
+				);
+
+				// --- Damage Entities ---
+				AABB hitBox = new AABB(start, actualEnd).inflate(1.0); // 1 block margin of error
+				for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, hitBox, e -> e != player)) {
+					// Precise intersection check for the beam path
+					Optional<Vec3> hit = target.getBoundingBox().inflate(0.2).clip(start, actualEnd);
+					if (hit.isPresent()) {
+						target.hurt(level.damageSources().playerAttack(player), 15.0f); // 15 Damage
+						// Optional: set them on fire
+						// target.igniteForSeconds(5);
+					}
+				}
+
+				// Play firing sound (replace with your custom ModSounds if desired)
+				level.playSound(null, player.getX(), player.getY(), player.getZ(),
+						SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 2.0f, 2.0f);
+			});
 		});
 		PayloadTypeRegistry.clientboundPlay().register(
 				PulseBlasterAmmoPayload.ID,

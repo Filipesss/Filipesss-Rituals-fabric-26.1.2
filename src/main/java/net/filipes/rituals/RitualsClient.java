@@ -19,12 +19,10 @@ import net.filipes.rituals.client.cooldown.CooldownHudOverlay;
 import net.filipes.rituals.client.cooldown.CooldownManager;
 import net.filipes.rituals.client.render.RitualPedestalBlockEntityRenderer;
 import net.filipes.rituals.entity.ModEntities;
-import net.filipes.rituals.entity.client.ElectricBoltEntityRenderer;
-import net.filipes.rituals.entity.client.PulseBlasterBeamModel;
-import net.filipes.rituals.entity.client.PulseBlasterBeamRenderer;
-import net.filipes.rituals.entity.client.ScreenShakeEntityRenderer;
+import net.filipes.rituals.entity.client.*;
 import net.filipes.rituals.item.ModItems;
 import net.filipes.rituals.item.custom.RosegoldPickaxeItem;
+import net.filipes.rituals.network.FireDeathLaserPacket;
 import net.filipes.rituals.network.ShadowguardInvisiblePacket;
 import net.filipes.rituals.network.TogglePickaxeMiningPacket;
 import net.filipes.rituals.screen.AmethystHourglassScreen;
@@ -33,6 +31,7 @@ import net.filipes.rituals.util.TooltipStyleHolder;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderers;
@@ -106,6 +105,19 @@ public class RitualsClient implements ClientModInitializer {
                 PulseBlasterGunModel.LAYER,
                 PulseBlasterGunModel::getTexturedModelData
         );
+        ModelLayerRegistry.registerModelLayer(
+                PolarityTornadoBlueModel.LAYER,
+                PolarityTornadoBlueModel::getTexturedModelData);
+        ModelLayerRegistry.registerModelLayer(
+                PolarityTornadoRedModel.LAYER,
+                PolarityTornadoRedModel::getTexturedModelData);
+        EntityRendererRegistry.register(
+                ModEntities.POLARITY_TORNADO_BLUE,
+                PolarityTornadoBlueEntityRenderer::new);
+        EntityRendererRegistry.register(
+                ModEntities.POLARITY_TORNADO_RED,
+                PolarityTornadoRedEntityRenderer::new);
+
 
         SpecialModelRenderers.ID_MAPPER.put(
                 Identifier.fromNamespaceAndPath("rituals", "pulse_blaster"),
@@ -120,6 +132,7 @@ public class RitualsClient implements ClientModInitializer {
         CooldownHudOverlay.register();
         PulseBlasterHudOverlay.register();
         ShadowguardHudOverlay.register();
+        EntityRendererRegistry.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
 
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadowguardInvisiblePacket.TYPE,
@@ -136,6 +149,10 @@ public class RitualsClient implements ClientModInitializer {
                     if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         ClientPlayNetworking.send(new TogglePickaxeMiningPacket());
+                    }
+                    // Check for Pulse Blaster
+                    else if (held.getItem() instanceof net.filipes.rituals.item.custom.PulseBlasterItem) {
+                        ClientPlayNetworking.send(new FireDeathLaserPacket());
                     }
                 }
             }

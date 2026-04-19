@@ -128,6 +128,7 @@ public class PulseBlasterItem extends Item {
         int newAmmo = ammo - 1;
         activeAmmo.put(id, newAmmo);
         syncAmmo(player, newAmmo);
+
     }
 
     @Override
