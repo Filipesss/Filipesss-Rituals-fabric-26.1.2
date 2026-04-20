@@ -15,6 +15,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.config.RitualConfig;
 import net.filipes.rituals.effect.ModStatusEffects;
 import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.entity.client.DeathLaserEntityRenderer;
 import net.filipes.rituals.entity.custom.DeathLaserEntity;
 import net.filipes.rituals.event.PlayerKillListener;
 import net.filipes.rituals.item.ModItemGroups;
@@ -32,6 +33,7 @@ import net.filipes.rituals.upgrade.KillUpgradeRegistry;
 import net.filipes.rituals.upgrade.UpgradeRecipeRegistry;
 import net.filipes.rituals.util.RosegoldPickaxeUsageEvent;
 import net.filipes.rituals.worldgen.RitualWorldGen;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -132,14 +134,6 @@ public class Rituals implements ModInitializer {
 
 				// --- Spawn Visual Laser ---
 				// Color is ARGB hex. Let's make it an angry red/orange: 0xFFFF2222
-				DeathLaserEntity.spawn(
-						level, start, actualEnd,
-						4.0f,      // Speed
-						0.35f,     // Width
-						0xFFFF2222, // Color
-						25,        // Hold Ticks
-						actualDist // Hit Distance
-				);
 
 				// --- Damage Entities ---
 				AABB hitBox = new AABB(start, actualEnd).inflate(1.0); // 1 block margin of error
@@ -158,6 +152,7 @@ public class Rituals implements ModInitializer {
 						SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 2.0f, 2.0f);
 			});
 		});
+		EntityRenderers.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
 		PayloadTypeRegistry.clientboundPlay().register(
 				PulseBlasterAmmoPayload.ID,
 				PulseBlasterAmmoPayload.CODEC

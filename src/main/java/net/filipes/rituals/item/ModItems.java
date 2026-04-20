@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.network.chat.Component;
@@ -193,10 +194,14 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponents.ATTRIBUTE_MODIFIERS, TridentItem.createAttributes())
+                    .component(DataComponents.TOOL, TridentItem.createToolProperties())
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
                                     Component.translatable("tooltip.rituals.depthstrike")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x00FFFF)).withItalic(false))
+                                            .withStyle(style -> style
+                                                    .withColor(TextColor.fromRgb(0x00FFFF))
+                                                    .withItalic(false))
                             ))));
 
 
