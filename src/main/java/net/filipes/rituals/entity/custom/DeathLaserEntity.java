@@ -20,39 +20,15 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * A caster-following death laser beam entity.
- * Ported from Cataclysm (NeoForge 1.21.1) to Fabric 26.1.2.
- *
- * SPAWNING (server-side only):
- *   DeathLaserEntity laser = new DeathLaserEntity(
- *       ModEntities.DEATH_LASER, level, casterEntity,
- *       caster.getX(), caster.getY() + 2.7, caster.getZ(),
- *       (float)((caster.yHeadRot + 90) * Math.PI / 180.0),
- *       (float)(-caster.getXRot()      * Math.PI / 180.0),
- *       60,   // duration ticks
- *       8f,   // flat damage
- *       5f    // % max-HP bonus damage
- *   );
- *   laser.setFire(true); // optional
- *   level.addFreshEntity(laser);
- */
 public class DeathLaserEntity extends Entity {
 
     public static final double RADIUS = 30.0;
 
-    /**
-     * Height offset above caster's feet where the beam originates.
-     * Cataclysm uses 2.7 for Harbinger, 1.8 for Prowler.
-     */
     public static final double CASTER_Y_OFFSET = 2.7;
-
-    // ── Synced data ───────────────────────────────────────────────────────────
 
     private static final EntityDataAccessor<Float>   YAW       = SynchedEntityData.defineId(DeathLaserEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float>   PITCH     = SynchedEntityData.defineId(DeathLaserEntity.class, EntityDataSerializers.FLOAT);
@@ -61,8 +37,6 @@ public class DeathLaserEntity extends Entity {
     private static final EntityDataAccessor<Boolean> FIRE      = SynchedEntityData.defineId(DeathLaserEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Float>   DAMAGE    = SynchedEntityData.defineId(DeathLaserEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float>   HP_DAMAGE = SynchedEntityData.defineId(DeathLaserEntity.class, EntityDataSerializers.FLOAT);
-
-    // ── Non-synced fields ─────────────────────────────────────────────────────
 
     public LivingEntity caster;
 
@@ -73,14 +47,11 @@ public class DeathLaserEntity extends Entity {
     public float renderYaw, renderPitch;
     public float prevRenderYaw, prevRenderPitch;
 
-    /** 0 = invisible, 3 = fully visible. */
     public int appearTimer;
     public int prevAppearTimer;
 
     public boolean  on        = true;
     public Direction blockSide = null;
-
-    // ── Constructors ──────────────────────────────────────────────────────────
 
     public DeathLaserEntity(EntityType<? extends DeathLaserEntity> type, Level level) {
         super(type, level);
@@ -106,8 +77,6 @@ public class DeathLaserEntity extends Entity {
         }
     }
 
-    // ── Tick ──────────────────────────────────────────────────────────────────
-
     @Override
     public void tick() {
         super.tick();
@@ -122,20 +91,17 @@ public class DeathLaserEntity extends Entity {
         yo = getY();
         zo = getZ();
 
-        // Resolve caster client-side on tick 1
         if (tickCount == 1 && level().isClientSide()) {
             Entity e = level().getEntity(getCasterID());
             if (e instanceof LivingEntity le) caster = le;
         }
 
-        // Server: snap position + direction to caster every tick
         if (!level().isClientSide() && caster != null) {
             this.setLaserYaw  ((float) ((caster.yHeadRot + 90.0) * Math.PI / 180.0));
             this.setLaserPitch((float) (-caster.getXRot()         * Math.PI / 180.0));
             this.setPos(caster.getX(), caster.getY() + CASTER_Y_OFFSET, caster.getZ());
         }
 
-        // Both sides: keep render angles in sync with caster head
         if (caster != null) {
             renderYaw   = (float) ((caster.yHeadRot + 90.0) * Math.PI / 180.0);
             renderPitch = (float) (-caster.getXRot()         * Math.PI / 180.0);
@@ -149,7 +115,6 @@ public class DeathLaserEntity extends Entity {
             return;
         }
 
-        // Appear / disappear animation
         if (!on) {
             if (appearTimer > 0) appearTimer--;
             else { discard(); return; }
@@ -159,12 +124,10 @@ public class DeathLaserEntity extends Entity {
             if (appearTimer > 0) appearTimer--;
         }
 
-        // Turn off after duration
         if (tickCount - 20 > getDuration()) {
             on = false;
         }
 
-        // Active beam logic (after warmup)
         if (tickCount > 20) {
             calculateEndPos();
 
@@ -197,8 +160,6 @@ public class DeathLaserEntity extends Entity {
             }
         }
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void calculateEndPos() {
         float yaw   = level().isClientSide() ? renderYaw   : getLaserYaw();
@@ -240,8 +201,6 @@ public class DeathLaserEntity extends Entity {
         return result;
     }
 
-    // ── Synced data ───────────────────────────────────────────────────────────
-
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(YAW,       0f);
@@ -274,7 +233,6 @@ public class DeathLaserEntity extends Entity {
     public float   getHpDamage()           { return entityData.get(HP_DAMAGE); }
     public void    setHpDamage(float v)    { entityData.set(HP_DAMAGE, v); }
 
-    // ── Persistence / overrides ───────────────────────────────────────────────
 
     @Override public boolean   shouldBeSaved()                              { return false; }
     @Override protected void   readAdditionalSaveData(ValueInput in)        {}

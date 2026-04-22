@@ -106,6 +106,22 @@ public class ModEntities {
                     .build(ResourceKey.create(Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "death_laser")))
     );
+    public static final EntityType<ThrownDepthstrikeEntity> THROWN_DEPTHSTRIKE = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "thrown_depthstrike"),
+            EntityType.Builder.<ThrownDepthstrikeEntity>of(
+                            (type, level) -> new ThrownDepthstrikeEntity(type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.5f, 0.5f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "thrown_depthstrike")
+                    ))
+    );
+
 
 
 

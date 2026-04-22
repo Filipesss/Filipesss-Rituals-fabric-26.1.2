@@ -2,7 +2,6 @@
 	"format_version": "1.21.11",
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
-	"gui_light": "front",
 	"textures": {
 		"0": "rituals:item/depthstrike_outlines",
 		"1": "rituals:item/depthstrike",
@@ -765,15 +764,13 @@
 	],
 	"display": {
 		"thirdperson_righthand": {
-			"rotation": [180, 0, 0],
-			"translation": [0, 3.5, 0]
+			"translation": [0, -5.5, 0]
 		},
 		"thirdperson_lefthand": {
-			"rotation": [-180, 0, 0],
-			"translation": [0, 3.5, 0]
+			"translation": [0, -5.5, 0]
 		},
 		"firstperson_righthand": {
-			"rotation": [180, 0, 0],
+			"rotation": [-180, 0, 0],
 			"translation": [0.75, 5, 0]
 		},
 		"firstperson_lefthand": {
@@ -781,7 +778,7 @@
 			"translation": [0.75, 5.25, 0]
 		},
 		"ground": {
-			"rotation": [180, 0, 0],
+			"rotation": [-180, 0, 0],
 			"translation": [0, 12.75, 0]
 		},
 		"gui": {
@@ -790,16 +787,16 @@
 			"scale": [0.57, 0.57, 0.57]
 		},
 		"head": {
-			"rotation": [180, 0, 0],
+			"rotation": [-180, 0, 0],
 			"translation": [0, 6, 0]
 		},
 		"fixed": {
-			"rotation": [180, 90, 0],
+			"rotation": [-180, 90, 0],
 			"translation": [0, 1.5, 0],
 			"scale": [0.81, 0.81, 0.81]
 		},
 		"on_shelf": {
-			"rotation": [180, 90, 0],
+			"rotation": [-180, 90, 0],
 			"translation": [0, 3.25, -1.25]
 		}
 	}

@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.rendertype.RenderTypes; // still used by lightning bolts
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
@@ -31,10 +31,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
     private static final float SPRITE_HALF = 0.75f;
     private static final float BEAM_HALF   = 0.75f;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Render state
-    // ─────────────────────────────────────────────────────────────────────────
-
     public static class LaserRenderState extends EntityRenderState {
         float posX, posY, posZ;
         float colX, colY, colZ;
@@ -51,10 +47,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
     public DeathLaserEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
 
     @Override public LaserRenderState createRenderState() { return new LaserRenderState(); }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // State extraction
-    // ─────────────────────────────────────────────────────────────────────────
 
     @Override
     public void extractRenderState(DeathLaserEntity e, LaserRenderState s, float pt) {
@@ -99,17 +91,13 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
     @Override protected float getShadowRadius  (LaserRenderState s) { return 0f; }
     @Override protected float getShadowStrength(LaserRenderState s) { return 0f; }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Submit
-    // ─────────────────────────────────────────────────────────────────────────
-
     @Override
     public void submit(LaserRenderState s, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
 
         if (s.alpha < 0.005f) return;
 
-        final RenderType TEX      = RenderTypes.entityTranslucentEmissive(TEXTURE);
+        final RenderType TEX      = RenderTypes.eyes(TEXTURE);
         final int         frame   = s.frame;
         final float       len     = s.beamLength;
         final boolean     fp      = s.clearerView;
@@ -121,7 +109,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
         ps.pushPose();
         ps.translate(s.posX, s.posY, s.posZ);
 
-        // 1. Start billboard
         if (!fp) {
             ps.pushPose();
             ps.mulPose(camQuat);
@@ -129,7 +116,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
             ps.popPose();
         }
 
-        // 2. Beam body
         ps.pushPose();
         ps.mulPose(new Quaternionf().rotationX( 90f * Mth.DEG_TO_RAD));
         ps.mulPose(new Quaternionf().rotationZ((yaw - 90f) * Mth.DEG_TO_RAD));
@@ -149,7 +135,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
         }
         ps.popPose();
 
-        // 3. End billboard + surface flare
         ps.pushPose();
         ps.translate(s.colX - s.posX, s.colY - s.posY, s.colZ - s.posZ);
         {
@@ -172,16 +157,11 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
 
         ps.popPose();
 
-        // 4. Side bolts + impact discharge
         if (s.age > 20f && len > 0.1f) {
             drawLightningBolts(s, ps, snc);
             drawImpactBolts(s, ps, snc);
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Textured quad helpers
-    // ─────────────────────────────────────────────────────────────────────────
 
     private static void drawSprite(PoseStack.Pose pose, VertexConsumer v, int frame) {
         float u0 = (16f * frame) / TW, u1 = u0 + 16f / TW;
@@ -222,17 +202,7 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
                 .setNormal(0f, 0f, 1f);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Side lightning bolts — 4 pairs, snapping every tick
-    //
-    // Each pair is rotated around the beam axis by 45° from the previous so
-    // they surround the beam from all sides.  UPDATE_TICKS = 1 → snaps every
-    // tick for a fast crackle feel.
-    // ─────────────────────────────────────────────────────────────────────────
-
-    // How many 45°-rotated bolt pairs to draw around the beam
-    private static final int   BOLT_PAIRS    = 4;
-    // Ticks between shape snaps — 1 = every tick (fast crackle)
+    private static final int   BOLT_PAIRS    = 6;
     private static final int   UPDATE_TICKS  = 1;
 
     private static void drawLightningBolts(LaserRenderState s, PoseStack ps, SubmitNodeCollector snc) {
@@ -243,7 +213,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
 
         final Vec3 dir    = rawDir.normalize();
         final Vec3 helper = (Math.abs(dir.y) > 0.95) ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-        // Base perpendicular axes
         final Vec3 right0 = dir.cross(helper).normalize();
         final Vec3 up0    = right0.cross(dir).normalize();
 
@@ -252,15 +221,14 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
         final long  seed = s.seed;
 
         for (int p = 0; p < BOLT_PAIRS; p++) {
-            // Rotate right/up around the beam axis by p * 45°
-            double angle  = p * (Math.PI / BOLT_PAIRS);  // 0°, 45°, 90°, 135°
+            double angle  = p * (Math.PI / BOLT_PAIRS);
             double cosA   = Math.cos(angle), sinA = Math.sin(angle);
             Vec3   right  = right0.scale(cosA).add(up0.scale(sinA));
             Vec3   up     = right0.scale(-sinA).add(up0.scale(cosA));
 
-            // Unique seeds per pair so all bolts look different
             long seedA = seed ^ (p * 0x9E3779B97F4A7C15L);
             long seedB = seedA ^ 0xDEADBEEFCAFEBABEL;
+            long seedC = seedA ^ 0x1A2B3C4D5E6F7A8BL;
 
             snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) ->
                     drawBolt(pose, v, from, dir, right, up, len,
@@ -268,13 +236,12 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
             snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) ->
                     drawBolt(pose, v, from, dir, right, up, len,
                             0.07f, 249, 194, 43, 179, age, seedB));
+            snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) ->
+                    drawBolt(pose, v, from, dir, right, up, len,
+                            0.06f, 200, 0, 0, 200, age, seedC));
         }
     }
 
-    /**
-     * One piecewise-linear bolt.  Shape snaps every {@code UPDATE_TICKS} ticks.
-     * 1 knot per ~4 blocks → long straight runs with rare hard kinks.
-     */
     private static void drawBolt(PoseStack.Pose pose, VertexConsumer v,
                                  Vec3 origin, Vec3 dir, Vec3 right, Vec3 up,
                                  float length, float width,
@@ -309,28 +276,17 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Impact discharge — 360° bolts with curves, smooth fade, varying length
-    //
-    // Each impact bolt uses drawBolt (1–2 knots → gentle curve) with a length
-    // that slowly drifts between LENGTH_MIN and LENGTH_MAX.
-    //
-    // Timing per 22-tick cycle:
-    //   appear window   [0, 7)            — each bolt fades in at a hashed time
-    //   hold            [7, 13)           — fully visible
-    //   disappear window [13, 22)         — each bolt fades out at a hashed time
-    // FADE = 3 ticks so the ramp is clearly visible.
-    // ─────────────────────────────────────────────────────────────────────────
 
-    private static final float IMP_LENGTH_MIN   = 0.8f;
-    private static final float IMP_LENGTH_MAX   = 2.2f;
-    // How fast the length oscillates (ticks per full drift cycle)
-    private static final float IMP_LENGTH_CYCLE = 8f;
+    // ── Impact bolts ─────────────────────────────────────────────────────────
+
+    private static final int   IMP_NUM_SPARKS = 20;
+    private static final float IMP_CYCLE      = 10f;   // ticks per fire cycle
+    private static final int   IMP_NUM_SEGS   = 3;     // segments per spark
+    private static final float IMP_FADE       = 1.0f;  // ticks to fade each segment in/out
 
     private static void drawImpactBolts(LaserRenderState s, PoseStack ps, SubmitNodeCollector snc) {
         Vec3 impact = new Vec3(s.colX, s.colY, s.colZ);
 
-        // Surface normal
         Vec3 normal;
         if (s.blockSide != null) {
             normal = new Vec3(s.blockSide.getStepX(),
@@ -345,73 +301,84 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
         Vec3 axisA  = normal.cross(helper).normalize();
         Vec3 axisB  = normal.cross(axisA).normalize();
 
-        final int   NUM_BOLTS       = 8;
-        final float CYCLE           = 22f;
-        final float APPEAR_END      = 7f;
-        final float DISAPPEAR_START = 13f;
-        final float FADE            = 3.0f;   // clearly visible smooth ramp
+        // Alive window: one tick per segment to reveal + one fade-out tick
+        final float totalAliveTime = IMP_NUM_SEGS + IMP_FADE;
 
-        float cycleAge = s.age % CYCLE;
+        for (int slot = 0; slot < IMP_NUM_SPARKS; slot++) {
 
-        for (int i = 0; i < NUM_BOLTS; i++) {
+            float offset   = (hash(s.seed + slot * 0xA7B3L) * 0.5f + 0.5f) * IMP_CYCLE;
+            float localAge = (s.age + offset) % IMP_CYCLE;
 
-            // Per-bolt hashed appear / disappear times
-            float appearAt    = (hash(s.seed + i * 0xA3C5L) * 0.5f + 0.5f)
-                    * (APPEAR_END - FADE);
-            float disappearAt = DISAPPEAR_START
-                    + (hash(s.seed + i * 0x7F3BL + 1L) * 0.5f + 0.5f)
-                    * (CYCLE - FADE - DISAPPEAR_START);
+            if (localAge >= totalAliveTime) continue;
 
-            float alpha;
-            if (cycleAge < appearAt || cycleAge > disappearAt + FADE) {
-                alpha = 0f;
-            } else {
-                float fadeIn  = Mth.clamp((cycleAge - appearAt)           / FADE, 0f, 1f);
-                float fadeOut = Mth.clamp((disappearAt + FADE - cycleAge) / FADE, 0f, 1f);
-                alpha = Math.min(fadeIn, fadeOut);
-            }
-            if (alpha < 0.02f) continue;
+            int  cycleNum  = (int)((s.age + offset) / IMP_CYCLE);
+            long shapeSeed = rehash(s.seed ^ ((long)slot * 0x9E3779B97F4A7C15L)
+                    + (long)cycleNum * 0x6C62272E07BB0142L);
 
-            // Evenly spread angle + fixed per-bolt jitter
-            float angle  = (float)(i * 2.0 * Math.PI / NUM_BOLTS)
-                    + hash(s.seed + i * 31337L) * 0.4f;
-
+            float angle  = (hash(shapeSeed) * 0.5f + 0.5f) * (float)(2.0 * Math.PI);
             Vec3 boltDir = axisA.scale(Math.cos(angle)).add(axisB.scale(Math.sin(angle)));
             Vec3 perp    = normal.cross(boltDir).normalize();
 
-            // Length drifts smoothly using a per-bolt phase offset
-            float lenPhase  = s.age / IMP_LENGTH_CYCLE
-                    + (hash(s.seed + i * 55555L) * 0.5f + 0.5f);  // offset in [0,1]
-            // sin oscillates in [-1,1] → remap to [LENGTH_MIN, LENGTH_MAX]
-            float boltLen   = IMP_LENGTH_MIN
-                    + (IMP_LENGTH_MAX - IMP_LENGTH_MIN)
-                    * ((float) Math.sin(lenPhase * Math.PI * 2.0) * 0.5f + 0.5f);
+            // Longer sparks, much less lateral wiggle
+            float totalLen = 1.5f + (hash(shapeSeed + 1L) * 0.5f + 0.5f) * 2.0f;
 
-            long boltSeed = s.seed ^ (i * 0x9E3779B97F4A7C15L);
+            Vec3[] pts = new Vec3[IMP_NUM_SEGS + 1];
+            pts[0] = impact;
+            for (int k = 1; k <= IMP_NUM_SEGS; k++) {
+                float t      = k / (float) IMP_NUM_SEGS;
+                float env    = (float) Math.sin(t * Math.PI);
+                float maxOff = totalLen * 0.12f;   // subtle deviation only
+                float offP   = hash(shapeSeed + k * 997L)  * env * maxOff;
+                float offN   = hash(shapeSeed + k * 1009L) * env * maxOff;
+                pts[k] = impact
+                        .add(boltDir.scale(totalLen * t))
+                        .add(perp.scale(offP))
+                        .add(normal.scale(offN));
+            }
 
-            final int   aRed  = (int)(230 * alpha);
-            final int   aGold = (int)(179 * alpha);
-            final Vec3  imp   = impact;
-            final Vec3  bd    = boltDir;
-            final Vec3  pp    = perp;
-            final Vec3  nm    = normal;
-            final float bl    = boltLen;
-            final float age   = s.age;
 
-            // Use drawBolt with the bolt's outward direction as "dir",
-            // perp and normal as the lateral axes — gives a gentle 1-knot curve
-            snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) ->
-                    drawBolt(pose, v, imp, bd, pp, nm, bl,
-                            0.09f, 255, 26,  0,   aRed,  age, boltSeed));
-            snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) ->
-                    drawBolt(pose, v, imp, bd, pp, nm, bl,
-                            0.06f, 249, 194, 43,  aGold, age, boltSeed ^ 0xCAFEBABEL));
+            final double sqrt3over2 = Math.sqrt(3.0) / 2.0;
+            final Vec3 tubeA = perp;
+            final Vec3 tubeB = perp.scale(-0.5).add(normal.scale(sqrt3over2));
+
+            for (int seg = 0; seg < IMP_NUM_SEGS; seg++) {
+
+                float segRevealAge = localAge - seg;
+                if (segRevealAge < 0f) continue;
+
+                float alpha;
+                if (segRevealAge < IMP_FADE) {
+                    alpha = segRevealAge / IMP_FADE;
+                } else if (localAge > totalAliveTime - IMP_FADE) {
+                    alpha = (totalAliveTime - localAge) / IMP_FADE;
+                } else {
+                    alpha = 1.0f;
+                }
+                alpha = Mth.clamp(alpha, 0f, 1f);
+
+                final int al = (int)(alpha * 230);
+                if (al < 4) continue;
+
+                final Vec3 a = pts[seg];
+                final Vec3 b = pts[seg + 1];
+                final Vec3 tA = tubeA, tB = tubeB;
+
+                snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) -> {
+                    crossQuad(pose, v, a, b, tA, 0.09f, 255, 80, 0, al);
+                    crossQuad(pose, v, a, b, tB, 0.09f, 255, 80, 0, al);
+                });
+            }
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Low-level geometry helpers
-    // ─────────────────────────────────────────────────────────────────────────
+    private static long rehash(long seed) {
+        seed ^= (seed >>> 33);
+        seed *= 0xFF51AFD7ED558CCDL;
+        seed ^= (seed >>> 33);
+        seed *= 0xC4CEB9FE1A85EC53L;
+        seed ^= (seed >>> 33);
+        return seed;
+    }
 
     private static void crossQuad(PoseStack.Pose pose, VertexConsumer v,
                                   Vec3 a, Vec3 b, Vec3 axis, float w,
@@ -435,7 +402,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
         v.addVertex(pose, (float)p.x, (float)p.y, (float)p.z).setColor(r, g, b, a);
     }
 
-    // splitmix64 hash → float in [-1, 1]
     private static float hash(long seed) {
         seed ^= (seed >>> 30);
         seed *= 0xBF58476D1CE4E5B9L;
