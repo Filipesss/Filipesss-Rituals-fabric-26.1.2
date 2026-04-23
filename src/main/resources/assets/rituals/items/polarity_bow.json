@@ -1,0 +1,12 @@
+{
+  "model": {
+    "type": "minecraft:special",
+    "model": {
+      "type": "rituals:polarity_bow"
+    },
+    "base": "rituals:item/polarity_bow",
+    "textures": {
+      "layer0": "rituals:item/polarity_bow"
+    }
+  }
+}

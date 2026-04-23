@@ -123,6 +123,10 @@ public class RitualsClient implements ClientModInitializer {
                 Identifier.fromNamespaceAndPath("rituals", "pulse_blaster"),
                 (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PulseBlasterSpecialRenderer.Unbaked.CODEC
         );
+        SpecialModelRenderers.ID_MAPPER.put(
+                Identifier.fromNamespaceAndPath("rituals", "polarity_bow"),
+                (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PolarityBowSpecialRenderer.Unbaked.CODEC
+        );
         EntityRendererRegistry.register(ModEntities.THROWN_DEPTHSTRIKE, ThrownDepthstrikeRenderer::new);
 
 
