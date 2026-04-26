@@ -106,6 +106,16 @@ public class ModEntities {
                     .build(ResourceKey.create(Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "death_laser")))
     );
+    public static final EntityType<CinderboltBeamEntity> CINDERBOLT_BEAM = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "cinderbolt_beam"),
+            EntityType.Builder.<CinderboltBeamEntity>of(
+                            (type, level) -> new CinderboltBeamEntity((EntityType<? extends CinderboltBeamEntity>) type, level),
+                            MobCategory.MISC
+                    ).sized(0.25f, 0.25f).clientTrackingRange(64).updateInterval(1)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "cinderbolt_beam")))
+    );
     public static final EntityType<ThrownDepthstrikeEntity> THROWN_DEPTHSTRIKE = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "thrown_depthstrike"),
@@ -121,6 +131,28 @@ public class ModEntities {
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "thrown_depthstrike")
                     ))
     );
+    public static final EntityType<PolarityArrowEntity> POLARITY_ARROW =
+            Registry.register(
+                    BuiltInRegistries.ENTITY_TYPE,
+                    Identifier.fromNamespaceAndPath("rituals", "polarity_arrow"),
+                    EntityType.Builder.<PolarityArrowEntity>of(
+                            PolarityArrowEntity::new,
+                            MobCategory.MISC
+                    ).sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(20).build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "polarity_arrow"))
+            ));
+    public static final EntityType<CinderArrowEntity> CINDER_ARROW =
+            Registry.register(
+                    BuiltInRegistries.ENTITY_TYPE,
+                    Identifier.fromNamespaceAndPath("rituals", "cinder_arrow"),
+                    EntityType.Builder.<CinderArrowEntity>of(
+                            CinderArrowEntity::new,
+                            MobCategory.MISC
+                    ).sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(20).build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "cinder_arrow"))
+                    ));
 
 
 

@@ -4,7 +4,7 @@
     "model": {
       "type": "rituals:polarity_bow"
     },
-    "base": "rituals:item/polarity_bow",
+    "base": "rituals:item/polarity_bow_transforms",
     "textures": {
       "layer0": "rituals:item/polarity_bow"
     }

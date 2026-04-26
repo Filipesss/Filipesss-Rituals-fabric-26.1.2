@@ -118,6 +118,9 @@ public class RitualsClient implements ClientModInitializer {
                 ModEntities.POLARITY_TORNADO_RED,
                 PolarityTornadoRedEntityRenderer::new);
 
+        EntityRendererRegistry.register(ModEntities.POLARITY_ARROW, PolarityArrowEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.CINDER_ARROW, CinderArrowEntityRenderer::new);
+
 
         SpecialModelRenderers.ID_MAPPER.put(
                 Identifier.fromNamespaceAndPath("rituals", "pulse_blaster"),
@@ -138,6 +141,7 @@ public class RitualsClient implements ClientModInitializer {
         PulseBlasterHudOverlay.register();
         ShadowguardHudOverlay.register();
         EntityRendererRegistry.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.CINDERBOLT_BEAM, CinderboltBeamEntityRenderer::new);
 
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadowguardInvisiblePacket.TYPE,

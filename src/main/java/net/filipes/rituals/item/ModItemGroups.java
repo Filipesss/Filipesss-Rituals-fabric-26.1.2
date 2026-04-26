@@ -49,6 +49,9 @@ public class ModItemGroups {
                         output.accept(ModItems.ROSEGOLD_LEGGINGS);
                         output.accept(ModItems.ROSEGOLD_CHESTPLATE);
                         output.accept(ModItems.ROSEGOLD_HELMET);
+                        output.accept(ModItems.POLARITY_BOW);
+                        output.accept(ModItems.CINDERBOLT);
+                        output.accept(ModItems.DEPTHSTRIKE);
 
                     })
                     .build());

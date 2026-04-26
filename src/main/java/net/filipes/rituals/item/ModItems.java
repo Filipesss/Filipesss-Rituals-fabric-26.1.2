@@ -189,6 +189,16 @@ public class ModItems {
                                     Component.translatable("tooltip.rituals.polarity_bow")
                                             .withStyle(style -> style.withColor(TextColor.fromRgb(0x00FFFF)).withItalic(false))
                             ))));
+    public static final Item CINDERBOLT = registerItem("cinderbolt",
+            settings -> new CinderboltItem(settings),
+            new Item.Properties()
+                    .stacksTo(1)
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponents.LORE,
+                            new ItemLore(List.of(
+                                    Component.translatable("tooltip.rituals.cinderbolt")
+                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0xFF6400)).withItalic(false))
+                            ))));
     public static final Item DEPTHSTRIKE = registerItem("depthstrike",
             settings -> new DepthstrikeItem(settings),
             new Item.Properties()

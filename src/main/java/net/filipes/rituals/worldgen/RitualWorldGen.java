@@ -17,18 +17,12 @@ import java.util.Random;
 
 public class RitualWorldGen {
 
-    /**
-     * Called once when the server starts. For any pedestal type not yet placed,
-     * picks a random position and places the block, forcing chunk generation.
-     * Only runs when new types are missing from the saved data.
-     */
     public static void placeAllPedestals(MinecraftServer server) {
         ServerLevel overworld = server.getLevel(Level.OVERWORLD);
         if (overworld == null) return;
 
         PedestalSavedData data = PedestalSavedData.getOrCreate(overworld);
 
-        // Seed from world seed so position is consistent if called twice before save
         Random rng = new Random(overworld.getSeed() ^ 0xDEADBEEF_CAFEL);
 
         for (PedestalType type : PedestalTypes.REGISTRY.values()) {
@@ -45,14 +39,13 @@ public class RitualWorldGen {
 
     private static BlockPos findPlacementPos(ServerLevel world, Random rng) {
         int radius = RitualConfig.PEDESTAL_SPAWN_RADIUS;
-        // Pick a random point within the square radius, avoiding spawn (64 block minimum)
+
         int x, z;
         do {
             x = rng.nextInt(radius * 2) - radius;
             z = rng.nextInt(radius * 2) - radius;
         } while (Math.abs(x) < 64 && Math.abs(z) < 64);
 
-        // Force-generate the chunk so we can read the heightmap
         world.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true);
         int y = world.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
         return new BlockPos(x, y, z);
