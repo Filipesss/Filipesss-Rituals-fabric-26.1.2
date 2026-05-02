@@ -23,7 +23,6 @@ public class RosegoldHelmetItem extends Item implements RitualsTooltipStyle {
         if (slot != EquipmentSlot.HEAD) return;
         if (!(entity instanceof LivingEntity living)) return;
 
-        // Strength II = amplifier 1
         living.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 40, 1, true, false, false));
     }
 

@@ -106,6 +106,37 @@ public class ModEntities {
                     .build(ResourceKey.create(Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "death_laser")))
     );
+    public static final EntityType<SpiralStabEntity> SPIRAL_STAB = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "spiral_stab"),
+            EntityType.Builder.<SpiralStabEntity>of(
+                            (type, level) -> new SpiralStabEntity((EntityType<? extends SpiralStabEntity>) type, level),
+                            MobCategory.MISC
+                    ).sized(0.25f, 0.25f).clientTrackingRange(64).updateInterval(1)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "death_laser")))
+    );
+    public static final EntityType<DashStabEntity> DASH_STAB = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "dash_stab"),
+            EntityType.Builder.<DashStabEntity>of(
+                            (type, level) -> new DashStabEntity((EntityType<? extends DashStabEntity>) type, level),
+                            MobCategory.MISC
+                    ).sized(0.1f, 0.1f).clientTrackingRange(10).updateInterval(1)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "dash_stab")))
+    );
+    public static final EntityType<TeleportTrailEntity> LIGHTNING_RAPIER_TELEPORT = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_rapier_teleport"),
+            EntityType.Builder.<TeleportTrailEntity>of(
+                            (type, level) -> new TeleportTrailEntity((EntityType<? extends TeleportTrailEntity>) type, level),
+                            MobCategory.MISC
+                    ).sized(0.1f, 0.1f).clientTrackingRange(10).updateInterval(1)
+                    .build(ResourceKey.create(Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_rapier_teleport")))
+    );
+
     public static final EntityType<CinderboltBeamEntity> CINDERBOLT_BEAM = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "cinderbolt_beam"),
@@ -153,6 +184,21 @@ public class ModEntities {
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "cinder_arrow"))
                     ));
+
+    public static final EntityType<LightningStrikeEntity> LIGHTNING_STRIKE = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_strike"),
+            EntityType.Builder.<LightningStrikeEntity>of(
+                            (type, level) -> new LightningStrikeEntity(type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_strike")))
+    );
 
 
 

@@ -27,5 +27,6 @@
   "key.rituals.action_two":   "Action 2",
   "key.rituals.action_three": "Action 3",
   "item.rituals.upgrade.kill_upgrade": "%s upgraded from stage %s → %s through blood.",
-  "tooltip.rituals.shadowguard.kills": "Kills: %s"
+  "tooltip.rituals.shadowguard.kills": "Kills: %s",
+  "tooltip.rituals.pharathorn.kills": "Kills: %s"
 }

@@ -22,4 +22,7 @@ public class ThrownDepthstrikeRenderState extends EntityRenderState {
     public boolean inGround = false;
     public float age = 0f;
     public long seed = 0L;
+
+    // Set to the entity's age at the moment it hit the ground; -1 means still in flight
+    public float landingAge = -1f;
 }

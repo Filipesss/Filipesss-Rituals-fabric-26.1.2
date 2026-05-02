@@ -23,6 +23,9 @@ public class KillUpgradeRegistry {
         register(ModItems.SHADOWGUARD, 6, new KillUpgradeRecipe(7, 10));
 
 
+        register(ModItems.PHARATHORN, 1, new KillUpgradeRecipe(2, 2));
+        register(ModItems.PHARATHORN, 2, new KillUpgradeRecipe(3, 4));
+        register(ModItems.PHARATHORN, 3, new KillUpgradeRecipe(4, 6));
 
     }
 

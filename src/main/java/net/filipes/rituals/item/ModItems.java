@@ -19,6 +19,7 @@ import net.minecraft.world.item.component.ItemLore;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.enchantment.Enchantable;
 import net.minecraft.world.item.equipment.ArmorType;
 
 import java.util.List;
@@ -38,10 +39,6 @@ public class ModItems {
                     new ItemLore(List.of(Component.translatable("tooltip.rituals.raw_rosegold")
                             .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFFFFF)).withItalic(false))))));
 
-    public static final Item EM_PICK = registerItem("em_pick",
-            settings -> new Item(settings),
-            new Item.Properties().pickaxe(ModToolMaterials.ROSEGOLD, 1.0F, -2.8F).fireResistant());
-
     public static final Item ROSEGOLD_PICKAXE = registerItem("rosegold_pickaxe",
             settings -> new RosegoldPickaxeItem(ModToolMaterials.ROSEGOLD, 1.0F, -2.8F, settings),
             new Item.Properties()
@@ -56,11 +53,8 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.lightning_rapier")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
-                            ))));
+                    .component(DataComponents.ENCHANTABLE, new Enchantable(15))
+                    );
     public static final Item SOLAR_BLADE = registerItem("solar_blade",
             settings -> new SolarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
@@ -150,6 +144,7 @@ public class ModItems {
     public static final Item ROSEGOLD_HELMET = registerItem("rosegold_helmet",
             settings -> new RosegoldHelmetItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.HELMET)
+                    .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
@@ -158,6 +153,7 @@ public class ModItems {
     public static final Item ROSEGOLD_CHESTPLATE = registerItem("rosegold_chestplate",
             settings -> new RosegoldChestplateItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.CHESTPLATE)
+                    .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
@@ -166,6 +162,7 @@ public class ModItems {
     public static final Item ROSEGOLD_LEGGINGS = registerItem("rosegold_leggings",
             settings -> new RosegoldLeggingsItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.LEGGINGS)
+                    .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
@@ -174,6 +171,7 @@ public class ModItems {
     public static final Item ROSEGOLD_BOOTS = registerItem("rosegold_boots",
             settings -> new RosegoldBootsItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.BOOTS)
+                    .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
@@ -212,6 +210,17 @@ public class ModItems {
                                             .withStyle(style -> style
                                                     .withColor(TextColor.fromRgb(0x00FFFF))
                                                     .withItalic(false))
+                            ))));
+
+    public static final Item PHARATHORN = registerItem("pharathorn",
+            settings -> new PharathornItem(ModToolMaterials.ROSEGOLD, 8F, -3.2F, settings),
+            new Item.Properties()
+                    .stacksTo(1)
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponents.LORE,
+                            new ItemLore(List.of(
+                                    Component.translatable("tooltip.rituals.lightning_rapier")
+                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
                             ))));
 
 

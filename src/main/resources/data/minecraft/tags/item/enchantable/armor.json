@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "rituals:rosegold_helmet",
+    "rituals:rosegold_chestplate",
+    "rituals:rosegold_leggings",
+    "rituals:rosegold_boots"
+  ]
+}
