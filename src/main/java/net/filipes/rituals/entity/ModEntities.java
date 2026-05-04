@@ -206,7 +206,7 @@ public class ModEntities {
                             (type, level) -> new LightningTrailEntity(type, level),
                             MobCategory.MISC
                     )
-                    .sized(0.25f, 0.25f)
+                    .sized(1f, 2f)
                     .clientTrackingRange(64)
                     .updateInterval(1)
                     .build(ResourceKey.create(
@@ -226,6 +226,20 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "spark")))
+    );
+    public static final EntityType<BurstSparkEntity> BURST_SPARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "burst_spark"),
+            EntityType.Builder.<BurstSparkEntity>of(
+                            (type, level) -> new BurstSparkEntity(type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "burst_spark")))
     );
 
 

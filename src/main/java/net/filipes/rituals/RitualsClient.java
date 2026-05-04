@@ -162,6 +162,7 @@ public class RitualsClient implements ClientModInitializer {
         );
         EntityRendererRegistry.register(ModEntities.LIGHTNING_TRAIL, LightningTrailEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.SPARK, SparkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.BURST_SPARK, SparkEntityRenderer::new);
 
 
 
