@@ -3,6 +3,7 @@ package net.filipes.rituals.entity.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.filipes.rituals.entity.custom.LightningSparkEntity;
 import net.filipes.rituals.entity.custom.LightningTrailEntity;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -15,36 +16,42 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.LightCoordsUtil;
 
-public class LightningTrailEntityRenderer
-        extends EntityRenderer<LightningTrailEntity, LightningTrailEntityRenderer.TrailRenderState> {
+public class LightningSparkEntityRenderer
+        extends EntityRenderer<LightningSparkEntity, LightningSparkEntityRenderer.TrailRenderState> {
 
     public static class TrailRenderState extends EntityRenderState {
         float relX, relY, relZ;
+        float offX, offY, offZ; // add this
         int   frame;
         float cameraYaw;
+        boolean flipped;
         float scale = 1.0f;
     }
 
 
-    private static final RenderType[] RENDER_TYPES = new RenderType[LightningTrailEntity.FRAME_COUNT];
+    private static final RenderType[] RENDER_TYPES = new RenderType[LightningSparkEntity.FRAME_COUNT];
     static {
-        for (int i = 0; i < LightningTrailEntity.FRAME_COUNT; i++) {
+        for (int i = 0; i < LightningSparkEntity.FRAME_COUNT; i++) {
             Identifier tex = Identifier.fromNamespaceAndPath(
-                    "rituals", "textures/particle/lightning_trail_" + i + ".png");
+                    "rituals", "textures/particle/lightning_spark_" + i + ".png");
             RENDER_TYPES[i] = RenderTypes.entityTranslucentEmissive(tex);
         }
     }
 
-    public LightningTrailEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
+    public LightningSparkEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
 
     @Override public TrailRenderState createRenderState() { return new TrailRenderState(); }
 
     @Override
-    public void extractRenderState(LightningTrailEntity e, TrailRenderState s, float pt) {
+    public void extractRenderState(LightningSparkEntity e, TrailRenderState s, float pt) {
         super.extractRenderState(e, s, pt);
         double eX = e.xo + (e.getX() - e.xo) * pt;
         double eY = e.yo + (e.getY() - e.yo) * pt;
         double eZ = e.zo + (e.getZ() - e.zo) * pt;
+        s.offX = e.getRenderOffsetX();
+        s.offY = e.getRenderOffsetY();
+        s.offZ = e.getRenderOffsetZ();
+        s.flipped = e.isRenderFlipped();
         s.relX = (float)(eX - s.x);
         s.relY = (float)(eY - s.y);
         s.relZ = (float)(eZ - s.z);
@@ -55,7 +62,7 @@ public class LightningTrailEntityRenderer
         s.scale = e.getEntityScale();
     }
 
-    @Override public boolean affectedByCulling(LightningTrailEntity e) { return false; }
+    @Override public boolean affectedByCulling(LightningSparkEntity e) { return false; }
     @Override protected float getShadowRadius  (TrailRenderState s)    { return 0f; }
     @Override protected float getShadowStrength(TrailRenderState s)    { return 0f; }
 
@@ -63,25 +70,42 @@ public class LightningTrailEntityRenderer
     public void submit(TrailRenderState s, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
 
-        final float half = LightningTrailEntity.QUAD_SIZE * 0.5f;
+        final float half = LightningSparkEntity.QUAD_SIZE * 0.5f;
+        boolean flip = s.flipped;
         final RenderType rt = RENDER_TYPES[s.frame];
 
         ps.pushPose();
-        ps.translate(s.relX, s.relY, s.relZ);
+        ps.translate(
+                s.relX + s.offX,
+                s.relY + s.offY,
+                s.relZ + s.offZ
+        );
         ps.mulPose(Axis.YP.rotationDegrees(-s.cameraYaw));
         if (s.scale != 1.0f) ps.scale(s.scale, s.scale, s.scale);
 
         snc.submitCustomGeometry(ps, rt, (pose, v) -> {
 
-            tv(pose, v, -half, -half, 0f, 0f, 1f);
-            tv(pose, v,  half, -half, 0f, 1f, 1f);
-            tv(pose, v,  half,  half, 0f, 1f, 0f);
-            tv(pose, v, -half,  half, 0f, 0f, 0f);
+            if (!flip) {
+                tv(pose, v, -half, -half, 0f, 0f, 1f);
+                tv(pose, v,  half, -half, 0f, 1f, 1f);
+                tv(pose, v,  half,  half, 0f, 1f, 0f);
+                tv(pose, v, -half,  half, 0f, 0f, 0f);
 
-            tv(pose, v, -half,  half, 0f, 0f, 0f);
-            tv(pose, v,  half,  half, 0f, 1f, 0f);
-            tv(pose, v,  half, -half, 0f, 1f, 1f);
-            tv(pose, v, -half, -half, 0f, 0f, 1f);
+                tv(pose, v, -half,  half, 0f, 0f, 0f);
+                tv(pose, v,  half,  half, 0f, 1f, 0f);
+                tv(pose, v,  half, -half, 0f, 1f, 1f);
+                tv(pose, v, -half, -half, 0f, 0f, 1f);
+            } else {
+                tv(pose, v, -half, -half, 0f, 1f, 1f);
+                tv(pose, v,  half, -half, 0f, 0f, 1f);
+                tv(pose, v,  half,  half, 0f, 0f, 0f);
+                tv(pose, v, -half,  half, 0f, 1f, 0f);
+
+                tv(pose, v, -half,  half, 0f, 1f, 0f);
+                tv(pose, v,  half,  half, 0f, 0f, 0f);
+                tv(pose, v,  half, -half, 0f, 0f, 1f);
+                tv(pose, v, -half, -half, 0f, 1f, 1f);
+            }
         });
 
         ps.popPose();

@@ -85,6 +85,7 @@ public class RitualsClient implements ClientModInitializer {
             TooltipStyleHolder.clear();
             TooltipStyleHolder.set(stack);
         });
+        //ENTITY
 
         BlockEntityRenderers.register(
                 ModBlockEntities.RITUAL_PEDESTAL_BE,
@@ -116,6 +117,10 @@ public class RitualsClient implements ClientModInitializer {
                 PolarityTornadoBlueModel.LAYER,
                 PolarityTornadoBlueModel::getTexturedModelData);
         ModelLayerRegistry.registerModelLayer(
+                DepthstrikeGroundModel.LAYER,
+                DepthstrikeGroundModel::createBodyLayer);
+
+        ModelLayerRegistry.registerModelLayer(
                 PolarityTornadoRedModel.LAYER,
                 PolarityTornadoRedModel::getTexturedModelData);
         EntityRendererRegistry.register(
@@ -125,10 +130,26 @@ public class RitualsClient implements ClientModInitializer {
                 ModEntities.POLARITY_TORNADO_RED,
                 PolarityTornadoRedEntityRenderer::new);
 
+
         EntityRendererRegistry.register(ModEntities.POLARITY_ARROW, PolarityArrowEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CINDER_ARROW, CinderArrowEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.CINDERBOLT_BEAM, CinderboltBeamEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SPIRAL_STAB, SpiralStabEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.DASH_STAB, DashStabEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LIGHTNING_RAPIER_TELEPORT, TeleportTrailEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LIGHTNING_STRIKE, LightningStrikeEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LIGHTNING_TRAIL, LightningTrailEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SPARK, SparkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.BURST_SPARK, SparkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LIGHTNING_SPARK, LightningSparkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LIGHTNING_EXPLOSION, LightningExplosionEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.THROWN_DEPTHSTRIKE, ThrownDepthstrikeRenderer::new);
+        EntityRendererRegistry.register(ModEntities.POLARITY_TORNADO_BLUE, PolarityTornadoBlueEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_GROUND, DepthstrikeGroundEntityRenderer::new);
 
 
+        //SPECIAL MODELS
         SpecialModelRenderers.ID_MAPPER.put(
                 Identifier.fromNamespaceAndPath("rituals", "pulse_blaster"),
                 (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PulseBlasterSpecialRenderer.Unbaked.CODEC
@@ -137,33 +158,23 @@ public class RitualsClient implements ClientModInitializer {
                 Identifier.fromNamespaceAndPath("rituals", "polarity_bow"),
                 (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PolarityBowSpecialRenderer.Unbaked.CODEC
         );
-        EntityRendererRegistry.register(ModEntities.THROWN_DEPTHSTRIKE, ThrownDepthstrikeRenderer::new);
-
-
-
 
         MenuScreens.register(ModMenuTypes.AMETHYST_HOURGLASS, AmethystHourglassScreen::new);
         RosegoldPickaxeHudOverlay.register();
+
+        //COOLDOWNS
         CooldownManager.register("pickaxe_test", "Test Ability", 15_000, 0xFF66FF);
         CooldownManager.register("pharathorn_dash", "Pharathorn Dash", 25_000, 0xFFAA00);
         CooldownManager.register("lightning_rapier_teleport", "Lightning Dash", 20_000, 0x50C8FF);
+        CooldownManager.register("depthstrike_ability", "Ground Shock", 30_000, 0x50FF90);
+        CooldownManager.register("depthstrike_ground_ability", "Ground Spikes", 25_000, 0x50FF90);
+        CooldownManager.register("depthstrike_recall", "Recall", 25_000, 0x50FF90);
+
+
 
         CooldownHudOverlay.register();
         PulseBlasterHudOverlay.register();
         ShadowguardHudOverlay.register();
-        EntityRendererRegistry.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.CINDERBOLT_BEAM, CinderboltBeamEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.SPIRAL_STAB, SpiralStabEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.DASH_STAB, DashStabEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.LIGHTNING_RAPIER_TELEPORT, TeleportTrailEntityRenderer::new);
-        EntityRendererRegistry.register(
-                ModEntities.LIGHTNING_STRIKE,
-                LightningStrikeEntityRenderer::new
-        );
-        EntityRendererRegistry.register(ModEntities.LIGHTNING_TRAIL, LightningTrailEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.SPARK, SparkEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.BURST_SPARK, SparkEntityRenderer::new);
-
 
 
 
@@ -171,6 +182,8 @@ public class RitualsClient implements ClientModInitializer {
                 ShadowguardInvisiblePacket.TYPE,
                 (packet, context) -> ShadowguardHudOverlay.trigger()
         );
+
+        //PARTICLES
         ParticleProviderRegistry.getInstance().register(
                 ModParticles.LIGHTNING_BOLT_MINI,
                 spriteSet -> new LightningBoltMiniParticle.Factory(spriteSet)
@@ -202,17 +215,18 @@ public class RitualsClient implements ClientModInitializer {
                     if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         ClientPlayNetworking.send(new TogglePickaxeMiningPacket());
-                    }
-
-                    else if (held.getItem() instanceof net.filipes.rituals.item.custom.PulseBlasterItem) {
+                    } else if (held.getItem() instanceof net.filipes.rituals.item.custom.PulseBlasterItem) {
                         ClientPlayNetworking.send(new FireDeathLaserPacket());
-                    }
-
-                    else if (held.getItem() instanceof PharathornItem
+                    } else if (held.getItem() instanceof PharathornItem
                             && ModDataComponents.getStage(held) >= 2) {
                         if (!CooldownManager.isOnCooldown("pharathorn_dash")) {
                             ClientPlayNetworking.send(new PharathornDashPacket());
                             CooldownManager.trigger("pharathorn_dash");
+                        }
+                    } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
+                        if (!CooldownManager.isOnCooldown("depthstrike_recall")) {
+                            ClientPlayNetworking.send(new DepthstrikeRecallPacket());
+                            CooldownManager.trigger("depthstrike_recall");
                         }
                     }
                 }
@@ -224,6 +238,11 @@ public class RitualsClient implements ClientModInitializer {
                     if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         CooldownManager.trigger("pickaxe_test");
+                    } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
+                        if (!CooldownManager.isOnCooldown("depthstrike_ability")) {
+                            ClientPlayNetworking.send(new DepthstrikeAbilityPacket());
+                            CooldownManager.trigger("depthstrike_ability");
+                        }
                     }
                 }
             }
@@ -235,6 +254,11 @@ public class RitualsClient implements ClientModInitializer {
                         if (!CooldownManager.isOnCooldown("lightning_rapier_teleport")) {
                             ClientPlayNetworking.send(new LightningRapierTeleportPacket());
                             CooldownManager.trigger("lightning_rapier_teleport");
+                        }
+                    } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
+                        if (!CooldownManager.isOnCooldown("depthstrike_ground_ability")) {
+                            ClientPlayNetworking.send(new DepthstrikeGroundAbilityPacket());
+                            CooldownManager.trigger("depthstrike_ground_ability");
                         }
                     }
                 }

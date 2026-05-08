@@ -13,21 +13,21 @@ import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-public class LightningTrailEntity extends Entity implements Scalable {
+public class LightningExplosionEntity extends Entity implements Scalable {
 
-    public static final int   FRAME_COUNT = 8;
+    public static final int   FRAME_COUNT = 9;
     public static final float QUAD_SIZE   = 2.0f;
 
     private static final EntityDataAccessor<Float> DATA_SCALE =
-            SynchedEntityData.defineId(LightningTrailEntity.class, EntityDataSerializers.FLOAT);
+            SynchedEntityData.defineId(LightningExplosionEntity.class, EntityDataSerializers.FLOAT);
 
-    public LightningTrailEntity(EntityType<? extends LightningTrailEntity> type, Level level) {
+    public LightningExplosionEntity(EntityType<? extends LightningExplosionEntity> type, Level level) {
         super(type, level);
         this.noPhysics = true;
     }
 
-    public LightningTrailEntity(EntityType<? extends LightningTrailEntity> type, Level level,
-                                double x, double y, double z) {
+    public LightningExplosionEntity(EntityType<? extends LightningExplosionEntity> type, Level level,
+                                    double x, double y, double z) {
         this(type, level);
         this.setPos(x, y, z);
     }

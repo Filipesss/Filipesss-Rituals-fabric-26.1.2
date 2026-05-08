@@ -82,6 +82,9 @@ public class Rituals implements ModInitializer {
 		ModParticles.register();
 		ModSounds.initialize();
 		PlayerKillListener.register();
+		RosegoldPickaxeUsageEvent.register();
+		KillUpgradeRegistry.registerAll();
+
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			ShadowguardItem.tickInvisibility();
 		});
@@ -101,7 +104,7 @@ public class Rituals implements ModInitializer {
 				ServerPlayNetworking.send(attacker, new ShadowguardInvisiblePacket());
 			}
 		});
-
+		// PAYLOADS
 		PayloadTypeRegistry.serverboundPlay().register(FireDeathLaserPacket.TYPE, FireDeathLaserPacket.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(DoubleJumpPayload.ID, DoubleJumpPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(PharathornDashPacket.TYPE, PharathornDashPacket.CODEC);
@@ -109,12 +112,48 @@ public class Rituals implements ModInitializer {
 				LightningRapierTeleportPacket.TYPE,
 				LightningRapierTeleportPacket.CODEC
 		);
-
 		ServerPlayNetworking.registerGlobalReceiver(
 				LightningRapierTeleportPacket.TYPE,
 				LightningRapierTeleportPacket::handle
 		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				DepthstrikeAbilityPacket.TYPE,
+				DepthstrikeAbilityPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				DepthstrikeAbilityPacket.TYPE,
+				DepthstrikeAbilityPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				DepthstrikeGroundAbilityPacket.TYPE,
+				DepthstrikeGroundAbilityPacket.CODEC);
 
+		ServerPlayNetworking.registerGlobalReceiver(
+				DepthstrikeGroundAbilityPacket.TYPE,
+				DepthstrikeGroundAbilityPacket::handle);
+
+		PayloadTypeRegistry.serverboundPlay().register(
+				DepthstrikeRecallPacket.TYPE,
+				DepthstrikeRecallPacket.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(
+				DepthstrikeRecallPacket.TYPE,
+				DepthstrikeRecallPacket::handle);
+		PayloadTypeRegistry.clientboundPlay().register(
+				PulseBlasterAmmoPayload.ID,
+				PulseBlasterAmmoPayload.CODEC
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				TogglePickaxeMiningPacket.TYPE,
+				TogglePickaxeMiningPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				TogglePickaxeMiningPacket.TYPE,
+				TogglePickaxeMiningPacket::handle
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				ShadowguardInvisiblePacket.TYPE,
+				ShadowguardInvisiblePacket.CODEC
+		);
 		Set<UUID> hasDoubleJumped = ConcurrentHashMap.newKeySet();
 
 
@@ -197,24 +236,6 @@ public class Rituals implements ModInitializer {
 			});
 		});
 		EntityRenderers.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
-		PayloadTypeRegistry.clientboundPlay().register(
-				PulseBlasterAmmoPayload.ID,
-				PulseBlasterAmmoPayload.CODEC
-		);
-		PayloadTypeRegistry.serverboundPlay().register(
-				TogglePickaxeMiningPacket.TYPE,
-				TogglePickaxeMiningPacket.CODEC
-		);
-		ServerPlayNetworking.registerGlobalReceiver(
-				TogglePickaxeMiningPacket.TYPE,
-				TogglePickaxeMiningPacket::handle
-		);
-		PayloadTypeRegistry.clientboundPlay().register(
-				ShadowguardInvisiblePacket.TYPE,
-				ShadowguardInvisiblePacket.CODEC
-		);
-		RosegoldPickaxeUsageEvent.register();
-		KillUpgradeRegistry.registerAll();
 
 		LOGGER.info("Hello Fabric world!");
 	}

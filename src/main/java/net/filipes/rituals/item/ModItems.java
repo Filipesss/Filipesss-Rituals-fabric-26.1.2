@@ -202,6 +202,7 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.ATTRIBUTE_MODIFIERS, TridentItem.createAttributes())
                     .component(DataComponents.TOOL, TridentItem.createToolProperties())
                     .component(DataComponents.LORE,

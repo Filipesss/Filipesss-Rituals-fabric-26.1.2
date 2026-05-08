@@ -1,6 +1,9 @@
 package net.filipes.rituals.entity.custom;
 
 import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.entity.Scalable;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -17,10 +20,11 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SparkEntity extends ThrowableProjectile {
 
-    // ── Trail ──────────────────────────────────────────────────────────────
     public int    maxLifetime;
     public int    trailLength;
     public int    windowSize;
@@ -35,7 +39,6 @@ public class SparkEntity extends ThrowableProjectile {
     public float  trailRotation;
     public int    landingCount = 0;
 
-    // ── Burst ──────────────────────────────────────────────────────────────
     public int    burstCount;
     public float  burstWidth;
     public double burstSpeedMin;
@@ -44,26 +47,23 @@ public class SparkEntity extends ThrowableProjectile {
     public int    burstTrailLength;
     public int    burstWindowSize;
     public float  burstJitter;
+    private boolean hasHit = false;
 
-    // ── On-hit spawn ───────────────────────────────────────────────────────
-    public EntityType<?> onHitSpawnType;
-    public int           onHitSpawnCount;
-    public double        onHitSpawnYOffset;
-    public float onHitSpawnScale;
+    public List<SpawnEntry> onHitSpawns = new ArrayList<>();
 
-    // ── Internal ───────────────────────────────────────────────────────────
+    private record PendingSpawn(EntityType<?> type, Vec3 pos, double yOffset, float scale, int spawnAtTick) {}
+    private final List<PendingSpawn> pendingSpawns = new ArrayList<>();
+
     public final ArrayDeque<Vec3> trailPositions = new ArrayDeque<>();
     public int trailWindowOffset = 0;
 
-    /**
-     * If non-null, used as the launch velocity on the first server tick
-     * instead of a random launch. Set this before adding the entity to the world.
-     */
     public Vec3 forcedVelocity = null;
-
     protected boolean launched = false;
 
-    // ──────────────────────────────────────────────────────────────────────
+    private static final EntityDataAccessor<String>  PRESET_NAME =
+            SynchedEntityData.defineId(SparkEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Integer> TRAIL_COLOR =
+            SynchedEntityData.defineId(SparkEntity.class, EntityDataSerializers.INT);
 
     public SparkEntity(EntityType<? extends SparkEntity> type, Level level) {
         super(type, level);
@@ -76,38 +76,63 @@ public class SparkEntity extends ThrowableProjectile {
         setPos(x, y, z);
     }
 
-    /** Bulk-applies all values from a preset. Safe to call at any time before spawning. */
-    public void applyPreset(SparkPreset p) {
-        maxLifetime       = p.maxLifetime;
-        trailLength       = p.trailLength;
-        windowSize        = p.windowSize;
-        trailR            = p.trailR;
-        trailG            = p.trailG;
-        trailB            = p.trailB;
-        trailWidth        = p.trailWidth;
-        trailAlpha        = p.trailAlpha;
-        trailJitter       = p.trailJitter;
-        gravity           = p.gravity;
-        trailSpacing      = p.trailSpacing;
-        trailAmount       = p.trailAmount;
-        trailGapChance    = p.trailGapChance;
-        trailRotation     = p.trailRotation;
-        burstCount        = p.burstCount;
-        burstWidth        = p.burstWidth;
-        burstSpeedMin     = p.burstSpeedMin;
-        burstSpeedMax     = p.burstSpeedMax;
-        burstLifetime     = p.burstLifetime;
-        burstTrailLength  = p.burstTrailLength;
-        burstWindowSize   = p.burstWindowSize;
-        burstJitter       = p.burstJitter;
-        onHitSpawnType    = p.onHitSpawnType;
-        onHitSpawnCount   = p.onHitSpawnCount;
-        onHitSpawnYOffset = p.onHitSpawnYOffset;
-        onHitSpawnScale = p.onHitSpawnScale;
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder entityData) {
+        entityData.define(PRESET_NAME, "default");
+        entityData.define(TRAIL_COLOR, (255 << 16) | (160 << 8) | 30);
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder entityData) {}
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (key.equals(PRESET_NAME)) {
+            applyPresetSilently(SparkPresets.get(entityData.get(PRESET_NAME)));
+        }
+        if (key.equals(TRAIL_COLOR)) {
+            int packed = entityData.get(TRAIL_COLOR);
+            trailR = (packed >> 16) & 0xFF;
+            trailG = (packed >> 8)  & 0xFF;
+            trailB =  packed        & 0xFF;
+        }
+    }
+
+    public void applyPreset(SparkPreset p) {
+        SparkPresets.nameOf(p).ifPresent(name -> entityData.set(PRESET_NAME, name));
+        applyPresetSilently(p);
+    }
+
+    private void applyPresetSilently(SparkPreset p) {
+        maxLifetime      = p.maxLifetime;
+        trailLength      = p.trailLength;
+        windowSize       = p.windowSize;
+        trailR           = p.trailR;
+        trailG           = p.trailG;
+        trailB           = p.trailB;
+        trailWidth       = p.trailWidth;
+        trailAlpha       = p.trailAlpha;
+        trailJitter      = p.trailJitter;
+        gravity          = p.gravity;
+        trailSpacing     = p.trailSpacing;
+        trailAmount      = p.trailAmount;
+        trailGapChance   = p.trailGapChance;
+        trailRotation    = p.trailRotation;
+        burstCount       = p.burstCount;
+        burstWidth       = p.burstWidth;
+        burstSpeedMin    = p.burstSpeedMin;
+        burstSpeedMax    = p.burstSpeedMax;
+        burstLifetime    = p.burstLifetime;
+        burstTrailLength = p.burstTrailLength;
+        burstWindowSize  = p.burstWindowSize;
+        burstJitter      = p.burstJitter;
+        onHitSpawns      = new ArrayList<>(p.onHitSpawns);
+    }
+
+    public void setTrailColor(int r, int g, int b) {
+        trailR = r;
+        trailG = g;
+        trailB = b;
+        entityData.set(TRAIL_COLOR, (r << 16) | (g << 8) | b);
+    }
 
     @Override
     public void tick() {
@@ -131,19 +156,42 @@ public class SparkEntity extends ThrowableProjectile {
 
         super.tick();
 
-        if (!level().isClientSide() && tickCount >= maxLifetime) discard();
+        if (!level().isClientSide()) {
+            pendingSpawns.removeIf(p -> {
+                if (tickCount < p.spawnAtTick()) return false;
+                Entity e = p.type().create((ServerLevel) level(), EntitySpawnReason.TRIGGERED);
+                if (e != null) {
+                    e.setPos(p.pos().x, p.pos().y + p.yOffset(), p.pos().z);
+                    if (p.scale() != 1.0f) {
+                        if (e instanceof LivingEntity living) {
+                            var attr = living.getAttribute(Attributes.SCALE);
+                            if (attr != null) attr.setBaseValue(p.scale());
+                        } else if (e instanceof Scalable scalable) {
+                            scalable.setEntityScale(p.scale());
+                        }
+                    }
+                    level().addFreshEntity(e);
+                }
+                return true;
+            });
+        }
+
+        if (!level().isClientSide()) {
+            boolean allDone  = hasHit && pendingSpawns.isEmpty();
+            boolean timedOut = !hasHit && tickCount >= maxLifetime;
+            if (allDone || timedOut) discard();
+        }
     }
 
     @Override
     protected void onHit(HitResult hit) {
-        super.onHit(hit);
-        if (!level().isClientSide()) {
+        if (!level().isClientSide() && !hasHit) {
+            hasHit = true;
+            setDeltaMovement(Vec3.ZERO);
             if (hit.getType() == HitResult.Type.BLOCK) {
                 spawnBurst(hit.getLocation());
                 spawnOnHitEntities(hit.getLocation());
-
             }
-            discard();
         }
     }
 
@@ -154,15 +202,13 @@ public class SparkEntity extends ThrowableProjectile {
             double speed = burstSpeedMin + random.nextDouble() * (burstSpeedMax - burstSpeedMin);
             double cosE  = Math.cos(elev);
             Vec3 vel = new Vec3(cosE * Math.cos(angle) * speed,
-                    Math.sin(elev)          * speed,
-                    cosE * Math.sin(angle)  * speed);
+                    Math.sin(elev)         * speed,
+                    cosE * Math.sin(angle) * speed);
 
             BurstSparkEntity burst = new BurstSparkEntity(ModEntities.BURST_SPARK, level());
             burst.setPos(pos.x, pos.y, pos.z);
             burst.forcedVelocity = vel;
-            burst.trailR         = trailR;
-            burst.trailG         = trailG;
-            burst.trailB         = trailB;
+            burst.setTrailColor(trailR, trailG, trailB);
             burst.trailAlpha     = trailAlpha;
             burst.trailWidth     = burstWidth;
             burst.maxLifetime    = burstLifetime;
@@ -174,24 +220,26 @@ public class SparkEntity extends ThrowableProjectile {
     }
 
     private void spawnOnHitEntities(Vec3 pos) {
-        if (onHitSpawnType == null) return;
-        for (int i = 0; i < onHitSpawnCount; i++) {
-            Entity e = onHitSpawnType.create((ServerLevel) level(), EntitySpawnReason.TRIGGERED);
-            if (e == null) continue;
-            e.setPos(pos.x, pos.y + onHitSpawnYOffset, pos.z);
-            if (onHitSpawnScale != 1.0f && e instanceof LivingEntity living) {
-                var attr = living.getAttribute(Attributes.SCALE);
-                if (attr != null) attr.setBaseValue(onHitSpawnScale);
+        for (SpawnEntry entry : onHitSpawns) {
+            for (int i = 0; i < entry.count(); i++) {
+                pendingSpawns.add(new PendingSpawn(
+                        entry.type(), pos,
+                        entry.yOffset(), entry.scale(),
+                        tickCount + entry.delayTicks()
+                ));
             }
-            level().addFreshEntity(e);
         }
     }
 
-    @Override protected double  getDefaultGravity()                                  { return gravity; }
-    @Override public    boolean shouldBeSaved()                                      { return false; }
-    @Override protected void    readAdditionalSaveData(ValueInput in)                {}
-    @Override protected void    addAdditionalSaveData(ValueOutput out)               {}
-    @Override public    boolean hurtServer(ServerLevel l, DamageSource s, float a)  { return false; }
-    @Override public    boolean canCollideWith(Entity e)                             { return false; }
-    @Override public    boolean shouldRenderAtSqrDistance(double d)                 { return d < 128 * 128; }
+    // -------------------------------------------------------------------------
+    // Misc overrides
+    // -------------------------------------------------------------------------
+
+    @Override protected double  getDefaultGravity()                                 { return gravity; }
+    @Override public    boolean shouldBeSaved()                                     { return false; }
+    @Override protected void    readAdditionalSaveData(ValueInput in)               {}
+    @Override protected void    addAdditionalSaveData(ValueOutput out)              {}
+    @Override public    boolean hurtServer(ServerLevel l, DamageSource s, float a) { return false; }
+    @Override public    boolean canCollideWith(Entity e)                            { return false; }
+    @Override public    boolean shouldRenderAtSqrDistance(double d)                { return d < 128 * 128; }
 }

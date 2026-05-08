@@ -1,20 +1,56 @@
 package net.filipes.rituals.entity.client;
 
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DestFactor;
+import com.mojang.blaze3d.platform.SourceFactor;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.filipes.rituals.entity.custom.SparkEntity;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T, SparkEntityRenderer.SparkRenderState> {
+    private static final RenderPipeline SPARK_PIPELINE = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.MATRICES_FOG_SNIPPET)
+                    .withLocation(Identifier.fromNamespaceAndPath("rituals", "spark_trail"))
+                    .withVertexShader("core/rendertype_lightning")
+                    .withFragmentShader("core/rendertype_lightning")
+                    .withColorTargetState(new ColorTargetState(
+                            new BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE, SourceFactor.ONE, DestFactor.ZERO)
+                    ))
+                    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+                    .withDepthStencilState(DepthStencilState.DEFAULT)
+                    .withCull(false)
+                    .build()
+    );
+
+    private static final RenderType SPARK_TRAIL = RenderType.create(
+            "spark_trail",
+            RenderSetup.builder(SPARK_PIPELINE)
+                    .sortOnUpload()
+                    .setOutputTarget(OutputTarget.WEATHER_TARGET)
+                    .createRenderSetup()
+    );
+
+
 
     public static class SparkRenderState extends EntityRenderState {
         final List<Vec3> trail = new ArrayList<>();
@@ -32,6 +68,7 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
     }
 
     public SparkEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
+
 
     @Override public SparkRenderState createRenderState() { return new SparkRenderState(); }
 
@@ -179,7 +216,7 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
                 final int   fr = r, fg = g, fb = b, fal = al;
                 final float fw = w;
 
-                snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) -> {
+                snc.submitCustomGeometry(ps, SPARK_TRAIL, (pose, v) -> {
                     vQuad(pose, v, pA, pB, pWA0, pWA1, fw, fr, fg, fb, fal);
                     vQuad(pose, v, pA, pB, pWB0, pWB1, fw, fr, fg, fb, fal);
                 });

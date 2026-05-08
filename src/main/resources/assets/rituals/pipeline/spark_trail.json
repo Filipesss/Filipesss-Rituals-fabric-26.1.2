@@ -1,0 +1,20 @@
+{
+  "passes": [
+    {
+      "vertex_shader": "minecraft:core/position_color",
+      "fragment_shader": "minecraft:core/position_color",
+      "vertex_format": "position_color",
+      "primitive": "quads",
+      "blend": {
+        "srcRgb": "src_alpha",
+        "dstRgb": "one_minus_src_alpha",
+        "srcAlpha": "one",
+        "dstAlpha": "zero"
+      },
+      "cull": false,
+      "depth_test": "lequal",
+      "depth_write": false,
+      "color_logic": "default"
+    }
+  ]
+}

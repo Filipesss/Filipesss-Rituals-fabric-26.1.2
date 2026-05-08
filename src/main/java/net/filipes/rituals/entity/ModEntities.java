@@ -213,6 +213,34 @@ public class ModEntities {
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_trail")))
     );
+    public static final EntityType<LightningSparkEntity> LIGHTNING_SPARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_spark"),
+            EntityType.Builder.<LightningSparkEntity>of(
+                            (type, level) -> new LightningSparkEntity(type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(1f, 2f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_spark")))
+    );
+    public static final EntityType<LightningExplosionEntity> LIGHTNING_EXPLOSION = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_explosion"),
+            EntityType.Builder.<LightningExplosionEntity>of(
+                            (type, level) -> new LightningExplosionEntity(type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(1f, 2f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_explosion")))
+    );
     public static final EntityType<SparkEntity> SPARK = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "spark"),
@@ -240,6 +268,22 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "burst_spark")))
+    );
+    public static final EntityType<DepthstrikeGroundEntity> DEPTHSTRIKE_GROUND = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_ground"),
+            EntityType.Builder.<DepthstrikeGroundEntity>of(
+                            (type, level) -> new DepthstrikeGroundEntity(
+                                    (EntityType<? extends DepthstrikeGroundEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_ground")
+                    ))
     );
 
 

@@ -3,7 +3,7 @@ package net.filipes.rituals.entity.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import net.filipes.rituals.entity.custom.LightningTrailEntity;
+import net.filipes.rituals.entity.custom.LightningExplosionEntity;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -15,8 +15,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.LightCoordsUtil;
 
-public class LightningTrailEntityRenderer
-        extends EntityRenderer<LightningTrailEntity, LightningTrailEntityRenderer.TrailRenderState> {
+public class LightningExplosionEntityRenderer
+        extends EntityRenderer<LightningExplosionEntity, LightningExplosionEntityRenderer.TrailRenderState> {
 
     public static class TrailRenderState extends EntityRenderState {
         float relX, relY, relZ;
@@ -26,21 +26,21 @@ public class LightningTrailEntityRenderer
     }
 
 
-    private static final RenderType[] RENDER_TYPES = new RenderType[LightningTrailEntity.FRAME_COUNT];
+    private static final RenderType[] RENDER_TYPES = new RenderType[LightningExplosionEntity.FRAME_COUNT];
     static {
-        for (int i = 0; i < LightningTrailEntity.FRAME_COUNT; i++) {
+        for (int i = 0; i < LightningExplosionEntity.FRAME_COUNT; i++) {
             Identifier tex = Identifier.fromNamespaceAndPath(
-                    "rituals", "textures/particle/lightning_trail_" + i + ".png");
+                    "rituals", "textures/particle/lightning_explosion_" + i + ".png");
             RENDER_TYPES[i] = RenderTypes.entityTranslucentEmissive(tex);
         }
     }
 
-    public LightningTrailEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
+    public LightningExplosionEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
 
     @Override public TrailRenderState createRenderState() { return new TrailRenderState(); }
 
     @Override
-    public void extractRenderState(LightningTrailEntity e, TrailRenderState s, float pt) {
+    public void extractRenderState(LightningExplosionEntity e, TrailRenderState s, float pt) {
         super.extractRenderState(e, s, pt);
         double eX = e.xo + (e.getX() - e.xo) * pt;
         double eY = e.yo + (e.getY() - e.yo) * pt;
@@ -55,7 +55,7 @@ public class LightningTrailEntityRenderer
         s.scale = e.getEntityScale();
     }
 
-    @Override public boolean affectedByCulling(LightningTrailEntity e) { return false; }
+    @Override public boolean affectedByCulling(LightningExplosionEntity e) { return false; }
     @Override protected float getShadowRadius  (TrailRenderState s)    { return 0f; }
     @Override protected float getShadowStrength(TrailRenderState s)    { return 0f; }
 
@@ -63,7 +63,7 @@ public class LightningTrailEntityRenderer
     public void submit(TrailRenderState s, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
 
-        final float half = LightningTrailEntity.QUAD_SIZE * 0.5f;
+        final float half = LightningExplosionEntity.QUAD_SIZE * 0.5f;
         final RenderType rt = RENDER_TYPES[s.frame];
 
         ps.pushPose();
