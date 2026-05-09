@@ -27,6 +27,12 @@ public class ModStatusEffects {
             new MoonshineEffect()
     );
 
+    public static final Holder<MobEffect> CONDUCTIVITY = Registry.registerForHolder(
+            BuiltInRegistries.MOB_EFFECT,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "conductivity"),
+            new ConductivityEffect()
+    );
+
     public static void registerModStatusEffects() {
         Rituals.LOGGER.info("Registering Mod Mob Effects for " + Rituals.MOD_ID);
     }

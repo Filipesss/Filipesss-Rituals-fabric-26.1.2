@@ -123,6 +123,10 @@ public class RitualsClient implements ClientModInitializer {
         ModelLayerRegistry.registerModelLayer(
                 PolarityTornadoRedModel.LAYER,
                 PolarityTornadoRedModel::getTexturedModelData);
+        ModelLayerRegistry.registerModelLayer(
+                DepthstrikeChargedBallModel.LAYER,
+                DepthstrikeChargedBallModel::createBodyLayer
+        );
         EntityRendererRegistry.register(
                 ModEntities.POLARITY_TORNADO_BLUE,
                 PolarityTornadoBlueEntityRenderer::new);
@@ -147,6 +151,7 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.THROWN_DEPTHSTRIKE, ThrownDepthstrikeRenderer::new);
         EntityRendererRegistry.register(ModEntities.POLARITY_TORNADO_BLUE, PolarityTornadoBlueEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_GROUND, DepthstrikeGroundEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_CHARGED_BALL, DepthstrikeChargedBallEntityRenderer::new);
 
 
         //SPECIAL MODELS
@@ -166,9 +171,11 @@ public class RitualsClient implements ClientModInitializer {
         CooldownManager.register("pickaxe_test", "Test Ability", 15_000, 0xFF66FF);
         CooldownManager.register("pharathorn_dash", "Pharathorn Dash", 25_000, 0xFFAA00);
         CooldownManager.register("lightning_rapier_teleport", "Lightning Dash", 20_000, 0x50C8FF);
+        CooldownManager.register("lightning_rapier_charge",     "Instant Charge",     15_000, 0xFFFF44);
         CooldownManager.register("depthstrike_ability", "Ground Shock", 30_000, 0x50FF90);
         CooldownManager.register("depthstrike_ground_ability", "Ground Spikes", 25_000, 0x50FF90);
         CooldownManager.register("depthstrike_recall", "Recall", 25_000, 0x50FF90);
+        CooldownManager.register("depthstrike_charged_ball", "Charged Ball", 20_000, 0x50CFFF);
 
 
 
@@ -212,7 +219,17 @@ public class RitualsClient implements ClientModInitializer {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player != null) {
                     var held = mc.player.getMainHandItem();
-                    if (held.getItem() instanceof RosegoldPickaxeItem
+                    if (held.getItem() == ModItems.DEPTHSTRIKE && mc.player.isShiftKeyDown()) {
+                        if (!CooldownManager.isOnCooldown("depthstrike_charged_ball")) {
+                            ClientPlayNetworking.send(new DepthstrikeChargedBallPacket());
+                            CooldownManager.trigger("depthstrike_charged_ball");
+                        }
+                    } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
+                        if (!CooldownManager.isOnCooldown("depthstrike_recall")) {
+                            ClientPlayNetworking.send(new DepthstrikeRecallPacket());
+                            CooldownManager.trigger("depthstrike_recall");
+                        }
+                    } else if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         ClientPlayNetworking.send(new TogglePickaxeMiningPacket());
                     } else if (held.getItem() instanceof net.filipes.rituals.item.custom.PulseBlasterItem) {
@@ -223,10 +240,11 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new PharathornDashPacket());
                             CooldownManager.trigger("pharathorn_dash");
                         }
-                    } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
-                        if (!CooldownManager.isOnCooldown("depthstrike_recall")) {
-                            ClientPlayNetworking.send(new DepthstrikeRecallPacket());
-                            CooldownManager.trigger("depthstrike_recall");
+                    }  else if (held.getItem() instanceof LightningRapierItem
+                            && ModDataComponents.getStage(held) >= 4) {
+                        if (!CooldownManager.isOnCooldown("lightning_rapier_charge")) {
+                            ClientPlayNetworking.send(new LightningRapierInstantChargePacket());
+                            CooldownManager.trigger("lightning_rapier_charge");
                         }
                     }
                 }
@@ -243,6 +261,12 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new DepthstrikeAbilityPacket());
                             CooldownManager.trigger("depthstrike_ability");
                         }
+                    }  else if (held.getItem() instanceof LightningRapierItem
+                            && ModDataComponents.getStage(held) >= 5) {
+                        if (!CooldownManager.isOnCooldown("lightning_rapier_teleport")) {
+                            ClientPlayNetworking.send(new LightningRapierTeleportPacket());
+                            CooldownManager.trigger("lightning_rapier_teleport");
+                        }
                     }
                 }
             }
@@ -251,10 +275,7 @@ public class RitualsClient implements ClientModInitializer {
                 if (mc.player != null) {
                     var held = mc.player.getMainHandItem();
                     if (held.getItem() instanceof LightningRapierItem) {
-                        if (!CooldownManager.isOnCooldown("lightning_rapier_teleport")) {
-                            ClientPlayNetworking.send(new LightningRapierTeleportPacket());
-                            CooldownManager.trigger("lightning_rapier_teleport");
-                        }
+
                     } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
                         if (!CooldownManager.isOnCooldown("depthstrike_ground_ability")) {
                             ClientPlayNetworking.send(new DepthstrikeGroundAbilityPacket());

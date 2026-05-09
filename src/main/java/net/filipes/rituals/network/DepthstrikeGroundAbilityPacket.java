@@ -32,9 +32,9 @@ public class DepthstrikeGroundAbilityPacket implements CustomPacketPayload {
     public  static final long   COOLDOWN_MS   = 25_000L;
 
     private static final int    SPIKE_COUNT   = 6;
-    private static final double FIRST_DIST    = 2.0;  // blocks ahead of player
-    private static final double SPIKE_SPACING = 2.0;  // blocks between spikes
-    private static final int    TICK_STAGGER  = 5;    // ticks between each spike emerging
+    private static final double FIRST_DIST    = 2.0;
+    private static final double SPIKE_SPACING = 2.0;
+    private static final int    TICK_STAGGER  = 5;
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -65,27 +65,20 @@ public class DepthstrikeGroundAbilityPacket implements CustomPacketPayload {
                 int delay = i * TICK_STAGGER;
                 DepthstrikeGroundEntity spike = new DepthstrikeGroundEntity(
                         level, new Vec3(spawnX, spawnY, spawnZ), delay);
-                spike.setYRot(player.getYRot() + 90f); // face perpendicular to line
+                spike.setYRot(player.getYRot() + 90f);
                 level.addFreshEntity(spike);
 
 
-                // Small pre-emerge spark at each position (fires immediately regardless of delay)
                 SparkEntity preSpawn = new SparkEntity(ModEntities.SPARK, level,
                         spawnX, spawnY + 0.1, spawnZ);
 
                 preSpawn.applyPreset(SparkPresets.DEPTHSTRIKE_TRAIL);
                 preSpawn.forcedVelocity = new Vec3(0, 0.2, 0);
-                // Schedule via delay: only spawn the pre-spark close in time to the spike
-                // Simple approach: spawn it only for early spikes so it precedes the emerge
                 if (delay == 0) level.addFreshEntity(preSpawn);
             }
         });
     }
 
-    /**
-     * Finds the Y level of the ground at (x, z) near startY.
-     * Scans downward first, then upward, up to 5 blocks each way.
-     */
     private static double findGroundY(ServerLevel level, double x, double z, double startY) {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(
                 (int) Math.floor(x),
@@ -100,7 +93,6 @@ public class DepthstrikeGroundAbilityPacket implements CustomPacketPayload {
             pos.move(Direction.DOWN);
         }
 
-        // Scan up from start if player is inside a block or above a gap
         pos.set((int) Math.floor(x), (int) Math.floor(startY), (int) Math.floor(z));
         for (int i = 0; i < 5; i++) {
             if (level.getBlockState(pos).isAir() && !level.getBlockState(pos.below()).isAir()) {

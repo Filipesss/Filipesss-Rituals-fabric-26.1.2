@@ -19,6 +19,8 @@ import net.filipes.rituals.entity.client.DeathLaserEntityRenderer;
 import net.filipes.rituals.event.PlayerKillListener;
 import net.filipes.rituals.item.ModItemGroups;
 import net.filipes.rituals.item.ModItems;
+import net.filipes.rituals.item.custom.LightningRapierItem;
+import net.filipes.rituals.item.custom.LightningRapierStreakTracker;
 import net.filipes.rituals.item.custom.PulseBlasterItem;
 import net.filipes.rituals.item.custom.ShadowguardItem;
 import net.filipes.rituals.network.*;
@@ -88,6 +90,7 @@ public class Rituals implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			ShadowguardItem.tickInvisibility();
 		});
+
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, killed) -> {
 			if (!(source.getEntity() instanceof ServerPlayer attacker)) return;
 
@@ -120,6 +123,15 @@ public class Rituals implements ModInitializer {
 				DepthstrikeAbilityPacket.TYPE,
 				DepthstrikeAbilityPacket.CODEC
 		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				DepthstrikeChargedBallPacket.TYPE,
+				DepthstrikeChargedBallPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				DepthstrikeChargedBallPacket.TYPE,
+				DepthstrikeChargedBallPacket::handle
+		);
+
 		ServerPlayNetworking.registerGlobalReceiver(
 				DepthstrikeAbilityPacket.TYPE,
 				DepthstrikeAbilityPacket::handle
@@ -146,6 +158,10 @@ public class Rituals implements ModInitializer {
 				TogglePickaxeMiningPacket.TYPE,
 				TogglePickaxeMiningPacket.CODEC
 		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				LightningRapierInstantChargePacket.TYPE,
+				LightningRapierInstantChargePacket.CODEC
+		);
 		ServerPlayNetworking.registerGlobalReceiver(
 				TogglePickaxeMiningPacket.TYPE,
 				TogglePickaxeMiningPacket::handle
@@ -155,6 +171,27 @@ public class Rituals implements ModInitializer {
 				ShadowguardInvisiblePacket.CODEC
 		);
 		Set<UUID> hasDoubleJumped = ConcurrentHashMap.newKeySet();
+		ServerPlayNetworking.registerGlobalReceiver(
+				LightningRapierInstantChargePacket.TYPE,
+				(packet, context) -> {
+					context.server().execute(() -> {
+						ServerPlayer player = context.player();
+						ItemStack held = player.getMainHandItem();
+
+						if (held.getItem() instanceof LightningRapierItem
+								&& ModDataComponents.getStage(held) >= 4) {
+
+							LightningRapierItem.setCharge(held, 6);
+
+							// Visual/audio feedback
+							player.level().playSound(null,
+									player.getX(), player.getY(), player.getZ(),
+									ModSounds.LIGHTNING_RAPIER_ATTACK2,
+									SoundSource.PLAYERS, 1.0f, 0.4f);
+						}
+					});
+				}
+		);
 
 
 		ServerPlayNetworking.registerGlobalReceiver(DoubleJumpPayload.ID, (payload, ctx) -> {
@@ -188,6 +225,7 @@ public class Rituals implements ModInitializer {
 		ServerTickEvents.END_SERVER_TICK.register(server ->
 				server.getPlayerList().getPlayers().forEach(p -> {
 					if (p.onGround()) hasDoubleJumped.remove(p.getUUID());
+					LightningRapierStreakTracker.tick(server);
 				})
 		);
 

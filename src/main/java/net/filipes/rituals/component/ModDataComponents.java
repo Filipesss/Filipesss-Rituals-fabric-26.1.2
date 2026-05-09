@@ -15,6 +15,8 @@ public class ModDataComponents {
 
     public static DataComponentType<Integer> UPGRADE_STAGE;
     public static DataComponentType<Integer> KILL_COUNT;
+    public static DataComponentType<Integer> LIGHTNING_RAPIER_CHARGE;
+
     public static final DataComponentType<Boolean> MINING_ENABLED = Registry.register(
             BuiltInRegistries.DATA_COMPONENT_TYPE,
             Identifier.fromNamespaceAndPath("rituals", "mining_enabled"),
@@ -39,6 +41,14 @@ public class ModDataComponents {
                 Identifier.fromNamespaceAndPath("rituals", "kill_count"),
                 DataComponentType.<Integer>builder()
                         .persistent(Codec.intRange(0, Integer.MAX_VALUE))
+                        .networkSynchronized(ByteBufCodecs.VAR_INT)
+                        .build()
+        );
+        LIGHTNING_RAPIER_CHARGE = Registry.register(
+                BuiltInRegistries.DATA_COMPONENT_TYPE,
+                Identifier.fromNamespaceAndPath("rituals", "lightning_rapier_charge"),
+                DataComponentType.<Integer>builder()
+                        .persistent(Codec.intRange(0, 6))
                         .networkSynchronized(ByteBufCodecs.VAR_INT)
                         .build()
         );

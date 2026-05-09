@@ -285,6 +285,22 @@ public class ModEntities {
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_ground")
                     ))
     );
+    public static final EntityType<DepthstrikeChargedBallEntity> DEPTHSTRIKE_CHARGED_BALL = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_charged_ball"),
+            EntityType.Builder.<DepthstrikeChargedBallEntity>of(
+                            (type, level) -> new DepthstrikeChargedBallEntity(
+                                    (EntityType<? extends DepthstrikeChargedBallEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_charged_ball")
+                    ))
+    );
 
 
 

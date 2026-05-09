@@ -1,5 +1,6 @@
 package net.filipes.rituals.entity.custom;
 
+import net.filipes.rituals.effect.ConductivityHelper;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.item.ModItems;
 import net.minecraft.server.level.ServerLevel;
@@ -34,6 +35,8 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
     private static final double RECALL_SPEED = 4.5;
     private boolean fastReturn = false;
     private boolean unstuckFromGround = false;
+    private final Set<UUID> hitEntitiesThisFlight = new HashSet<>();
+    private int flightHitClearTick = -1;
 
     public static final Set<UUID> CHARGED_PLAYERS = new HashSet<>();
 
@@ -170,7 +173,20 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
                 ? level().damageSources().trident(this, owner)
                 : level().damageSources().trident(this, this);
 
-        hit.hurt(source, 8.0f);
+        // Base damage + conductivity bonus
+        float baseDamage = 9.0f;
+        float conductivityBonus = (hit instanceof LivingEntity livingHit)
+                ? ConductivityHelper.getDamageBonus(livingHit)
+                : 0f;
+
+        hit.hurt(source, baseDamage + conductivityBonus);
+
+        if (hit instanceof LivingEntity livingHit
+                && !hitEntitiesThisFlight.contains(livingHit.getUUID())) {
+            hitEntitiesThisFlight.add(livingHit.getUUID());
+            flightHitClearTick = tickCount + 5;
+            ConductivityHelper.applyOrStack(livingHit);
+        }
 
         Vec3 vel = getDeltaMovement();
         hit.setDeltaMovement(hit.getDeltaMovement().add(vel.normalize().scale(0.4)));

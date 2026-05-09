@@ -1,5 +1,6 @@
 package net.filipes.rituals.item.custom;
 
+import net.filipes.rituals.effect.ConductivityHelper;
 import net.filipes.rituals.entity.custom.ThrownDepthstrikeEntity;
 import net.filipes.rituals.util.RitualsTooltipStyle;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +18,33 @@ public class DepthstrikeItem extends TridentItem implements RitualsTooltipStyle 
     public DepthstrikeItem(Properties settings) {
         super(settings);
     }
+
+    // -------------------------------------------------------------------------
+    // Melee hit — apply/stack Conductivity, then add bonus magic damage
+    // -------------------------------------------------------------------------
+
+    @Override
+    public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+        super.hurtEnemy(stack, target, attacker);
+
+        if (attacker.level().isClientSide()) return;
+
+        // Bonus damage based on existing conductivity BEFORE stacking
+        float bonus = ConductivityHelper.getDamageBonus(target);
+        if (bonus > 0f) {
+            target.hurt(
+                    attacker.level().damageSources().indirectMagic(attacker, attacker),
+                    bonus
+            );
+        }
+
+        // Stack conductivity (increments level or applies fresh level 1)
+        ConductivityHelper.applyOrStack(target);
+    }
+
+    // -------------------------------------------------------------------------
+    // Ranged throw
+    // -------------------------------------------------------------------------
 
     @Override
     public boolean releaseUsing(ItemStack itemStack, Level level, LivingEntity entity, int remainingTime) {
@@ -47,8 +75,8 @@ public class DepthstrikeItem extends TridentItem implements RitualsTooltipStyle 
         return false;
     }
 
-    @Override public int getNameColor() { return 0; }
-    @Override public int getTooltipBorderColorTop() { return 0; }
-    @Override public int getTooltipBorderColorBottom() { return 0; }
+    @Override public int getNameColor()              { return 0; }
+    @Override public int getTooltipBorderColorTop()  { return 0; }
+    @Override public int getTooltipBorderColorBottom(){ return 0; }
     @Override public int getTooltipBackgroundColor() { return 0; }
 }
