@@ -1,5 +1,6 @@
 package net.filipes.rituals.entity.custom;
 
+import net.filipes.rituals.effect.ConductivityHelper;
 import net.filipes.rituals.entity.ModEntities;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -17,6 +18,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 
 public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
 
@@ -26,6 +28,13 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
     private static final float AOE_DAMAGE            = 14.0f;
     private static final float EXPLOSION_RADIUS      = 3.5f;
     private static final int   AMBIENT_SPARK_INTERVAL = 3;
+    private static final float[] HOMING_STRENGTHS = { 0.03f, 0.06f, 0.10f, 0.15f, 0.20f };
+    private static final double  HOMING_RANGE     = 24.0;
+    private static final int     HOMING_INTERVAL  = 5;   // re-scan every N ticks
+
+    @Nullable
+    private LivingEntity homingTarget     = null;
+    private          int           nextHomingSearch = 0;
 
     private SparkEntity trailSpark  = null;
     private boolean     hasExploded = false;
@@ -64,8 +73,27 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         // the ball maintains constant speed.
         if (!hasExploded) {
             Vec3 motion = getDeltaMovement();
-            double currentSpeed = motion.length();
-            if (currentSpeed > 0.001) {
+            if (motion.length() > 0.001) {
+                if (!level().isClientSide()) {
+                    // Refresh homing target periodically
+                    if (tickCount >= nextHomingSearch) {
+                        nextHomingSearch = tickCount + HOMING_INTERVAL;
+                        homingTarget = findHomingTarget();
+                    }
+                    // Steer toward target before speed is locked in
+                    if (homingTarget != null && homingTarget.isAlive()) {
+                        int amplifier = ConductivityHelper.getLevel(homingTarget) - 1; // 0-4
+                        if (amplifier >= 0) {
+                            float strength = HOMING_STRENGTHS[amplifier];
+                            Vec3 toTarget  = homingTarget.position()
+                                    .add(0, homingTarget.getBbHeight() * 0.5, 0)
+                                    .subtract(position())
+                                    .normalize();
+                            // Blend current direction with direction-to-target
+                            motion = motion.normalize().add(toTarget.scale(strength));
+                        }
+                    }
+                }
                 setDeltaMovement(motion.normalize().scale(SPEED));
             }
         }
@@ -133,6 +161,27 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
             target.hurt(source, DIRECT_DAMAGE);
             triggerExplosion(target);
         }
+    }
+    @Nullable
+    private LivingEntity findHomingTarget() {
+        Entity owner = getOwner();
+        AABB searchBox = new AABB(
+                getX() - HOMING_RANGE, getY() - HOMING_RANGE, getZ() - HOMING_RANGE,
+                getX() + HOMING_RANGE, getY() + HOMING_RANGE, getZ() + HOMING_RANGE);
+
+        LivingEntity best     = null;
+        double       bestDist = Double.MAX_VALUE;
+
+        for (LivingEntity candidate : level().getEntitiesOfClass(LivingEntity.class, searchBox)) {
+            if (candidate == owner) continue;
+            if (ConductivityHelper.getLevel(candidate) == 0) continue;   // no effect
+            double dist = candidate.position().distanceToSqr(position());
+            if (dist < bestDist) {
+                bestDist = dist;
+                best     = candidate;
+            }
+        }
+        return best;
     }
 
     // -------------------------------------------------------------------------

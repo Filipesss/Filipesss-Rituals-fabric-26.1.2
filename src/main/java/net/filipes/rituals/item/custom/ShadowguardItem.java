@@ -38,29 +38,22 @@ public class ShadowguardItem extends MaceItem implements RitualsTooltipStyle {
     public void postHurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         super.postHurtEnemy(stack, target, attacker);
 
-        System.out.println("postHurtEnemy fired");
 
         if (attacker.level().isClientSide()) return;
 
         int stage = ModDataComponents.getStage(stack);
-        System.out.println("Stage: " + stage);
 
         if (stage >= 2) {
             float roll = attacker.level().getRandom().nextFloat();
-            System.out.println("Roll: " + roll);
 
             if (roll < 0.50f) {
-                System.out.println("Triggering invisibility");
 
                 attacker.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, false, false));
 
                 invisibleUntil.put(attacker.getUUID(), System.currentTimeMillis() + 3000);
 
                 if (attacker instanceof ServerPlayer serverPlayer) {
-                    System.out.println("Sending packet to: " + serverPlayer.getName().getString());
                     ServerPlayNetworking.send(serverPlayer, new ShadowguardInvisiblePacket());
-                } else {
-                    System.out.println("Attacker is not a ServerPlayer: " + attacker.getClass().getName());
                 }
             }
         }

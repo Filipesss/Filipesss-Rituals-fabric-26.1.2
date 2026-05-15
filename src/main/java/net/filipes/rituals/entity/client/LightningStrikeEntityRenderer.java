@@ -1,19 +1,56 @@
 package net.filipes.rituals.entity.client;
 
+import com.mojang.blaze3d.pipeline.BlendFunction;
+import com.mojang.blaze3d.pipeline.ColorTargetState;
+import com.mojang.blaze3d.pipeline.DepthStencilState;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.platform.DestFactor;
+import com.mojang.blaze3d.platform.SourceFactor;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.filipes.rituals.entity.custom.LightningStrikeEntity;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.client.renderer.rendertype.OutputTarget;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 public class LightningStrikeEntityRenderer
         extends EntityRenderer<LightningStrikeEntity, LightningStrikeEntityRenderer.StrikeRenderState> {
+
+    // ── Same additive pipeline as SparkEntityRenderer ─────────────────────────
+    private static final RenderPipeline STRIKE_PIPELINE = RenderPipelines.register(
+            RenderPipeline.builder(RenderPipelines.MATRICES_FOG_SNIPPET)
+                    .withLocation(Identifier.fromNamespaceAndPath("rituals", "lightning_strike_trail"))
+                    .withVertexShader("core/rendertype_lightning")
+                    .withFragmentShader("core/rendertype_lightning")
+                    .withColorTargetState(new ColorTargetState(
+                            new BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE, SourceFactor.ONE, DestFactor.ZERO)
+                    ))
+                    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+                    .withDepthStencilState(DepthStencilState.DEFAULT)
+                    .withCull(false)
+                    .build()
+    );
+
+    private static final RenderType STRIKE_TRAIL = RenderType.create(
+            "lightning_strike_trail",
+            RenderSetup.builder(STRIKE_PIPELINE)
+                    .sortOnUpload()
+                    .setOutputTarget(OutputTarget.WEATHER_TARGET)
+                    .createRenderSetup()
+    );
+
+    // ── Render state ──────────────────────────────────────────────────────────
 
     public static class StrikeRenderState extends EntityRenderState {
         float posX, posY, posZ;
@@ -24,11 +61,11 @@ public class LightningStrikeEntityRenderer
         long  seed;
     }
 
-    /** Shape re-randomises every tick for a rapid flicker. */
     private static final int   BOLT_UPDATE_TICKS = 1;
-    private static final int   STRAND_COUNT      = 20;
-    /** How far below the entity origin the bolt extends (pushes it into the ground). */
-    private static final float BOTTOM_EXTEND     = 2f;
+    private static final int   STRAND_COUNT      = 5;
+    private static final float BOTTOM_EXTEND     = 1.2f;
+    private static final float BOLT_WIDTH        = 0.13f;
+    private static final int   PEAK_ALPHA        = 95;
 
     public LightningStrikeEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
 
@@ -65,8 +102,8 @@ public class LightningStrikeEntityRenderer
                        SubmitNodeCollector snc, CameraRenderState cam) {
         if (s.alpha < 0.005f) return;
 
-        final int   alphaFull = (int)(s.alpha * 255);
-        final int   mainAlpha = (int)(alphaFull * 0.85f);
+        // Alpha fades in/out with appear timer, but peaks at PEAK_ALPHA
+        final int   mainAlpha = (int)(s.alpha * PEAK_ALPHA);
         final float age       = s.age;
         final long  seed      = s.seed;
         final float height    = s.height;
@@ -77,8 +114,8 @@ public class LightningStrikeEntityRenderer
         for (int strand = 0; strand < STRAND_COUNT; strand++) {
             final long strandSeed = seed ^ ((long)strand * 0x9E3779B97F4A7C15L);
 
-            snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) ->
-                    drawVerticalBolt(pose, v, height, 0.07f,
+            snc.submitCustomGeometry(ps, STRIKE_TRAIL, (pose, v) ->
+                    drawVerticalBolt(pose, v, height, BOLT_WIDTH,
                             s.r, s.g, s.b, mainAlpha, age, strandSeed));
         }
 
@@ -91,29 +128,28 @@ public class LightningStrikeEntityRenderer
                                          float height, float width,
                                          int r, int g, int bl, int alpha,
                                          float age, long seed) {
-        if (alpha < 4 || height < 0.1f) return;
+        if (alpha < 2 || height < 0.1f) return;
 
-        // Changes shape every tick (BOLT_UPDATE_TICKS = 1)
-        int timeSlot = (int)(age / BOLT_UPDATE_TICKS);
-        int knots    = Mth.clamp((int)(height / 1.5f), 4, 24);
+        int   timeSlot = (int)(age / BOLT_UPDATE_TICKS);
+        float span     = height + BOTTOM_EXTEND;
+        int   knots    = Mth.clamp((int)(span / 3.5f), 3, 12);
 
         Vec3[] pts = new Vec3[knots + 2];
-        // Bottom extends BOTTOM_EXTEND blocks below the entity origin
         pts[0]         = new Vec3(0, -BOTTOM_EXTEND, 0);
         pts[knots + 1] = new Vec3(0,  height,        0);
 
-        float totalSpan = height + BOTTOM_EXTEND;
-
         for (int i = 1; i <= knots; i++) {
-            float t   = i / (float)(knots + 1);
-            float env = (float) Math.sin(t * Math.PI);
-            // Wider spread than before
-            float maxOff = Math.min(totalSpan * 0.14f, 2.0f);
+            float t = i / (float)(knots + 1);
+
+            // Envelope: 0 at the bottom tip, peaks in the middle, stays ~80%
+            // at the top so the top end stays open rather than converging.
+            float env    = (float) Math.sin(t * Math.PI * 0.7f);
+            float maxOff = Math.min(span * 0.10f, 1.4f);
 
             float offX = hash(seed + i * 997L  + timeSlot * 7919L) * env * maxOff;
             float offZ = hash(seed + i * 1009L + timeSlot * 6271L) * env * maxOff;
-            // Y interpolated across the full span (bottom → top)
-            pts[i] = new Vec3(offX, -BOTTOM_EXTEND + totalSpan * t, offZ);
+
+            pts[i] = new Vec3(offX, -BOTTOM_EXTEND + span * t, offZ);
         }
 
         final float COS30 = 0.866f;
@@ -125,6 +161,12 @@ public class LightningStrikeEntityRenderer
             Vec3 dir = b.subtract(a);
             if (dir.lengthSqr() < 1e-8) continue;
             dir = dir.normalize();
+
+            // Push both ends slightly past the knot so neighbouring quads
+            // overlap and the junction gap disappears.
+            float ext = width * 0.25f;
+            a = a.subtract(dir.scale(ext));
+            b = b.add(dir.scale(ext));
 
             Vec3 helper   = (Math.abs(dir.y) > 0.9) ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
             Vec3 right    = dir.cross(helper).normalize();
@@ -139,6 +181,7 @@ public class LightningStrikeEntityRenderer
         }
     }
 
+    // ── Geometry helpers ──────────────────────────────────────────────────────
 
     private static void vQuad(PoseStack.Pose pose, VertexConsumer v,
                               Vec3 a, Vec3 b, Vec3 wing, float w,

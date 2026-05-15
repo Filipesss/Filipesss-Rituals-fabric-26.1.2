@@ -27,6 +27,7 @@ import net.filipes.rituals.item.ModItems;
 import net.filipes.rituals.item.custom.LightningRapierItem;
 import net.filipes.rituals.item.custom.PharathornItem;
 import net.filipes.rituals.item.custom.RosegoldPickaxeItem;
+import net.filipes.rituals.item.custom.ShadowguardItem;
 import net.filipes.rituals.network.*;
 import net.filipes.rituals.particle.*;
 import net.filipes.rituals.screen.AmethystHourglassScreen;
@@ -119,6 +120,13 @@ public class RitualsClient implements ClientModInitializer {
         ModelLayerRegistry.registerModelLayer(
                 DepthstrikeGroundModel.LAYER,
                 DepthstrikeGroundModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(
+                PharathornGroundSmashModel.LAYER,
+                PharathornGroundSmashModel::createBodyLayer);
+        EntityRendererRegistry.register(
+                ModEntities.PHARATHORN_GROUND_SMASH,
+                PharathornGroundSmashEntityRenderer::new);
+
 
         ModelLayerRegistry.registerModelLayer(
                 PolarityTornadoRedModel.LAYER,
@@ -152,6 +160,12 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.POLARITY_TORNADO_BLUE, PolarityTornadoBlueEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_GROUND, DepthstrikeGroundEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_CHARGED_BALL, DepthstrikeChargedBallEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.WIND_GUST_BIG, WindGustBigEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SHADOWGUARD_GRAPPLE, ShadowguardGrappleEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LIFESTEAL_MARK, LifestealMarkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.PHARATHORN_MARK, PharathornMarkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.PHARATHORN_GROUND_SMASH, PharathornGroundSmashEntityRenderer::new);
+
 
 
         //SPECIAL MODELS
@@ -170,12 +184,19 @@ public class RitualsClient implements ClientModInitializer {
         //COOLDOWNS
         CooldownManager.register("pickaxe_test", "Test Ability", 15_000, 0xFF66FF);
         CooldownManager.register("pharathorn_dash", "Pharathorn Dash", 25_000, 0xFFAA00);
+        CooldownManager.register("pharathorn_reveal", "Pharathorn Reveal", 30_000, 0xFF4400);
+        CooldownManager.register("pharathorn_fortify", "Fortify", 20_000, 0xFFAA00);
+        CooldownManager.register("pharathorn_ground_smash", "Ground Smash", 20_000, 0xFFAA00);
+        CooldownManager.register("pharathorn_spiral_stab", "Spiral Stab", 12_000, 0xFFAA00);
         CooldownManager.register("lightning_rapier_teleport", "Lightning Dash", 20_000, 0x50C8FF);
         CooldownManager.register("lightning_rapier_charge",     "Instant Charge",     15_000, 0xFFFF44);
         CooldownManager.register("depthstrike_ability", "Ground Shock", 30_000, 0x50FF90);
         CooldownManager.register("depthstrike_ground_ability", "Ground Spikes", 25_000, 0x50FF90);
         CooldownManager.register("depthstrike_recall", "Recall", 25_000, 0x50FF90);
         CooldownManager.register("depthstrike_charged_ball", "Charged Ball", 20_000, 0x50CFFF);
+        CooldownManager.register("shadowguard_launch", "Shadow Launch", 12_000, 0x9B6DFF);
+        CooldownManager.register("shadowguard_grapple", "Grapple", 15_000, 0x9B6DFF);
+        CooldownManager.register("lifesteal_mark", "Lifesteal Mark", 8_000, 0x9B00FF);
 
 
 
@@ -219,67 +240,111 @@ public class RitualsClient implements ClientModInitializer {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player != null) {
                     var held = mc.player.getMainHandItem();
+                    int stage = ModDataComponents.getStage(held);
+
                     if (held.getItem() == ModItems.DEPTHSTRIKE && mc.player.isShiftKeyDown()) {
-                        if (!CooldownManager.isOnCooldown("depthstrike_charged_ball")) {
+                        if (stage >= 5 && !CooldownManager.isOnCooldown("depthstrike_charged_ball")) {
                             ClientPlayNetworking.send(new DepthstrikeChargedBallPacket());
                             CooldownManager.trigger("depthstrike_charged_ball");
                         }
-                    } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
-                        if (!CooldownManager.isOnCooldown("depthstrike_recall")) {
+                    } else if (held.getItem() == ModItems.DEPTHSTRIKE && !mc.player.isShiftKeyDown()) {
+                        if (stage >= 4 && !CooldownManager.isOnCooldown("depthstrike_recall")) {
                             ClientPlayNetworking.send(new DepthstrikeRecallPacket());
                             CooldownManager.trigger("depthstrike_recall");
+                        }
+                    } else if (held.getItem() instanceof ShadowguardItem) {
+                        if (stage >= 4 && !CooldownManager.isOnCooldown("shadowguard_launch")) {
+                            ClientPlayNetworking.send(new ShadowguardLaunchPacket());
+                            CooldownManager.trigger("shadowguard_launch");
                         }
                     } else if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         ClientPlayNetworking.send(new TogglePickaxeMiningPacket());
                     } else if (held.getItem() instanceof net.filipes.rituals.item.custom.PulseBlasterItem) {
                         ClientPlayNetworking.send(new FireDeathLaserPacket());
-                    } else if (held.getItem() instanceof PharathornItem
-                            && ModDataComponents.getStage(held) >= 2) {
-                        if (!CooldownManager.isOnCooldown("pharathorn_dash")) {
-                            ClientPlayNetworking.send(new PharathornDashPacket());
-                            CooldownManager.trigger("pharathorn_dash");
-                        }
-                    }  else if (held.getItem() instanceof LightningRapierItem
+                    } else if (held.getItem() instanceof LightningRapierItem
                             && ModDataComponents.getStage(held) >= 4) {
                         if (!CooldownManager.isOnCooldown("lightning_rapier_charge")) {
                             ClientPlayNetworking.send(new LightningRapierInstantChargePacket());
                             CooldownManager.trigger("lightning_rapier_charge");
                         }
+                    } else if (held.getItem() instanceof PharathornItem) {
+                        if (mc.player.isShiftKeyDown() && stage >= 6) {
+                            if (!CooldownManager.isOnCooldown("pharathorn_spiral_stab")) {
+                                ClientPlayNetworking.send(new SpiralStabPacket());
+                                CooldownManager.trigger("pharathorn_spiral_stab");
+                            }
+                        } else if (!mc.player.isShiftKeyDown() && stage >= 2) {
+                            if (!CooldownManager.isOnCooldown("pharathorn_fortify")) {
+                                ClientPlayNetworking.send(new PharathornFortifyPacket());
+                                CooldownManager.trigger("pharathorn_fortify");
+                            }
+                        }
                     }
                 }
             }
+
             while (actionTwo.consumeClick()) {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player != null) {
                     var held = mc.player.getMainHandItem();
-                    if (held.getItem() instanceof RosegoldPickaxeItem
+                    int stage = ModDataComponents.getStage(held);
+
+                    if (held.getItem() instanceof ShadowguardItem) {
+                        if (stage >= 5 && !CooldownManager.isOnCooldown("lifesteal_mark")) {
+                            ClientPlayNetworking.send(new LifestealMarkPacket());
+                            CooldownManager.trigger("lifesteal_mark");
+                        }
+                    } else if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         CooldownManager.trigger("pickaxe_test");
                     } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
-                        if (!CooldownManager.isOnCooldown("depthstrike_ability")) {
+                        if (stage >= 3 && !CooldownManager.isOnCooldown("depthstrike_ability")) {
                             ClientPlayNetworking.send(new DepthstrikeAbilityPacket());
                             CooldownManager.trigger("depthstrike_ability");
                         }
-                    }  else if (held.getItem() instanceof LightningRapierItem
+                    } else if (held.getItem() instanceof LightningRapierItem
                             && ModDataComponents.getStage(held) >= 5) {
                         if (!CooldownManager.isOnCooldown("lightning_rapier_teleport")) {
                             ClientPlayNetworking.send(new LightningRapierTeleportPacket());
                             CooldownManager.trigger("lightning_rapier_teleport");
                         }
+                    } else if (held.getItem() instanceof PharathornItem) {
+                        if (mc.player.isShiftKeyDown() && stage >= 7) {
+                            if (!CooldownManager.isOnCooldown("pharathorn_ground_smash")) {
+                                ClientPlayNetworking.send(new PharathornGroundSmashPacket());
+                                CooldownManager.trigger("pharathorn_ground_smash");
+                            }
+                        } else if (!mc.player.isShiftKeyDown() && stage >= 3) {
+                            if (!CooldownManager.isOnCooldown("pharathorn_reveal")) {
+                                ClientPlayNetworking.send(new PharathornRevealPacket());
+                                CooldownManager.trigger("pharathorn_reveal");
+                            }
+                        }
                     }
                 }
             }
+
             while (actionThree.consumeClick()) {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player != null) {
                     var held = mc.player.getMainHandItem();
-                    if (held.getItem() instanceof LightningRapierItem) {
+                    int stage = ModDataComponents.getStage(held);
 
+                    if (held.getItem() instanceof ShadowguardItem) {
+                        if (stage >= 7 && !CooldownManager.isOnCooldown("shadowguard_grapple")) {
+                            ClientPlayNetworking.send(new ShadowguardGrapplePacket());
+                            CooldownManager.trigger("shadowguard_grapple");
+                        }
                     } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
-                        if (!CooldownManager.isOnCooldown("depthstrike_ground_ability")) {
+                        if (stage >= 6 && !CooldownManager.isOnCooldown("depthstrike_ground_ability")) {
                             ClientPlayNetworking.send(new DepthstrikeGroundAbilityPacket());
                             CooldownManager.trigger("depthstrike_ground_ability");
+                        }
+                    } else if (held.getItem() instanceof PharathornItem && stage >= 5) {
+                        if (!CooldownManager.isOnCooldown("pharathorn_dash")) {
+                            ClientPlayNetworking.send(new PharathornDashPacket());
+                            CooldownManager.trigger("pharathorn_dash");
                         }
                     }
                 }

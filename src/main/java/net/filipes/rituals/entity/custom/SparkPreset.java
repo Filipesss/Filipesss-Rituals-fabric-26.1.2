@@ -72,6 +72,7 @@ public final class SparkPreset {
                 .onHitSpawns(onHitSpawns);
     }
 
+
     public static final class Builder {
         int    maxLifetime      = 500;
         int    trailLength      = 40;
@@ -119,6 +120,17 @@ public final class SparkPreset {
             return this;
         }
         public Builder onHitSpawns(List<SpawnEntry> list) { onHitSpawns = new ArrayList<>(list);      return this; }
+        // Add this method to Builder alongside the others
+        public Builder noBurst() {
+            burstCount       = 0;
+            burstSpeedMin    = 0;
+            burstSpeedMax    = 0;
+            burstLifetime    = 0;
+            burstTrailLength = 0;
+            burstWindowSize  = 0;
+            burstJitter      = 0;
+            return this;
+        }
 
         public SparkPreset build() { return new SparkPreset(this); }
     }

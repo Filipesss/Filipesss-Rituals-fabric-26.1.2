@@ -3,6 +3,7 @@ package net.filipes.rituals.entity.custom;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.ValueInput;
@@ -12,21 +13,27 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SpiralStabEntity extends Entity {
 
-    public static final int   STAB_COUNT        = 28;   // total stabs in the spiral
-    public static final float SPIRAL_RADIUS      = 5.0f; // max radius of the spiral
-    public static final int   EMERGE_TICKS       = 2;    // ticks to fully emerge per stab
-    public static final int   HOLD_TICKS         = 40;   // ticks stabs stay fully up
-    public static final int   RETRACT_TICKS      = 3;    // ticks to retract
-    public static final int   STAGGER_TICKS      = 1;    // ticks between each stab spawning
-    public static final float MAX_CURVE          = 0.18f; // max lateral curve offset per stab
+    public static final int   STAB_COUNT        = 28;
+    public static final float SPIRAL_RADIUS      = 5.0f;
+    public static final int   EMERGE_TICKS       = 2;
+    public static final int   HOLD_TICKS         = 40;
+    public static final int   RETRACT_TICKS      = 3;
+    public static final int   STAGGER_TICKS      = 1;
+    public static final float MAX_CURVE          = 0.18f;
     private static final EntityDataAccessor<Integer> OWNER_ID =
             SynchedEntityData.defineId(SpiralStabEntity.class, EntityDataSerializers.INT);
+    private static final float STAB_HIT_RADIUS = 0.9f;
+    private final Set<Integer> damagedStabs = new HashSet<>();
+    private java.util.UUID ownerUUID;
 
     public int totalLifetime;
 
@@ -54,6 +61,7 @@ public class SpiralStabEntity extends Entity {
                             LivingEntity owner, double x, double y, double z) {
         this(type, level);
         this.owner = owner;
+        this.ownerUUID = owner.getUUID();
         this.setPos(x, y, z);
         if (!level.isClientSide()) {
             this.setOwnerId(owner.getId());
@@ -72,8 +80,48 @@ public class SpiralStabEntity extends Entity {
             buildStabs();
         }
 
+        if (!level().isClientSide()) {
+            tickDamage();
+        }
+
         if (tickCount >= totalLifetime) {
             discard();
+        }
+    }
+
+    private void tickDamage() {
+        if (stabs.isEmpty()) return;
+
+        if (owner == null) {
+            Entity e = level().getEntity(getOwnerId());
+            if (e instanceof LivingEntity le) owner = le;
+        }
+        if (owner == null) return;
+
+        float baseDamage = (float) owner.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.62f; // damage
+
+        for (int i = 0; i < stabs.size(); i++) {
+            StabData s = stabs.get(i);
+
+            if (tickCount - 1 != s.spawnTick) continue;
+            if (damagedStabs.contains(i)) continue;
+            damagedStabs.add(i);
+
+            AABB box = new AABB(
+                    s.originX - STAB_HIT_RADIUS, s.originY - 0.5, s.originZ - STAB_HIT_RADIUS,
+                    s.originX + STAB_HIT_RADIUS, s.originY + 2.5, s.originZ + STAB_HIT_RADIUS
+            );
+
+            List<LivingEntity> targets = level().getEntitiesOfClass(LivingEntity.class, box,
+                    e -> e != owner && !e.getUUID().equals(ownerUUID));
+
+            for (LivingEntity target : targets) {
+                target.hurtServer(
+                        (ServerLevel) level(),
+                        level().damageSources().indirectMagic(this, owner),
+                        baseDamage
+                );
+            }
         }
     }
 

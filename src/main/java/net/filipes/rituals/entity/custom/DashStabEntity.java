@@ -9,14 +9,19 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class DashStabEntity extends Entity {
 
@@ -25,6 +30,9 @@ public class DashStabEntity extends Entity {
     public static final int HOLD_TICKS    = 35;
     public static final int RETRACT_TICKS = 3;
     public static final int STAGGER_TICKS = 3;
+
+    private static final float DAMAGE_MULTIPLIER = 0.55f;
+    private static final float STAB_HIT_RADIUS   = 0.85f;
 
     private static final EntityDataAccessor<Integer> OWNER_ID =
             SynchedEntityData.defineId(DashStabEntity.class, EntityDataSerializers.INT);
@@ -35,9 +43,11 @@ public class DashStabEntity extends Entity {
     private static final EntityDataAccessor<Integer> OWNER_STAGE =
             SynchedEntityData.defineId(DashStabEntity.class, EntityDataSerializers.INT);
 
-    public int totalLifetime;
-    public List<StabData> stabs = new ArrayList<>();
-    private boolean stabsBuilt = false;
+    public  int            totalLifetime;
+    public  List<StabData> stabs        = new ArrayList<>();
+    private boolean        stabsBuilt   = false;
+    private final Set<Integer> damagedStabs = new HashSet<>();
+    private UUID ownerUUID;
 
     public static class StabData {
         public float originX, originY, originZ;
@@ -47,7 +57,7 @@ public class DashStabEntity extends Entity {
 
     public DashStabEntity(EntityType<? extends DashStabEntity> type, Level level) {
         super(type, level);
-        this.noPhysics = true;
+        this.noPhysics    = true;
         totalLifetime = STAGGER_TICKS * STAB_COUNT + EMERGE_TICKS + HOLD_TICKS + RETRACT_TICKS + 10;
     }
 
@@ -55,6 +65,7 @@ public class DashStabEntity extends Entity {
                           LivingEntity owner, Vec3 start, Vec3 end) {
         this(type, level);
         setPos(start.x, start.y, start.z);
+        this.ownerUUID = owner.getUUID();
         if (!level.isClientSide()) {
             setOwnerId(owner.getId());
             entityData.set(END_X, (float) end.x);
@@ -67,7 +78,43 @@ public class DashStabEntity extends Entity {
     public void tick() {
         super.tick();
         if (tickCount == 1) buildStabs();
+        if (!level().isClientSide()) tickDamage();
         if (tickCount >= totalLifetime) discard();
+    }
+
+    private void tickDamage() {
+        if (stabs.isEmpty()) return;
+
+        Entity ownerEntity = level().getEntity(getOwnerId());
+        if (!(ownerEntity instanceof LivingEntity owner)) return;
+
+        float baseDamage = (float) owner.getAttributeValue(Attributes.ATTACK_DAMAGE) * DAMAGE_MULTIPLIER;
+
+        for (int i = 0; i < stabs.size(); i++) {
+            StabData s = stabs.get(i);
+
+            if (tickCount - 1 != s.spawnTick) continue;
+            if (damagedStabs.contains(i)) continue;
+            damagedStabs.add(i);
+
+            AABB box = new AABB(
+                    s.originX - STAB_HIT_RADIUS, s.originY - 0.5, s.originZ - STAB_HIT_RADIUS,
+                    s.originX + STAB_HIT_RADIUS, s.originY + 2.5, s.originZ + STAB_HIT_RADIUS
+            );
+
+            List<LivingEntity> targets = level().getEntitiesOfClass(
+                    LivingEntity.class, box,
+                    e -> e != owner && (ownerUUID == null || !e.getUUID().equals(ownerUUID))
+            );
+
+            for (LivingEntity target : targets) {
+                target.hurtServer(
+                        (ServerLevel) level(),
+                        level().damageSources().indirectMagic(this, owner),
+                        baseDamage
+                );
+            }
+        }
     }
 
     private void buildStabs() {
@@ -109,20 +156,20 @@ public class DashStabEntity extends Entity {
         return -1f;
     }
 
-    public int getOwnerStage() { return entityData.get(OWNER_STAGE); }
+    public int  getOwnerStage() { return entityData.get(OWNER_STAGE); }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(OWNER_ID, -1);
-        builder.define(END_X, 0f);
-        builder.define(END_Z, 0f);
+        builder.define(OWNER_ID,    -1);
+        builder.define(END_X,       0f);
+        builder.define(END_Z,       0f);
         builder.define(OWNER_STAGE, 1);
     }
 
-    public int  getOwnerId()      { return entityData.get(OWNER_ID); }
-    public float getEndX() { return entityData.get(END_X); }
-    public float getEndZ() { return entityData.get(END_Z); }
-    public void setOwnerId(int v) { entityData.set(OWNER_ID, v); }
+    public int   getOwnerId()      { return entityData.get(OWNER_ID); }
+    public float getEndX()         { return entityData.get(END_X);    }
+    public float getEndZ()         { return entityData.get(END_Z);    }
+    public void  setOwnerId(int v) { entityData.set(OWNER_ID, v);     }
 
     @Override public boolean shouldBeSaved()                                    { return false; }
     @Override protected void readAdditionalSaveData(ValueInput in)              {}

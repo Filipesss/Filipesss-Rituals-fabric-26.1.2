@@ -1,8 +1,10 @@
 package net.filipes.rituals.item.custom;
 
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.effect.ConductivityHelper;
 import net.filipes.rituals.entity.custom.ThrownDepthstrikeEntity;
 import net.filipes.rituals.util.RitualsTooltipStyle;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.stats.Stats;
@@ -10,8 +12,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
+
+import java.util.function.Consumer;
 
 public class DepthstrikeItem extends TridentItem implements RitualsTooltipStyle {
 
@@ -19,17 +25,15 @@ public class DepthstrikeItem extends TridentItem implements RitualsTooltipStyle 
         super(settings);
     }
 
-    // -------------------------------------------------------------------------
-    // Melee hit — apply/stack Conductivity, then add bonus magic damage
-    // -------------------------------------------------------------------------
-
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         super.hurtEnemy(stack, target, attacker);
 
         if (attacker.level().isClientSide()) return;
+        if (target == attacker) return;
 
-        // Bonus damage based on existing conductivity BEFORE stacking
+        int stage = ModDataComponents.getStage(stack);
+
         float bonus = ConductivityHelper.getDamageBonus(target);
         if (bonus > 0f) {
             target.hurt(
@@ -38,13 +42,14 @@ public class DepthstrikeItem extends TridentItem implements RitualsTooltipStyle 
             );
         }
 
-        // Stack conductivity (increments level or applies fresh level 1)
-        ConductivityHelper.applyOrStack(target);
+        // Stage 1: only apply lvl 1 (don't stack above what's already there)
+        // Stage 2+: full stacking
+        if (stage >= 2) {
+            ConductivityHelper.applyOrStack(target);
+        } else {
+            ConductivityHelper.applyLevelOne(target);
+        }
     }
-
-    // -------------------------------------------------------------------------
-    // Ranged throw
-    // -------------------------------------------------------------------------
 
     @Override
     public boolean releaseUsing(ItemStack itemStack, Level level, LivingEntity entity, int remainingTime) {
@@ -75,8 +80,16 @@ public class DepthstrikeItem extends TridentItem implements RitualsTooltipStyle 
         return false;
     }
 
-    @Override public int getNameColor()              { return 0; }
-    @Override public int getTooltipBorderColorTop()  { return 0; }
+    @Override
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
+                                Consumer<Component> builder, TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, builder, flag);
+        int kills = ModDataComponents.getKillCount(stack);
+        builder.accept(Component.literal("Kills: " + kills));
+    }
+
+    @Override public int getNameColor()               { return 0; }
+    @Override public int getTooltipBorderColorTop()   { return 0; }
     @Override public int getTooltipBorderColorBottom(){ return 0; }
-    @Override public int getTooltipBackgroundColor() { return 0; }
+    @Override public int getTooltipBackgroundColor()  { return 0; }
 }

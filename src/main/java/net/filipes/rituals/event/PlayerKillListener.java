@@ -39,12 +39,10 @@ public class PlayerKillListener {
                 if (newKills >= recipe.getKillsRequired()) {
                     updated = ModDataComponents.withStage(updated, recipe.getResultStage());
                     killerPlayer.setItemInHand(InteractionHand.MAIN_HAND, updated);
-
-                    killerPlayer.sendSystemMessage(Component.translatable(
-                            "item.rituals.upgrade.kill_upgrade",
-                            weapon.getHoverName(),
-                            recipe.getResultStage()
-                    ));
+                    killerPlayer.sendSystemMessage(
+                            Component.translatable("item.rituals.upgrade.kill_upgrade")
+                                    .withStyle(style -> style.withColor(0xFF0000))
+                    );
                 } else {
                     killerPlayer.setItemInHand(InteractionHand.MAIN_HAND, updated);
                 }

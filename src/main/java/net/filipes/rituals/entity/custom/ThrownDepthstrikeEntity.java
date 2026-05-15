@@ -1,8 +1,10 @@
 package net.filipes.rituals.entity.custom;
 
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.effect.ConductivityHelper;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.item.ModItems;
+import net.filipes.rituals.item.custom.DepthstrikeItem;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -20,6 +22,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.NonNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -107,6 +110,10 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
                 setNoGravity(false);
             }
         }
+        if (flightHitClearTick > 0 && tickCount >= flightHitClearTick) {
+            hitEntitiesThisFlight.clear();
+            flightHitClearTick = -1;
+        }
 
         super.tick();
 
@@ -159,7 +166,7 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
     }
 
     @Override
-    protected SoundEvent getDefaultHitGroundSoundEvent() {
+    protected @NonNull SoundEvent getDefaultHitGroundSoundEvent() {
         return SoundEvents.TRIDENT_HIT_GROUND;
     }
 
@@ -173,7 +180,6 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
                 ? level().damageSources().trident(this, owner)
                 : level().damageSources().trident(this, this);
 
-        // Base damage + conductivity bonus
         float baseDamage = 9.0f;
         float conductivityBonus = (hit instanceof LivingEntity livingHit)
                 ? ConductivityHelper.getDamageBonus(livingHit)
@@ -181,11 +187,28 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
 
         hit.hurt(source, baseDamage + conductivityBonus);
 
+        // Conductivity — respect stage
         if (hit instanceof LivingEntity livingHit
+                && livingHit != owner
                 && !hitEntitiesThisFlight.contains(livingHit.getUUID())) {
+
             hitEntitiesThisFlight.add(livingHit.getUUID());
-            flightHitClearTick = tickCount + 5;
-            ConductivityHelper.applyOrStack(livingHit);
+            flightHitClearTick = tickCount + 20;
+
+            // Find the owner's held depthstrike to check stage
+            int stage = 1;
+            if (owner instanceof Player player) {
+                ItemStack held = player.getMainHandItem();
+                if (held.getItem() instanceof DepthstrikeItem) {
+                    stage = ModDataComponents.getStage(held);
+                }
+            }
+
+            if (stage >= 2) {
+                ConductivityHelper.applyOrStack(livingHit);
+            } else {
+                ConductivityHelper.applyLevelOne(livingHit);
+            }
         }
 
         Vec3 vel = getDeltaMovement();

@@ -16,6 +16,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.level.Level;
 
@@ -33,6 +34,10 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
         super(settings.sword(material, attackDamage, attackSpeed));
     }
 
+    // =========================================================================
+    //  Core attack logic
+    // =========================================================================
+
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         int stage = ModDataComponents.getStage(stack);
@@ -41,24 +46,29 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
         if (!world.isClientSide() && attacker instanceof ServerPlayer player) {
             ServerLevel serverLevel = (ServerLevel) world;
 
+            // Passive (all stages): weather damage bonus
             if (hasWeatherBonus(player, serverLevel)) {
                 target.hurt(serverLevel.damageSources().lightningBolt(), WEATHER_BONUS_DAMAGE);
             }
 
+            // Stage 3+: supercharge system
             if (stage >= 3) {
                 handleChargeSystem(stack, target, player, serverLevel, stage);
             }
 
+            // Stage 2+: chain lightning
             List<LivingEntity> chainedTargets = List.of();
             if (stage >= 2) {
                 chainedTargets = doChainLightning(world, serverLevel, target, attacker, stage);
             }
 
+            // Sounds
             boolean didChain = !chainedTargets.isEmpty();
             world.playSound(null, target.getX(), target.getY(), target.getZ(),
                     didChain ? ModSounds.LIGHTNING_RAPIER_ATTACK1 : ModSounds.LIGHTNING_RAPIER_ATTACK2,
                     SoundSource.PLAYERS, 1.0f, 1.0f);
 
+            // Stage 6+: stun primary target
             if (stage >= 6) {
                 applyStun(target);
             }
@@ -67,11 +77,16 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
         super.hurtEnemy(stack, target, attacker);
     }
 
+    // =========================================================================
+    //  Supercharge / streak system  (Stage 3+)
+    // =========================================================================
+
     private void handleChargeSystem(ItemStack stack, LivingEntity target,
                                     ServerPlayer player, ServerLevel serverLevel, int stage) {
         int charge = getCharge(stack);
 
         if (charge >= 6) {
+            // Supercharged hit: deal extra damage equal to weapon damage (total = 2x)
             float bonusDmg = (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE);
             target.hurt(serverLevel.damageSources().playerAttack(player), bonusDmg);
 
@@ -87,6 +102,7 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
             int streak = LightningRapierStreakTracker.onHit(
                     player.getUUID(), target.getUUID(), serverLevel.getGameTime());
 
+            // Always sync streak → component so the bar reflects every hit
             setCharge(stack, streak);
 
             if (streak >= STREAK_NEEDED) {
@@ -97,6 +113,10 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
             }
         }
     }
+
+    // =========================================================================
+    //  Chain lightning  (Stage 2+)
+    // =========================================================================
 
     private List<LivingEntity> doChainLightning(Level world, ServerLevel serverLevel,
                                                 LivingEntity primaryTarget,
@@ -127,6 +147,10 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
         return nearby;
     }
 
+    // =========================================================================
+    //  Helpers
+    // =========================================================================
+
     private static boolean hasWeatherBonus(ServerPlayer player, ServerLevel level) {
         if (player.isInWater()) return true;
         if (level.isRaining() && level.canSeeSky(player.blockPosition())) return true;
@@ -141,11 +165,13 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
     private static void spawnLightningStrike(ServerLevel level, LivingEntity target) {
         LightningStrikeEntity.spawnAt(level,
                 target.getX(), target.getY(), target.getZ(),
-                12f, 15,
+                14f, 15,
                 80, 160, 255,
                 0f, 0f,
-                8);
+                18);
     }
+
+    // ── Charge component accessors ────────────────────────────────────────────
 
     public static int getCharge(ItemStack stack) {
         Integer c = stack.get(ModDataComponents.LIGHTNING_RAPIER_CHARGE);
@@ -162,24 +188,35 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
         return next;
     }
 
+    // =========================================================================
+    //  Charge bar  (reuses the item durability bar slot)
+    // =========================================================================
+
     @Override
     public boolean isBarVisible(ItemStack stack) {
+        // Show the bar at stage 3+ whenever there is any charge built up
         return ModDataComponents.getStage(stack) >= 3 && getCharge(stack) > 0;
     }
 
     @Override
     public int getBarWidth(ItemStack stack) {
+        // 13 is the full bar width Minecraft uses for durability
         return Math.round((getCharge(stack) / 6f) * 13);
     }
 
     @Override
     public int getBarColor(ItemStack stack) {
+        // Interpolate from red (charge 1) → yellow (charge 6)
         float t = getCharge(stack) / 6f;
         int r = 0xFF;
         int g = (int) (t * 0xFF);
         int b = 0;
         return (r << 16) | (g << 8) | b;
     }
+
+    // =========================================================================
+    //  RitualsTooltipStyle
+    // =========================================================================
 
     @Override
     public Component getName(ItemStack stack) {

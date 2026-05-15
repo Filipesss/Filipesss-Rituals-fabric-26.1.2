@@ -129,6 +129,114 @@ public final class SparkPresets {
             .burstCount(0)
             .trailRotation(0.05f)
             .build();
+    public static final  SparkPreset SHADOWGUARD_KNOCK_UP = SparkPreset.builder()
+            .color(196, 184, 227)
+            .trailAmount(2)
+            .gravity(0.08)
+            .windowSize(7)
+            .addSpawn(ModEntities.WIND_GUST_BIG, 1, 1.0, 2.0f, 0)
+            .trailSpacing(0.05f)
+            .trailAlpha(95)
+            .trailGapChance(0.05f)
+            .trailJitter(0.15f)
+            .burstCount(0)
+            .trailRotation(0.05f)
+            .build();
+
+    public static final SparkPreset SHADOWGUARD_GRAPPLE_TRAIL = SparkPreset.builder()
+            .color(242, 237, 255)
+            .trailAmount(1)
+            .gravity(0.04)
+            .trailLength(20)
+            .windowSize(5)
+            .maxLifetime(80)
+            .trailAlpha(95)
+            .trailJitter(0.02f)
+            .trailRotation(0.1f)
+            .trailGapChance(0f)
+            .noBurst()
+            .build();
+
+    public static final SparkPreset IMPACT_SPARK_REGULAR = SparkPreset.builder()
+            .color(255, 139, 38)
+            .trailAmount(1)
+            .gravity(0.06)
+            .trailLength(20)
+            .trailWidth(0.05f)
+            .windowSize(3)
+            .maxLifetime(80)
+            .trailAlpha(95)
+            .trailJitter(0f)
+            .trailRotation(0f)
+            .trailGapChance(0f)
+            .noBurst()
+            .build();
+    public static final SparkPreset LIFESTEAL_SHADOWGUARD = SparkPreset.builder()
+            .color(41, 186, 55)
+            .trailAmount(1)
+            .gravity(0.06)
+            .windowSize(7)
+            .trailAlpha(95)
+            .build();
+
+    public static final  SparkPreset LIFESTEAL_BIG = SparkPreset.builder()
+            .color(41, 186, 55)
+            .trailAmount(2)
+            .gravity(0.08)
+            .windowSize(7)
+            .trailSpacing(0.05f)
+            .trailAlpha(95)
+            .trailGapChance(0.05f)
+            .trailJitter(0.15f)
+            .burstCount(6)
+            .trailRotation(0.05f)
+            .build();
+
+    public static final  SparkPreset PHARATHORN_MARK_BIG = SparkPreset.builder()
+            .color(255, 31, 31)
+            .trailAmount(2)
+            .gravity(0.08)
+            .windowSize(7)
+            .trailSpacing(0.05f)
+            .trailAlpha(95)
+            .trailGapChance(0.05f)
+            .trailJitter(0.15f)
+            .burstCount(6)
+            .trailRotation(0.05f)
+            .build();
+    public static final SparkPreset PHARATHORN_MARK = SparkPreset.builder()
+            .color(255, 31, 31)
+            .trailAmount(1)
+            .gravity(0.06)
+            .windowSize(7)
+            .trailAlpha(95)
+            .build();
+    public static final SparkPreset PHARATHORN_IMMUNITY = SparkPreset.builder()
+            .color(255, 191, 94)
+            .trailAmount(1)
+            .noBurst()
+            .gravity(0.06)
+            .windowSize(7)
+            .trailAlpha(95)
+            .build();
+    public static final SparkPreset PHARATHORN_DASH = SparkPreset.builder()
+            .color(3, 252, 190)
+            .trailAmount(1)
+            .gravity(0.09)
+            .windowSize(3)
+            .trailAlpha(95)
+            .build();
+    public static final SparkPreset PHARATHORN_DASH_MAIN = SparkPreset.builder()
+            .color(3, 252, 190)
+            .trailAmount(4)
+            .trailJitter(0.26f)
+            .maxLifetime(20)
+            .trailGapChance(0.15f)
+            .gravity(0.06)
+            .windowSize(3)
+            .trailAlpha(95)
+            .build();
+
 
 
 
@@ -145,6 +253,16 @@ public final class SparkPresets {
         register("depthstrike_charged_ball", DEPTHSTRIKE_CHARGED_BALL);
         register("depthstrike_charged_ball_trail", DEPTHSTRIKE_CHARGED_BALL_TRAIL);
         register("depthstrike_charged_ball_impact", DEPTHSTRIKE_CHARGED_BALL_IMPACT);
+        register("shadowguard_knock_up", SHADOWGUARD_KNOCK_UP);
+        register("shadowguard_grapple_trail", SHADOWGUARD_GRAPPLE_TRAIL);
+        register("impact_spark_regular", IMPACT_SPARK_REGULAR);
+        register("lifesteal_shadowguard", LIFESTEAL_SHADOWGUARD);
+        register("lifesteal_big", LIFESTEAL_BIG);
+        register("pharathorn_mark_big", PHARATHORN_MARK_BIG);
+        register("pharathorn_mark", PHARATHORN_MARK);
+        register("pharathorn_immunity", PHARATHORN_IMMUNITY);
+        register("pharathorn_dash", PHARATHORN_DASH);
+        register("pharathorn_dash_main", PHARATHORN_DASH_MAIN);
 
     }
     public static Optional<String> nameOf(SparkPreset preset) {

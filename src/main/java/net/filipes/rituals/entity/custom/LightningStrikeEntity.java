@@ -147,14 +147,14 @@ public class LightningStrikeEntity extends Entity {
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(STRIKE_HEIGHT,  24f);  // taller default
+        builder.define(STRIKE_HEIGHT,  14f);  // taller default
         builder.define(DURATION,        20);
         builder.define(COLOR_R,         80);
         builder.define(COLOR_G,        160);
         builder.define(COLOR_B,        255);
         builder.define(DAMAGE,           0f);
         builder.define(DAMAGE_RADIUS,    3f);
-        builder.define(IMPACT_SPARKS,   10);
+        builder.define(IMPACT_SPARKS,   18);
     }
 
     public float getStrikeHeight()          { return entityData.get(STRIKE_HEIGHT); }
@@ -179,6 +179,7 @@ public class LightningStrikeEntity extends Entity {
     public int   getImpactSparks()          { return entityData.get(IMPACT_SPARKS); }
     public void  setImpactSparks(int v)     { entityData.set(IMPACT_SPARKS, v); }
 
+    // ── Misc ──────────────────────────────────────────────────────────────────
 
     @Override public boolean      shouldBeSaved()                                    { return false; }
     @Override protected void      readAdditionalSaveData(ValueInput in)              {}

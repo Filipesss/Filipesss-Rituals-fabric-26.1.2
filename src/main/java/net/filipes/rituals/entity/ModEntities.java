@@ -241,6 +241,20 @@ public class ModEntities {
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lightning_explosion")))
     );
+    public static final EntityType<WindGustBigEntity> WIND_GUST_BIG = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "wind_gust_big"),
+            EntityType.Builder.<WindGustBigEntity>of(
+                            (type, level) -> new WindGustBigEntity(type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(1f, 2f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "wind_gust_big")))
+    );
     public static final EntityType<SparkEntity> SPARK = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "spark"),
@@ -285,6 +299,22 @@ public class ModEntities {
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_ground")
                     ))
     );
+    public static final EntityType<PharathornGroundSmashEntity> PHARATHORN_GROUND_SMASH = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "pharathorn_ground_smash"),
+            EntityType.Builder.<PharathornGroundSmashEntity>of(
+                            (type, level) -> new PharathornGroundSmashEntity(
+                                    (EntityType<? extends PharathornGroundSmashEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "pharathorn_ground_smash")
+                    ))
+    );
     public static final EntityType<DepthstrikeChargedBallEntity> DEPTHSTRIKE_CHARGED_BALL = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_charged_ball"),
@@ -299,6 +329,54 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_charged_ball")
+                    ))
+    );
+    public static final EntityType<ShadowguardGrappleEntity> SHADOWGUARD_GRAPPLE = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "shadowguard_grapple"),
+            EntityType.Builder.<ShadowguardGrappleEntity>of(
+                            (type, level) -> new ShadowguardGrappleEntity(
+                                    (EntityType<? extends ShadowguardGrappleEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "shadowguard_grapple")
+                    ))
+    );
+    public static final EntityType<LifestealMarkEntity> LIFESTEAL_MARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lifesteal_mark"),
+            EntityType.Builder.<LifestealMarkEntity>of(
+                            (type, level) -> new LifestealMarkEntity(
+                                    (EntityType<? extends LifestealMarkEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lifesteal_mark")
+                    ))
+    );
+    public static final EntityType<PharathornMarkEntity> PHARATHORN_MARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "pharathorn_mark"),
+            EntityType.Builder.<PharathornMarkEntity>of(
+                            (type, level) -> new PharathornMarkEntity(
+                                    (EntityType<? extends PharathornMarkEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "pharathorn_mark")
                     ))
     );
 
