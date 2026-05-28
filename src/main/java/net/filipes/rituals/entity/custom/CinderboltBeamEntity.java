@@ -1,5 +1,7 @@
 package net.filipes.rituals.entity.custom;
 
+import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -27,7 +29,10 @@ import java.util.Optional;
 public class CinderboltBeamEntity extends Entity {
 
     public static final double RADIUS         = 30.0;
-    public static final double CASTER_Y_OFFSET = 2.7;
+    public static final double CASTER_Y_OFFSET = 1.4;
+    private boolean shakeSpawned = false;
+    private boolean playedLaserSound = false;
+    private static final int SPARK_INTERVAL = 4;
 
     private static final EntityDataAccessor<Float>   YAW       = SynchedEntityData.defineId(CinderboltBeamEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float>   PITCH     = SynchedEntityData.defineId(CinderboltBeamEntity.class, EntityDataSerializers.FLOAT);
@@ -96,7 +101,7 @@ public class CinderboltBeamEntity extends Entity {
         if (!level().isClientSide() && caster != null) {
             this.setLaserYaw  ((float) ((caster.yHeadRot + 90.0) * Math.PI / 180.0));
             this.setLaserPitch((float) (-caster.getXRot()         * Math.PI / 180.0));
-            this.setPos(caster.getX(), caster.getY() + CASTER_Y_OFFSET, caster.getZ());
+            this.setPos(caster.getX(), caster.getY() + 1.4, caster.getZ());
         }
 
         if (caster != null) {
@@ -119,6 +124,17 @@ public class CinderboltBeamEntity extends Entity {
         }
 
         if (tickCount - 20 > getDuration()) on = false;
+        if (!playedLaserSound && !level().isClientSide() && tickCount == 21) {
+            playedLaserSound = true;
+            level().playSound(
+                    null,
+                    getX(), getY(), getZ(),
+                    ModSounds.LASER,
+                    net.minecraft.sounds.SoundSource.PLAYERS,
+                    1.0f,
+                    1.0f
+            );
+        }
 
         if (tickCount > 20) {
             calculateEndPos();
@@ -129,6 +145,44 @@ public class CinderboltBeamEntity extends Entity {
                     new Vec3(endPosX, endPosY, endPosZ));
 
             if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
+                if (!shakeSpawned) {
+                    shakeSpawned = true;
+                    ScreenShakeEntity shake = new ScreenShakeEntity(level(),
+                            new Vec3(getX(), getY(), getZ()), 14f, 0.3f, 16);
+                    level().addFreshEntity(shake);
+                }
+                if (tickCount % SPARK_INTERVAL == 0) {
+                    double cx = collidePosX, cy = collidePosY, cz = collidePosZ;
+
+                    for (int i = 0; i < 4; i++) {
+                        double angle  = Math.random() * 2.0 * Math.PI;
+                        double upward = Math.random() * 0.4 + 0.1;
+                        double speed  = Math.random() * 0.25 + 0.15;
+                        SparkEntity spark = new SparkEntity(ModEntities.SPARK, serverLevel, cx, cy, cz);
+                        spark.applyPreset(SparkPresets.CINDERBOLT_BEAM_IMPACT);
+                        spark.forcedVelocity = new Vec3(
+                                Math.cos(angle) * speed,
+                                upward,
+                                Math.sin(angle) * speed
+                        );
+                        serverLevel.addFreshEntity(spark);
+                    }
+
+                    int upCount = 3;
+                    for (int i = 0; i < upCount; i++) {
+                        double angle  = (2.0 * Math.PI / upCount) * i;
+                        double spread = Math.random() * 0.1;
+                        double rise   = Math.random() * 0.3 + 0.6;
+                        SparkEntity spark = new SparkEntity(ModEntities.SPARK, serverLevel, cx, cy, cz);
+                        spark.applyPreset(SparkPresets.CINDERBOLT_BEAM_IMPACT);
+                        spark.forcedVelocity = new Vec3(
+                                Math.cos(angle) * spread,
+                                rise,
+                                Math.sin(angle) * spread
+                        );
+                        serverLevel.addFreshEntity(spark);
+                    }
+                }
                 if (blockSide != null && getFire()) {
                     BlockPos bp = BlockPos.containing(collidePosX, collidePosY, collidePosZ);
                     if (level().isEmptyBlock(bp))

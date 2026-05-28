@@ -65,7 +65,6 @@ public class PharathornGroundSmashEntity extends Entity {
         int eff = tickCount - getDelayTicks();
         if (eff < 0) return;
 
-        // Damage at the moment the spike fully emerges
         if (!level().isClientSide() && eff == EMERGE_TICKS && !hasDamaged) {
             hasDamaged = true;
             AABB hitbox = getBoundingBox().inflate(0.9, 1.8, 0.9);

@@ -30,7 +30,7 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
     private static final int   AMBIENT_SPARK_INTERVAL = 3;
     private static final float[] HOMING_STRENGTHS = { 0.03f, 0.06f, 0.10f, 0.15f, 0.20f };
     private static final double  HOMING_RANGE     = 24.0;
-    private static final int     HOMING_INTERVAL  = 5;   // re-scan every N ticks
+    private static final int     HOMING_INTERVAL  = 5;
 
     @Nullable
     private LivingEntity homingTarget     = null;
@@ -63,33 +63,26 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         this.setXRot(owner.getXRot());
     }
 
-    // -------------------------------------------------------------------------
-    // Tick — ThrowableProjectile.tick() moves the entity AND raycasts for hits
-    // -------------------------------------------------------------------------
-
     @Override
     public void tick() {
-        // ThrowableProjectile applies 0.99 drag each tick — counteract it so
-        // the ball maintains constant speed.
         if (!hasExploded) {
             Vec3 motion = getDeltaMovement();
             if (motion.length() > 0.001) {
                 if (!level().isClientSide()) {
-                    // Refresh homing target periodically
+
                     if (tickCount >= nextHomingSearch) {
                         nextHomingSearch = tickCount + HOMING_INTERVAL;
                         homingTarget = findHomingTarget();
                     }
-                    // Steer toward target before speed is locked in
+
                     if (homingTarget != null && homingTarget.isAlive()) {
-                        int amplifier = ConductivityHelper.getLevel(homingTarget) - 1; // 0-4
+                        int amplifier = ConductivityHelper.getLevel(homingTarget) - 1;
                         if (amplifier >= 0) {
                             float strength = HOMING_STRENGTHS[amplifier];
                             Vec3 toTarget  = homingTarget.position()
                                     .add(0, homingTarget.getBbHeight() * 0.5, 0)
                                     .subtract(position())
                                     .normalize();
-                            // Blend current direction with direction-to-target
                             motion = motion.normalize().add(toTarget.scale(strength));
                         }
                     }
@@ -98,7 +91,7 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
             }
         }
 
-        super.tick(); // handles movement + block/entity raycasting → onHit*
+        super.tick();
 
         if (!level().isClientSide()) {
             if (tickTrail >= 0 && tickCount >= tickTrail) {
@@ -124,21 +117,12 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Collision filtering — ThrowableProjectile calls canHitEntity() before
-    // registering an entity hit, so override that (not canCollideWith).
-    // -------------------------------------------------------------------------
-
     @Override
     protected boolean canHitEntity(Entity target) {
         if (target == getOwner()) return false;
         if (target instanceof LivingEntity) return true;
         return super.canHitEntity(target);
     }
-
-    // -------------------------------------------------------------------------
-    // Hit handlers — called by ThrowableProjectile's internal raycast
-    // -------------------------------------------------------------------------
 
     @Override
     protected void onHitBlock(BlockHitResult result) {
@@ -184,10 +168,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         return best;
     }
 
-    // -------------------------------------------------------------------------
-    // Explosion
-    // -------------------------------------------------------------------------
-
     private void triggerExplosion(LivingEntity directHit) {
         hasExploded = true;
         cleanupTrail();
@@ -207,7 +187,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         level.addFreshEntity(new ScreenShakeEntity(level,
                 new Vec3(explodeX, explodeY, explodeZ), 24f, 0.65f, 20));
 
-        // AOE damage
         Entity owner = getOwner();
         DamageSource aoeSource = (owner instanceof LivingEntity living)
                 ? level.damageSources().indirectMagic(this, living)
@@ -228,8 +207,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
             target.setDeltaMovement(target.getDeltaMovement().add(push));
         }
 
-        // Impact sparks — use DEPTHSTRIKE_CHARGED_BALL_IMPACT preset
-        // Ring
         for (int i = 0; i < 14; i++) {
             double angle = (Math.PI * 2.0 / 14) * i;
             SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, explodeX, explodeY, explodeZ);
@@ -250,7 +227,7 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
                     (random.nextDouble() - 0.5) * 0.4);
             level.addFreshEntity(spark);
         }
-        // Scattered
+
         for (int i = 0; i < 8; i++) {
             SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, explodeX, explodeY, explodeZ);
             spark.applyPreset(SparkPresets.DEPTHSTRIKE_CHARGED_BALL_IMPACT);
@@ -264,7 +241,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
             level.addFreshEntity(spark);
         }
 
-        // LIGHTNING_EXPLOSION — scaled up
         LightningExplosionEntity explosion = new LightningExplosionEntity(
                 ModEntities.LIGHTNING_EXPLOSION, level);
         explosion.setPos(explodeX, explodeY, explodeZ);
@@ -274,10 +250,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         tickTrail = tickCount + 4;
         tickSpark = tickCount + 8;
     }
-
-    // -------------------------------------------------------------------------
-    // Delayed effects
-    // -------------------------------------------------------------------------
 
     private void spawnDelayedTrail(ServerLevel level) {
         LightningTrailEntity trail = new LightningTrailEntity(ModEntities.LIGHTNING_TRAIL, level);
@@ -321,17 +293,11 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         discard();
     }
 
-    // -------------------------------------------------------------------------
-    // Visual centre for spark/explosion placement
-    // -------------------------------------------------------------------------
 
     private Vec3 visualCenter() {
         return new Vec3(getX(), getY() + 0.1, getZ());
     }
 
-    // -------------------------------------------------------------------------
-    // Trail spark
-    // -------------------------------------------------------------------------
 
     private void updateTrailSpark() {
         Vec3 c = visualCenter();
@@ -356,10 +322,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Ambient sparks
-    // -------------------------------------------------------------------------
-
     private void spawnAmbientSparks(ServerLevel level) {
         Vec3 c = visualCenter();
         int count = 2 + random.nextInt(2);
@@ -376,10 +338,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
             level.addFreshEntity(spark);
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Cleanup / persistence / flags
-    // -------------------------------------------------------------------------
 
     @Override
     public void remove(RemovalReason reason) {

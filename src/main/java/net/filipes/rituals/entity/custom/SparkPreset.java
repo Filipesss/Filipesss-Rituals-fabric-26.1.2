@@ -120,7 +120,6 @@ public final class SparkPreset {
             return this;
         }
         public Builder onHitSpawns(List<SpawnEntry> list) { onHitSpawns = new ArrayList<>(list);      return this; }
-        // Add this method to Builder alongside the others
         public Builder noBurst() {
             burstCount       = 0;
             burstSpeedMin    = 0;

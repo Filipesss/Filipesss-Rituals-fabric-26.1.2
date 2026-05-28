@@ -1,0 +1,21 @@
+{
+  "samplers": [{ "name": "Sampler0" }],
+  "passes": [
+    {
+      "vertex_shader": "minecraft:core/rendertype_eyes",
+      "fragment_shader": "minecraft:core/rendertype_eyes",
+      "vertex_format": "position_color_tex",
+      "primitive": "quads",
+      "blend": {
+        "srcRgb": "src_alpha",
+        "dstRgb": "one",
+        "srcAlpha": "one",
+        "dstAlpha": "zero"
+      },
+      "cull": false,
+      "depth_test": "lequal",
+      "depth_write": false,
+      "color_logic": "default"
+    }
+  ]
+}

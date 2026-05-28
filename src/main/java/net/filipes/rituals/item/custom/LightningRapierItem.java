@@ -64,9 +64,11 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
 
             // Sounds
             boolean didChain = !chainedTargets.isEmpty();
+            float pitch = 0.6f + world.getRandom().nextFloat() * 0.7f;
+
             world.playSound(null, target.getX(), target.getY(), target.getZ(),
-                    didChain ? ModSounds.LIGHTNING_RAPIER_ATTACK1 : ModSounds.LIGHTNING_RAPIER_ATTACK2,
-                    SoundSource.PLAYERS, 1.0f, 1.0f);
+                    didChain ? ModSounds.LIGHTNING_BOLT_3 : ModSounds.LIGHTNING_BOLT,
+                    SoundSource.PLAYERS, 1.0f, pitch);
 
             // Stage 6+: stun primary target
             if (stage >= 6) {
@@ -77,16 +79,12 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
         super.hurtEnemy(stack, target, attacker);
     }
 
-    // =========================================================================
-    //  Supercharge / streak system  (Stage 3+)
-    // =========================================================================
 
     private void handleChargeSystem(ItemStack stack, LivingEntity target,
                                     ServerPlayer player, ServerLevel serverLevel, int stage) {
         int charge = getCharge(stack);
 
         if (charge >= 6) {
-            // Supercharged hit: deal extra damage equal to weapon damage (total = 2x)
             float bonusDmg = (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE);
             target.hurt(serverLevel.damageSources().playerAttack(player), bonusDmg);
 
@@ -96,27 +94,23 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
             LightningRapierStreakTracker.reset(player.getUUID());
 
             serverLevel.playSound(null, target.getX(), target.getY(), target.getZ(),
-                    ModSounds.LIGHTNING_RAPIER_ATTACK1, SoundSource.PLAYERS, 1.4f, 0.7f);
+                    ModSounds.LIGHTNING_BOLT_2, SoundSource.PLAYERS, 1.4f, 0.7f);
 
         } else {
             int streak = LightningRapierStreakTracker.onHit(
                     player.getUUID(), target.getUUID(), serverLevel.getGameTime());
 
-            // Always sync streak → component so the bar reflects every hit
             setCharge(stack, streak);
 
             if (streak >= STREAK_NEEDED) {
                 LightningRapierStreakTracker.reset(player.getUUID());
 
                 serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        ModSounds.LIGHTNING_RAPIER_ATTACK2, SoundSource.PLAYERS, 1.0f, 0.4f);
+                        ModSounds.LIGHTNING_BOLT_3, SoundSource.PLAYERS, 1.0f, 0.4f);
             }
         }
     }
 
-    // =========================================================================
-    //  Chain lightning  (Stage 2+)
-    // =========================================================================
 
     private List<LivingEntity> doChainLightning(Level world, ServerLevel serverLevel,
                                                 LivingEntity primaryTarget,

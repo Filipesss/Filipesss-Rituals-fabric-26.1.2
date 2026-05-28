@@ -50,13 +50,11 @@ public class PharathornFortifyPacket implements CustomPacketPayload {
             player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, DURATION_TICKS, 3, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS,  DURATION_TICKS, 4, false, true));
 
-// Activation sparks
             ServerLevel level = (ServerLevel) player.level();
             double px = player.getX();
             double py = player.getY() + player.getBbHeight() * 0.5;
             double pz = player.getZ();
 
-// Ring around the player
             for (int i = 0; i < 10; i++) {
                 double angle = (Math.PI * 2.0 / 10) * i;
                 double radius = 0.6;
@@ -73,7 +71,7 @@ public class PharathornFortifyPacket implements CustomPacketPayload {
                         Math.sin(angle) * 0.25);
                 level.addFreshEntity(spark);
             }
-// Upward burst
+
             for (int i = 0; i < 5; i++) {
                 double theta = level.getRandom().nextDouble() * Math.PI * 2.0;
                 net.filipes.rituals.entity.custom.SparkEntity spark =

@@ -75,7 +75,7 @@ public class PharathornRevealPacket implements CustomPacketPayload {
                             e -> target.getUUID().equals(e.getTargetUUID()));
                     existing.forEach(e -> e.setForced(REVEAL_TICKS));
                 } else {
-                    // New mark — spawn in forced mode.
+
                     PharathornMarkTracker.mark(target.getUUID());
 
                     PharathornMarkEntity mark = new PharathornMarkEntity(
@@ -85,7 +85,7 @@ public class PharathornRevealPacket implements CustomPacketPayload {
                     mark.setEntityScale(1.0f);
                     level.addFreshEntity(mark);
 
-                    // Sparks — same burst pattern as the passive scan.
+
                     Vec3 toPlayer = player.position()
                             .add(0, player.getBbHeight() * 0.5, 0)
                             .subtract(spawnX, spawnY, spawnZ)
@@ -114,7 +114,6 @@ public class PharathornRevealPacket implements CustomPacketPayload {
                 }
             }
 
-            // One sound centred on the player for the whole pulse.
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.TRIAL_SPAWNER_OMINOUS_ACTIVATE,
                     SoundSource.PLAYERS, 1.0f, 0.8f);

@@ -43,6 +43,7 @@ public class CinderArrowEntityRenderer extends ArrowRenderer<CinderArrowEntity, 
                 state.trail.add(new Vec3(wp.x - cx, wp.y - cy, wp.z - cz));
             }
         }
+        state.arrowType = entity.getArrowType();
 
         Vec3 camWorld = Minecraft.getInstance().gameRenderer.getMainCamera().position();
         state.cameraOffset = camWorld.subtract(cx, cy, cz);
@@ -108,18 +109,24 @@ public class CinderArrowEntityRenderer extends ArrowRenderer<CinderArrowEntity, 
             final int iaA = (int)(alphaA * 185);
             final int iaB = (int)(alphaB * 185);
             final Vec3 fa0=a0, fa1=a1, fb0=b0, fb1=b1;
+            int r, g, cb;
+            switch (state.arrowType) {
+                case CinderArrowEntity.TYPE_PIERCE  -> { r = 255; g = 200; cb = 50;  }
+                case CinderArrowEntity.TYPE_EXPLODE -> { r = 255; g = 50;  cb = 20;  }
+                default                             -> { r = 255; g = 100; cb = 20;  }
+            }
 
             snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) -> {
-                // Orange: R=255, G=100, B=20
-                v.addVertex(pose, (float)fa0.x, (float)fa0.y, (float)fa0.z).setColor(255, 100, 20, iaA);
-                v.addVertex(pose, (float)fa1.x, (float)fa1.y, (float)fa1.z).setColor(255, 100, 20, iaA);
-                v.addVertex(pose, (float)fb1.x, (float)fb1.y, (float)fb1.z).setColor(255, 100, 20, iaB);
-                v.addVertex(pose, (float)fb0.x, (float)fb0.y, (float)fb0.z).setColor(255, 100, 20, iaB);
 
-                v.addVertex(pose, (float)fb0.x, (float)fb0.y, (float)fb0.z).setColor(255, 100, 20, iaB);
-                v.addVertex(pose, (float)fb1.x, (float)fb1.y, (float)fb1.z).setColor(255, 100, 20, iaB);
-                v.addVertex(pose, (float)fa1.x, (float)fa1.y, (float)fa1.z).setColor(255, 100, 20, iaA);
-                v.addVertex(pose, (float)fa0.x, (float)fa0.y, (float)fa0.z).setColor(255, 100, 20, iaA);
+                v.addVertex(pose, (float)fa0.x, (float)fa0.y, (float)fa0.z).setColor(r, g, cb, iaA);
+                v.addVertex(pose, (float)fa1.x, (float)fa1.y, (float)fa1.z).setColor(r, g, cb, iaA);
+                v.addVertex(pose, (float)fb1.x, (float)fb1.y, (float)fb1.z).setColor(r, g, cb, iaB);
+                v.addVertex(pose, (float)fb0.x, (float)fb0.y, (float)fb0.z).setColor(r, g, cb, iaB);
+
+                v.addVertex(pose, (float)fb0.x, (float)fb0.y, (float)fb0.z).setColor(r, g, cb, iaB);
+                v.addVertex(pose, (float)fb1.x, (float)fb1.y, (float)fb1.z).setColor(r, g, cb, iaB);
+                v.addVertex(pose, (float)fa1.x, (float)fa1.y, (float)fa1.z).setColor(r, g, cb, iaA);
+                v.addVertex(pose, (float)fa0.x, (float)fa0.y, (float)fa0.z).setColor(r, g, cb, iaA);
             });
         }
     }

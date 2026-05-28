@@ -34,15 +34,12 @@ public class LightningStrikeEntity extends Entity {
     public int  prevAppearTimer;
     public boolean on = true;
 
-    /** Counts how many impact sparks have already been spawned this lifetime. */
     private int sparksSpawned = 0;
 
     public LightningStrikeEntity(EntityType<? extends LightningStrikeEntity> type, Level level) {
         super(type, level);
         this.noPhysics = true;
     }
-
-    // ── Convenience spawn ─────────────────────────────────────────────────────
 
     public static void spawnAt(ServerLevel level, double x, double y, double z,
                                float height, int duration,
@@ -61,8 +58,6 @@ public class LightningStrikeEntity extends Entity {
         level.addFreshEntity(e);
     }
 
-    // ── Tick ──────────────────────────────────────────────────────────────────
-
     @Override
     public void tick() {
         super.tick();
@@ -78,12 +73,10 @@ public class LightningStrikeEntity extends Entity {
         }
 
         if (!level().isClientSide() && on && level() instanceof ServerLevel serverLevel) {
-            // Damage fires once at the bolt's peak
             if (tickCount == APPEAR_TICKS + 1) {
                 applyImpactDamage(serverLevel);
             }
 
-            // Sparks trickle out continuously from peak until the bolt fades
             if (tickCount >= APPEAR_TICKS) {
                 tickSparkSpawning(serverLevel);
             }
@@ -94,10 +87,6 @@ public class LightningStrikeEntity extends Entity {
         }
     }
 
-    /**
-     * Distributes {@link #getImpactSparks()} sparks evenly across the bolt's
-     * active duration, each fired at a random horizontal angle.
-     */
     private void tickSparkSpawning(ServerLevel level) {
         int total = getImpactSparks();
         if (sparksSpawned >= total) return;
@@ -143,8 +132,6 @@ public class LightningStrikeEntity extends Entity {
         }
     }
 
-    // ── Synced data ───────────────────────────────────────────────────────────
-
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(STRIKE_HEIGHT,  14f);  // taller default
@@ -178,8 +165,6 @@ public class LightningStrikeEntity extends Entity {
 
     public int   getImpactSparks()          { return entityData.get(IMPACT_SPARKS); }
     public void  setImpactSparks(int v)     { entityData.set(IMPACT_SPARKS, v); }
-
-    // ── Misc ──────────────────────────────────────────────────────────────────
 
     @Override public boolean      shouldBeSaved()                                    { return false; }
     @Override protected void      readAdditionalSaveData(ValueInput in)              {}

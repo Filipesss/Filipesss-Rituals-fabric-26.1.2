@@ -231,10 +231,8 @@ public class SparkEntity extends ThrowableProjectile {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Misc overrides
-    // -------------------------------------------------------------------------
-
+    @Override public boolean isOnFire() { return false; }
+    @Override public void setRemainingFireTicks(int ticks) {}
     @Override protected double  getDefaultGravity()                                 { return gravity; }
     @Override public    boolean shouldBeSaved()                                     { return false; }
     @Override protected void    readAdditionalSaveData(ValueInput in)               {}

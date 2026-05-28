@@ -10,5 +10,33 @@
   "lightning_rapier_attack2": {
     "subtitle": "Lightning chains",
     "sounds": ["rituals:lightning_rapier_attack2"]
+  },
+  "laser": {
+    "subtitle": "Laser",
+    "sounds": ["rituals:laser"]
+  },
+  "cinder_shield_equip": {
+    "subtitle": "Cinderbolt Shield Equips",
+    "sounds": ["rituals:cinder_shield_equip"]
+  },
+  "generic_dash": {
+    "subtitle": "Energized dash",
+    "sounds": ["rituals:generic_dash"]
+  },
+  "elec_trail": {
+    "subtitle": "Electric spark",
+    "sounds": ["rituals:elec_trail"]
+  },
+  "lightning_bolt": {
+    "subtitle": "Electricity",
+    "sounds": ["rituals:lightning_bolt"]
+  },
+  "lightning_bolt_2": {
+    "subtitle": "Electricity",
+    "sounds": ["rituals:lightning_bolt_2"]
+  },
+  "lstrike1": {
+    "subtitle": "Electricity",
+    "sounds": ["rituals:lstrike1"]
   }
 }

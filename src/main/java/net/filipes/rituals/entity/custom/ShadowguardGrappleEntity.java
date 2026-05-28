@@ -105,7 +105,7 @@ public class ShadowguardGrappleEntity extends ThrowableProjectile {
                     player.getId(), player.getDeltaMovement()));
 
         } else {
-            // Orbit sparks
+
             if (orbitSparkA == null || !orbitSparkA.isAlive()) {
                 orbitSparkA = createOrbitSpark((ServerLevel) level(), 0);
             }

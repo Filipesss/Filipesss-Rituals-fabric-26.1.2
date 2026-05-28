@@ -27,7 +27,6 @@ import net.minecraft.world.phys.Vec3;
 public class LightningStrikeEntityRenderer
         extends EntityRenderer<LightningStrikeEntity, LightningStrikeEntityRenderer.StrikeRenderState> {
 
-    // ── Same additive pipeline as SparkEntityRenderer ─────────────────────────
     private static final RenderPipeline STRIKE_PIPELINE = RenderPipelines.register(
             RenderPipeline.builder(RenderPipelines.MATRICES_FOG_SNIPPET)
                     .withLocation(Identifier.fromNamespaceAndPath("rituals", "lightning_strike_trail"))
@@ -50,7 +49,6 @@ public class LightningStrikeEntityRenderer
                     .createRenderSetup()
     );
 
-    // ── Render state ──────────────────────────────────────────────────────────
 
     public static class StrikeRenderState extends EntityRenderState {
         float posX, posY, posZ;
@@ -102,7 +100,7 @@ public class LightningStrikeEntityRenderer
                        SubmitNodeCollector snc, CameraRenderState cam) {
         if (s.alpha < 0.005f) return;
 
-        // Alpha fades in/out with appear timer, but peaks at PEAK_ALPHA
+
         final int   mainAlpha = (int)(s.alpha * PEAK_ALPHA);
         final float age       = s.age;
         final long  seed      = s.seed;
@@ -122,7 +120,6 @@ public class LightningStrikeEntityRenderer
         ps.popPose();
     }
 
-    // ── Bolt geometry ─────────────────────────────────────────────────────────
 
     private static void drawVerticalBolt(PoseStack.Pose pose, VertexConsumer v,
                                          float height, float width,
@@ -141,8 +138,6 @@ public class LightningStrikeEntityRenderer
         for (int i = 1; i <= knots; i++) {
             float t = i / (float)(knots + 1);
 
-            // Envelope: 0 at the bottom tip, peaks in the middle, stays ~80%
-            // at the top so the top end stays open rather than converging.
             float env    = (float) Math.sin(t * Math.PI * 0.7f);
             float maxOff = Math.min(span * 0.10f, 1.4f);
 
@@ -162,8 +157,6 @@ public class LightningStrikeEntityRenderer
             if (dir.lengthSqr() < 1e-8) continue;
             dir = dir.normalize();
 
-            // Push both ends slightly past the knot so neighbouring quads
-            // overlap and the junction gap disappears.
             float ext = width * 0.25f;
             a = a.subtract(dir.scale(ext));
             b = b.add(dir.scale(ext));
@@ -181,7 +174,6 @@ public class LightningStrikeEntityRenderer
         }
     }
 
-    // ── Geometry helpers ──────────────────────────────────────────────────────
 
     private static void vQuad(PoseStack.Pose pose, VertexConsumer v,
                               Vec3 a, Vec3 b, Vec3 wing, float w,

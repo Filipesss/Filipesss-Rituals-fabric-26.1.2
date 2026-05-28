@@ -187,7 +187,7 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
 
         hit.hurt(source, baseDamage + conductivityBonus);
 
-        // Conductivity — respect stage
+
         if (hit instanceof LivingEntity livingHit
                 && livingHit != owner
                 && !hitEntitiesThisFlight.contains(livingHit.getUUID())) {
@@ -195,7 +195,7 @@ public class ThrownDepthstrikeEntity extends AbstractArrow {
             hitEntitiesThisFlight.add(livingHit.getUUID());
             flightHitClearTick = tickCount + 20;
 
-            // Find the owner's held depthstrike to check stage
+
             int stage = 1;
             if (owner instanceof Player player) {
                 ItemStack held = player.getMainHandItem();

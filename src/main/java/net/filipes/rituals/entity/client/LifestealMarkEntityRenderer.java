@@ -72,14 +72,14 @@ public class LifestealMarkEntityRenderer
         final float half = LifestealMarkEntity.QUAD_SIZE * 0.5f;
         final RenderType rt = RENDER_TYPES[s.frame];
 
-        float frameScale = FRAME_SCALES[s.frame] * s.scale;  // combine with entity scale
+        float frameScale = FRAME_SCALES[s.frame] * s.scale;
 
         ps.pushPose();
         ps.translate(s.relX, s.relY, s.relZ);
         ps.mulPose(Axis.YP.rotationDegrees(-s.cameraYaw));
         ps.mulPose(Axis.XP.rotationDegrees(s.cameraPitch));
         ps.translate(0.0f, 0.0f, -0.8f);
-        if (frameScale != 1.0f) ps.scale(frameScale, frameScale, frameScale);  // was s.scale
+        if (frameScale != 1.0f) ps.scale(frameScale, frameScale, frameScale);
 
         snc.submitCustomGeometry(ps, rt, (pose, v) -> {
             tv(pose, v, -half, -half, 0f, 0f, 1f);

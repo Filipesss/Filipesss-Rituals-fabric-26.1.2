@@ -26,27 +26,32 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(
             "rituals", "textures/entity/cinderbolt_beam.png");
 
-    private static final float TW          = 256f;
-    private static final float TH          = 32f;
+    private static final float TW = 256f;
+    private static final float TH = 32f;
     private static final float SPRITE_HALF = 0.35f;
-    private static final float BEAM_HALF   = 0.35f;
+    private static final float BEAM_HALF = 0.35f;
 
     public static class BeamRenderState extends EntityRenderState {
         float posX, posY, posZ;
         float colX, colY, colZ;
         float yawDeg, pitchDeg;
         float beamLength;
-        int   frame;
+        int frame;
         float alpha;
         float age;
-        long  seed;
+        long seed;
         Direction blockSide;
         boolean clearerView;
     }
 
-    public CinderboltBeamEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
+    public CinderboltBeamEntityRenderer(EntityRendererProvider.Context ctx) {
+        super(ctx);
+    }
 
-    @Override public BeamRenderState createRenderState() { return new BeamRenderState(); }
+    @Override
+    public BeamRenderState createRenderState() {
+        return new BeamRenderState();
+    }
 
     @Override
     public void extractRenderState(CinderboltBeamEntity e, BeamRenderState s, float pt) {
@@ -55,20 +60,20 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
         double eX = e.xo + (e.getX() - e.xo) * pt;
         double eY = e.yo + (e.getY() - e.yo) * pt;
         double eZ = e.zo + (e.getZ() - e.zo) * pt;
-        s.posX = (float)(eX - s.x);
-        s.posY = (float)(eY - s.y);
-        s.posZ = (float)(eZ - s.z);
+        s.posX = (float) (eX - s.x);
+        s.posY = (float) (eY - s.y);
+        s.posZ = (float) (eZ - s.z);
 
         double cX = e.prevCollidePosX + (e.collidePosX - e.prevCollidePosX) * pt;
         double cY = e.prevCollidePosY + (e.collidePosY - e.prevCollidePosY) * pt;
         double cZ = e.prevCollidePosZ + (e.collidePosZ - e.prevCollidePosZ) * pt;
-        s.colX = (float)(cX - s.x);
-        s.colY = (float)(cY - s.y);
-        s.colZ = (float)(cZ - s.z);
+        s.colX = (float) (cX - s.x);
+        s.colY = (float) (cY - s.y);
+        s.colZ = (float) (cZ - s.z);
 
-        float yaw   = e.prevRenderYaw   + (e.renderYaw   - e.prevRenderYaw)   * pt;
+        float yaw = e.prevRenderYaw + (e.renderYaw - e.prevRenderYaw) * pt;
         float pitch = e.prevRenderPitch + (e.renderPitch - e.prevRenderPitch) * pt;
-        s.yawDeg   = yaw   * (180f / Mth.PI);
+        s.yawDeg = yaw * (180f / Mth.PI);
         s.pitchDeg = pitch * (180f / Mth.PI);
 
         float dx = s.colX - s.posX, dy = s.colY - s.posY, dz = s.colZ - s.posZ;
@@ -78,31 +83,42 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
         s.frame = (f < 0) ? 6 : Math.min(f, 6);
         s.alpha = Mth.clamp(e.appearTimer / 3f, 0f, 1f);
 
-        s.age  = e.tickCount - 1 + pt;
+        s.age = e.tickCount - 1 + pt;
         s.seed = e.getUUID().getMostSignificantBits() ^ e.getUUID().getLeastSignificantBits();
 
-        s.blockSide   = e.blockSide;
+        s.blockSide = e.blockSide;
         s.clearerView = e.caster instanceof Player
                 && Minecraft.getInstance().player == e.caster
                 && Minecraft.getInstance().options.getCameraType() == CameraType.FIRST_PERSON;
     }
 
-    @Override public boolean affectedByCulling(CinderboltBeamEntity e) { return false; }
-    @Override protected float getShadowRadius  (BeamRenderState s) { return 0f; }
-    @Override protected float getShadowStrength(BeamRenderState s) { return 0f; }
+    @Override
+    public boolean affectedByCulling(CinderboltBeamEntity e) {
+        return false;
+    }
+
+    @Override
+    protected float getShadowRadius(BeamRenderState s) {
+        return 0f;
+    }
+
+    @Override
+    protected float getShadowStrength(BeamRenderState s) {
+        return 0f;
+    }
 
     @Override
     public void submit(BeamRenderState s, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
         if (s.alpha < 0.005f) return;
 
-        final RenderType TEX    = RenderTypes.eyes(TEXTURE);
-        final int        frame  = s.frame;
-        final float      len    = s.beamLength;
-        final boolean    fp     = s.clearerView;
-        final float      yaw    = s.yawDeg;
-        final float      pitch  = s.pitchDeg;
-        final float      camXRot = Minecraft.getInstance().gameRenderer.getMainCamera().xRot();
+        final RenderType TEX = RenderTypes.eyes(TEXTURE);
+        final int frame = s.frame;
+        final float len = s.beamLength;
+        final boolean fp = s.clearerView;
+        final float yaw = s.yawDeg;
+        final float pitch = s.pitchDeg;
+        final float camXRot = Minecraft.getInstance().gameRenderer.getMainCamera().xRot();
         final Quaternionf camQuat = this.entityRenderDispatcher.camera.rotation();
 
         ps.pushPose();
@@ -116,7 +132,7 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
         }
 
         ps.pushPose();
-        ps.mulPose(new Quaternionf().rotationX( 90f * Mth.DEG_TO_RAD));
+        ps.mulPose(new Quaternionf().rotationX(90f * Mth.DEG_TO_RAD));
         ps.mulPose(new Quaternionf().rotationZ((yaw - 90f) * Mth.DEG_TO_RAD));
         ps.mulPose(new Quaternionf().rotationX(-pitch * Mth.DEG_TO_RAD));
         {
@@ -165,30 +181,30 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
     private static void drawSprite(PoseStack.Pose pose, VertexConsumer v, int frame) {
         float u0 = (16f * frame) / TW, u1 = u0 + 16f / TW;
         float v0 = 0f, v1 = 16f / TH;
-        float r  = SPRITE_HALF;
+        float r = SPRITE_HALF;
         vert(pose, v, -r, -r, 0, u0, v0);
-        vert(pose, v, -r,  r, 0, u0, v1);
-        vert(pose, v,  r,  r, 0, u1, v1);
-        vert(pose, v,  r, -r, 0, u1, v0);
-        vert(pose, v,  r, -r, 0, u1, v0);
-        vert(pose, v,  r,  r, 0, u1, v1);
-        vert(pose, v, -r,  r, 0, u0, v1);
+        vert(pose, v, -r, r, 0, u0, v1);
+        vert(pose, v, r, r, 0, u1, v1);
+        vert(pose, v, r, -r, 0, u1, v0);
+        vert(pose, v, r, -r, 0, u1, v0);
+        vert(pose, v, r, r, 0, u1, v1);
+        vert(pose, v, -r, r, 0, u0, v1);
         vert(pose, v, -r, -r, 0, u0, v0);
     }
 
     private static void drawBeam(PoseStack.Pose pose, VertexConsumer v,
                                  int frame, float length, boolean fp) {
-        float u0  = 0f, u1  = 20f / TW;
+        float u0 = 0f, u1 = 20f / TW;
         float vv0 = 16f / TH + (frame / TH), vv1 = vv0 + 1f / TH;
         float off = fp ? -1f : 0f;
-        vert(pose, v, -BEAM_HALF, off,    0, u0, vv0);
+        vert(pose, v, -BEAM_HALF, off, 0, u0, vv0);
         vert(pose, v, -BEAM_HALF, length, 0, u0, vv1);
-        vert(pose, v,  BEAM_HALF, length, 0, u1, vv1);
-        vert(pose, v,  BEAM_HALF, off,    0, u1, vv0);
-        vert(pose, v,  BEAM_HALF, off,    0, u1, vv0);
-        vert(pose, v,  BEAM_HALF, length, 0, u1, vv1);
+        vert(pose, v, BEAM_HALF, length, 0, u1, vv1);
+        vert(pose, v, BEAM_HALF, off, 0, u1, vv0);
+        vert(pose, v, BEAM_HALF, off, 0, u1, vv0);
+        vert(pose, v, BEAM_HALF, length, 0, u1, vv1);
         vert(pose, v, -BEAM_HALF, length, 0, u0, vv1);
-        vert(pose, v, -BEAM_HALF, off,    0, u0, vv0);
+        vert(pose, v, -BEAM_HALF, off, 0, u0, vv0);
     }
 
     private static void vert(PoseStack.Pose pose, VertexConsumer v,
@@ -202,29 +218,29 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
     }
 
 
-    private static final int BOLT_PAIRS   = 6;
+    private static final int BOLT_PAIRS = 6;
     private static final int UPDATE_TICKS = 1;
 
     private static void drawLightningBolts(BeamRenderState s, PoseStack ps, SubmitNodeCollector snc) {
-        Vec3 from   = new Vec3(s.posX, s.posY, s.posZ);
-        Vec3 to     = new Vec3(s.colX, s.colY, s.colZ);
+        Vec3 from = new Vec3(s.posX, s.posY, s.posZ);
+        Vec3 to = new Vec3(s.colX, s.colY, s.colZ);
         Vec3 rawDir = to.subtract(from);
         if (rawDir.lengthSqr() < 1e-6) return;
 
-        final Vec3 dir    = rawDir.normalize();
+        final Vec3 dir = rawDir.normalize();
         final Vec3 helper = (Math.abs(dir.y) > 0.95) ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
         final Vec3 right0 = dir.cross(helper).normalize();
-        final Vec3 up0    = right0.cross(dir).normalize();
+        final Vec3 up0 = right0.cross(dir).normalize();
 
-        final float age  = s.age;
-        final float len  = s.beamLength;
-        final long  seed = s.seed;
+        final float age = s.age;
+        final float len = s.beamLength;
+        final long seed = s.seed;
 
         for (int p = 0; p < BOLT_PAIRS; p++) {
             double angle = p * (Math.PI / BOLT_PAIRS);
-            double cosA  = Math.cos(angle), sinA = Math.sin(angle);
-            Vec3 right   = right0.scale(cosA).add(up0.scale(sinA));
-            Vec3 up      = right0.scale(-sinA).add(up0.scale(cosA));
+            double cosA = Math.cos(angle), sinA = Math.sin(angle);
+            Vec3 right = right0.scale(cosA).add(up0.scale(sinA));
+            Vec3 up = right0.scale(-sinA).add(up0.scale(cosA));
 
             long seedA = seed ^ (p * 0x9E3779B97F4A7C15L);
             long seedB = seedA ^ 0xDEADBEEFCAFEBABEL;
@@ -245,19 +261,19 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
                                  float age, long seed) {
         if (length < 0.1f) return;
 
-        int timeSlot = (int)(age / UPDATE_TICKS);
-        int knots    = Math.max(1, (int)(length / 4.0f));
+        int timeSlot = (int) (age / UPDATE_TICKS);
+        int knots = Math.max(1, (int) (length / 4.0f));
 
         Vec3[] pts = new Vec3[knots + 2];
-        pts[0]         = origin;
+        pts[0] = origin;
         pts[knots + 1] = origin.add(dir.scale(length));
 
         for (int i = 1; i <= knots; i++) {
-            float t      = i / (float)(knots + 1);
-            float env    = (float) Math.sin(t * Math.PI);
+            float t = i / (float) (knots + 1);
+            float env = (float) Math.sin(t * Math.PI);
             float maxOff = Math.min(length * 0.22f, 0.9f);
-            float offR   = hash(seed + i * 997L  + timeSlot * 7919L) * env * maxOff;
-            float offU   = hash(seed + i * 1009L + timeSlot * 6271L) * env * maxOff;
+            float offR = hash(seed + i * 997L + timeSlot * 7919L) * env * maxOff;
+            float offU = hash(seed + i * 1009L + timeSlot * 6271L) * env * maxOff;
             pts[i] = origin
                     .add(dir.scale(length * t))
                     .add(right.scale(offR))
@@ -266,15 +282,15 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
 
         for (int i = 0; i < pts.length - 1; i++) {
             crossQuad(pose, v, pts[i], pts[i + 1], right, width, r, g, b, al);
-            crossQuad(pose, v, pts[i], pts[i + 1], up,    width, r, g, b, al);
+            crossQuad(pose, v, pts[i], pts[i + 1], up, width, r, g, b, al);
         }
     }
 
 
-    private static final int   IMP_NUM_SPARKS = 20;
-    private static final float IMP_CYCLE      = 10f;
-    private static final int   IMP_NUM_SEGS   = 3;
-    private static final float IMP_FADE       = 1.0f;
+    private static final int IMP_NUM_SPARKS = 20;
+    private static final float IMP_CYCLE = 10f;
+    private static final int IMP_NUM_SEGS = 3;
+    private static final float IMP_FADE = 1.0f;
 
     private static void drawImpactBolts(BeamRenderState s, PoseStack ps, SubmitNodeCollector snc) {
         Vec3 impact = new Vec3(s.colX, s.colY, s.colZ);
@@ -290,34 +306,34 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
         }
 
         Vec3 helper = (Math.abs(normal.y) > 0.95) ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-        Vec3 axisA  = normal.cross(helper).normalize();
-        Vec3 axisB  = normal.cross(axisA).normalize();
+        Vec3 axisA = normal.cross(helper).normalize();
+        Vec3 axisB = normal.cross(axisA).normalize();
 
         final float totalAliveTime = IMP_NUM_SEGS + IMP_FADE;
 
         for (int slot = 0; slot < IMP_NUM_SPARKS; slot++) {
-            float offset   = (hash(s.seed + slot * 0xA7B3L) * 0.5f + 0.5f) * IMP_CYCLE;
+            float offset = (hash(s.seed + slot * 0xA7B3L) * 0.5f + 0.5f) * IMP_CYCLE;
             float localAge = (s.age + offset) % IMP_CYCLE;
             if (localAge >= totalAliveTime) continue;
 
-            int  cycleNum  = (int)((s.age + offset) / IMP_CYCLE);
-            long shapeSeed = rehash(s.seed ^ ((long)slot * 0x9E3779B97F4A7C15L)
-                    + (long)cycleNum * 0x6C62272E07BB0142L);
+            int cycleNum = (int) ((s.age + offset) / IMP_CYCLE);
+            long shapeSeed = rehash(s.seed ^ ((long) slot * 0x9E3779B97F4A7C15L)
+                    + (long) cycleNum * 0x6C62272E07BB0142L);
 
-            float angle  = (hash(shapeSeed) * 0.5f + 0.5f) * (float)(2.0 * Math.PI);
+            float angle = (hash(shapeSeed) * 0.5f + 0.5f) * (float) (2.0 * Math.PI);
             Vec3 boltDir = axisA.scale(Math.cos(angle)).add(axisB.scale(Math.sin(angle)));
-            Vec3 perp    = normal.cross(boltDir).normalize();
+            Vec3 perp = normal.cross(boltDir).normalize();
 
             float totalLen = 1.5f + (hash(shapeSeed + 1L) * 0.5f + 0.5f) * 2.0f;
 
             Vec3[] pts = new Vec3[IMP_NUM_SEGS + 1];
             pts[0] = impact;
             for (int k = 1; k <= IMP_NUM_SEGS; k++) {
-                float t      = k / (float) IMP_NUM_SEGS;
-                float env    = (float) Math.sin(t * Math.PI);
+                float t = k / (float) IMP_NUM_SEGS;
+                float env = (float) Math.sin(t * Math.PI);
                 float maxOff = totalLen * 0.12f;
-                float offP   = hash(shapeSeed + k * 997L)  * env * maxOff;
-                float offN   = hash(shapeSeed + k * 1009L) * env * maxOff;
+                float offP = hash(shapeSeed + k * 997L) * env * maxOff;
+                float offN = hash(shapeSeed + k * 1009L) * env * maxOff;
                 pts[k] = impact
                         .add(boltDir.scale(totalLen * t))
                         .add(perp.scale(offP))
@@ -342,7 +358,7 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
                 }
                 alpha = Mth.clamp(alpha, 0f, 1f);
 
-                final int al = (int)(alpha * 230);
+                final int al = (int) (alpha * 230);
                 if (al < 4) continue;
 
                 final Vec3 a = pts[seg];
@@ -370,10 +386,10 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
     private static void crossQuad(PoseStack.Pose pose, VertexConsumer v,
                                   Vec3 a, Vec3 b, Vec3 axis, float w,
                                   int r, int g, int bl, int al) {
-        float h   = w * 0.5f;
-        Vec3  off = axis.scale(h);
-        Vec3  a0  = a.add(off), a1 = a.subtract(off);
-        Vec3  b0  = b.add(off), b1 = b.subtract(off);
+        float h = w * 0.5f;
+        Vec3 off = axis.scale(h);
+        Vec3 a0 = a.add(off), a1 = a.subtract(off);
+        Vec3 b0 = b.add(off), b1 = b.subtract(off);
         bv(pose, v, a0, r, g, bl, al);
         bv(pose, v, a1, r, g, bl, al);
         bv(pose, v, b1, r, g, bl, al);
@@ -386,7 +402,7 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
 
     private static void bv(PoseStack.Pose pose, VertexConsumer v,
                            Vec3 p, int r, int g, int b, int a) {
-        v.addVertex(pose, (float)p.x, (float)p.y, (float)p.z).setColor(r, g, b, a);
+        v.addVertex(pose, (float) p.x, (float) p.y, (float) p.z).setColor(r, g, b, a);
     }
 
     private static float hash(long seed) {

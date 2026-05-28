@@ -11,6 +11,6 @@ public class ShadowguardGrappleRenderState extends EntityRenderState {
     public ItemStack stack = ItemStack.EMPTY;
     public ItemStackRenderState itemRenderState = new ItemStackRenderState();
     public float yRot;
-    public Vec3 ownerPos = Vec3.ZERO;       // for chain start
-    public Vec3 entityPos = Vec3.ZERO;      // for chain end
+    public Vec3 ownerPos = Vec3.ZERO;
+    public Vec3 entityPos = Vec3.ZERO;
 }

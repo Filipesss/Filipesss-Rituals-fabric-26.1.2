@@ -52,6 +52,8 @@ public class ModItemGroups {
                         output.accept(ModItems.POLARITY_BOW);
                         output.accept(ModItems.CINDERBOLT);
                         output.accept(ModItems.DEPTHSTRIKE);
+                        output.accept(ModItems.PHARATHORN);
+                        output.accept(ModItems.TEMPORAL_GLASSREAVER);
 
                     })
                     .build());

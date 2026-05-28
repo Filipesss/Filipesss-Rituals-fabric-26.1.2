@@ -1,10 +1,13 @@
 package net.filipes.rituals.entity.custom;
 
 import net.filipes.rituals.entity.Scalable;
+import net.filipes.rituals.sound.ModSounds;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -17,6 +20,7 @@ public class LightningTrailEntity extends Entity implements Scalable {
 
     public static final int   FRAME_COUNT = 8;
     public static final float QUAD_SIZE   = 2.0f;
+    private boolean playedSpawnSound = false;
 
     private static final EntityDataAccessor<Float> DATA_SCALE =
             SynchedEntityData.defineId(LightningTrailEntity.class, EntityDataSerializers.FLOAT);
@@ -24,17 +28,32 @@ public class LightningTrailEntity extends Entity implements Scalable {
     public LightningTrailEntity(EntityType<? extends LightningTrailEntity> type, Level level) {
         super(type, level);
         this.noPhysics = true;
+
     }
 
     public LightningTrailEntity(EntityType<? extends LightningTrailEntity> type, Level level,
                                 double x, double y, double z) {
         this(type, level);
         this.setPos(x, y, z);
+
     }
 
     @Override
     public void tick() {
         super.tick();
+
+        if (!playedSpawnSound && !level().isClientSide()) {
+            playedSpawnSound = true;
+            level().playSound(
+                    null,
+                    getX(), getY(), getZ(),
+                    ModSounds.LIGHTNING_BOLT,
+                    net.minecraft.sounds.SoundSource.PLAYERS,
+                    0.6f,
+                    1.0f
+            );
+        }
+
         xo = getX();
         yo = getY();
         zo = getZ();

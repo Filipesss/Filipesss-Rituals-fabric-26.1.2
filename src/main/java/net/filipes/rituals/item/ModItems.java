@@ -223,6 +223,16 @@ public class ModItems {
                                     Component.translatable("tooltip.rituals.lightning_rapier")
                                             .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
                             ))));
+    public static final Item TEMPORAL_GLASSREAVER = registerItem("temporal_glassreaver",
+            settings -> new TemporalGlassreaverItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
+            new Item.Properties()
+                    .stacksTo(1)
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponents.LORE,
+                            new ItemLore(List.of(
+                                    Component.translatable("tooltip.rituals.lightning_rapier")
+                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
+                            ))));
 
 
 

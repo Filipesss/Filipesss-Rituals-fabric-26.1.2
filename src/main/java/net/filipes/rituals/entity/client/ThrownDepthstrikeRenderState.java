@@ -17,12 +17,10 @@ public class ThrownDepthstrikeRenderState extends EntityRenderState {
     public float yRotO;
     public float xRotO;
 
-    // Trail and impact
     public List<Vec3> trail = new ArrayList<>();
     public boolean inGround = false;
     public float age = 0f;
     public long seed = 0L;
 
-    // Set to the entity's age at the moment it hit the ground; -1 means still in flight
     public float landingAge = -1f;
 }

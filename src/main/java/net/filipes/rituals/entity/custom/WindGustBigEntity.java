@@ -42,12 +42,12 @@ public class WindGustBigEntity extends Entity implements Scalable {
         zo = getZ();
         if (tickCount == 1) {
             this.level().playSound(
-                    null,                              // null = play for all nearby players
+                    null,
                     this.getX(), this.getY(), this.getZ(),
-                    SoundEvents.WIND_CHARGE_BURST,     // the wind charge sound
+                    SoundEvents.WIND_CHARGE_BURST,
                     SoundSource.NEUTRAL,
-                    1.0f,                              // volume
-                    1.0f                               // pitch
+                    1.0f,
+                    1.0f
             );
         }
 

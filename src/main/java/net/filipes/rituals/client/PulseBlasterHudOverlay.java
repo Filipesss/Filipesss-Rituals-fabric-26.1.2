@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.item.custom.PulseBlasterItem;
 import net.filipes.rituals.network.PulseBlasterAmmoPayload;
 
@@ -24,6 +25,7 @@ public class PulseBlasterHudOverlay {
     private static final int BAR_W    = SEGMENTS * SEG_W + (SEGMENTS - 1) * SEG_GAP;
 
     private static int liveAmmo = -1;
+    private static long clientOverchargeExpiry = -1L;
 
     public static void setLiveAmmo(int ammo) { liveAmmo = ammo; }
 
@@ -63,13 +65,17 @@ public class PulseBlasterHudOverlay {
         else if (off.getItem() instanceof PulseBlasterItem) blaster = off;
         if (blaster == null) { liveAmmo = -1; return; }
 
+        int stage   = ModDataComponents.getStage(blaster);  // ← read stage
+        int maxAmmo = PulseBlasterItem.getMaxAmmo(stage);    // 8 or 12
         int ammo    = (liveAmmo >= 0) ? liveAmmo : PulseBlasterItem.getAmmo(blaster);
-        int maxAmmo = PulseBlasterItem.MAX_AMMO;
+
+        // Recompute bar width dynamically
+        int barW = maxAmmo * SEG_W + (maxAmmo - 1) * SEG_GAP;
 
         int screenW    = client.getWindow().getGuiScaledWidth();
         int screenH    = client.getWindow().getGuiScaledHeight();
         int hotbarLeft = (screenW - 182) / 2;
-        int x          = hotbarLeft - BAR_W - 14;
+        int x          = hotbarLeft - barW - 14;
         int y          = screenH - 22;
 
         boolean low     = ammo <= 2 && ammo > 0;
@@ -83,9 +89,14 @@ public class PulseBlasterHudOverlay {
 
             if (filled) {
                 float ratio = (float) ammo / maxAmmo;
-                int   fill  = flashOn ? blendColor(ratio) : 0xFF888888;
-
-
+                int fill;
+                if (isOvercharged()) {
+                    float pulse = (float)((System.currentTimeMillis() % 400) / 400.0);
+                    fill = flashOn ? lerpColor(0xFFFF6600, 0xFFFFDD00,
+                            (float) Math.abs(Math.sin(pulse * Math.PI))) : 0xFF888888;
+                } else {
+                    fill = flashOn ? blendColor(ratio) : 0xFF888888;
+                }
                 graphics.fill(sx - 1, y - 1, sx + SEG_W + 1, y + SEG_H + 1, darken(fill, 0.4f));
                 graphics.fill(sx,     y,     sx + SEG_W,     y + SEG_H,     fill);
                 graphics.fill(sx,     y,     sx + SEG_W,     y + 2,         brighten(fill, 1.6f));
@@ -99,16 +110,29 @@ public class PulseBlasterHudOverlay {
 
         String label;
         int    labelColor;
-        if (empty) {
-            label = (time / 500) % 2 == 0 ? "RELOAD" : ""; labelColor = 0xFFAA3333;
+        if (isOvercharged()) {
+            long remaining = (clientOverchargeExpiry - time) / 1000 + 1;
+            label = "OVERCHARGE  " + remaining + "s";
+            labelColor = (time / 250) % 2 == 0 ? 0xFFFFCC00 : 0xFFFF6600;
+        } else if (empty) {
+            label = (time / 500) % 2 == 0 ? "RELOAD" : "";
+            labelColor = 0xFFAA3333;
         } else if (low) {
-            label = "LOW  " + ammo + "/" + maxAmmo; labelColor = flashOn ? 0xFFFF4444 : 0xFF883333;
+            label = "LOW  " + ammo + "/" + maxAmmo;
+            labelColor = flashOn ? 0xFFFF4444 : 0xFF883333;
         } else {
-            label = "PWR  " + ammo + "/" + maxAmmo; labelColor = 0xFFAAAAAA;
+            label = "PWR  " + ammo + "/" + maxAmmo;
+            labelColor = 0xFFAAAAAA;
         }
 
-        int labelX = x + BAR_W / 2 - client.font.width(label) / 2;
+        int labelX = x + barW / 2 - client.font.width(label) / 2;
         graphics.text(client.font, label, labelX, y - 10, labelColor, true);
+    }
+    public static void triggerOvercharge() {
+        clientOverchargeExpiry = System.currentTimeMillis() + PulseBlasterItem.OVERCHARGE_DURATION_MS;
+    }
+    public static boolean isOvercharged() {
+        return System.currentTimeMillis() < clientOverchargeExpiry;
     }
 
     private static int blendColor(float ratio) {
@@ -121,6 +145,11 @@ public class PulseBlasterHudOverlay {
             r = lerp(0xFF, 0xFF, t); g = lerp(0x22, 0xAA, t); b = lerp(0x00, 0x00, t);
         }
         return 0xFF000000 | (clamp(r) << 16) | (clamp(g) << 8) | clamp(b);
+    }
+    private static int lerpColor(int a, int b, float t) {
+        int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
+        int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
+        return 0xFF000000 | (lerp(ar,br,t) << 16) | (lerp(ag,bg,t) << 8) | lerp(ab,bb,t);
     }
 
     private static int darken(int color, float f) {

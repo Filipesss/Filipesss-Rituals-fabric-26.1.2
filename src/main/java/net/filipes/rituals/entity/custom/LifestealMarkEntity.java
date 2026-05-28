@@ -26,7 +26,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
     public static final int   LIFETIME        = FRAME_COUNT * LOOP_COUNT * FRAME_DURATION;
     public static final float QUAD_SIZE       = 1.6f;
 
-    /** Scoreboard team name used to colour the outline green. */
     private static final String GLOW_TEAM = "rituals_marked";
 
     private static final EntityDataAccessor<Float> DATA_SCALE =
@@ -50,9 +49,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
         this.targetUUID = targetUUID;
     }
 
-    // -------------------------------------------------------------------------
-    // Tick
-    // -------------------------------------------------------------------------
 
     @Override
     public void tick() {
@@ -67,7 +63,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
                 return;
             }
 
-            // Apply the green outline once, on the first server tick.
             if (!glowingApplied) {
                 applyGreenGlow(target, serverLevel);
                 glowingApplied = true;
@@ -91,14 +86,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Glow helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Adds the target to a green scoreboard team and turns on its glowing tag.
-     * The team is created lazily the first time it is needed.
-     */
     private void applyGreenGlow(Entity target, ServerLevel serverLevel) {
         Scoreboard scoreboard = serverLevel.getServer().getScoreboard();
 
@@ -106,7 +93,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
         if (team == null) {
             team = scoreboard.addPlayerTeam(GLOW_TEAM);
             team.setColor(ChatFormatting.GREEN);
-            // Keep the team name-tag invisible so only the outline shows.
             team.setNameTagVisibility(net.minecraft.world.scores.Team.Visibility.NEVER);
         }
 
@@ -114,10 +100,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
         target.setGlowingTag(true);
     }
 
-    /**
-     * Removes the target from the glow team and turns off its glowing tag.
-     * Called when the mark expires or the target dies.
-     */
     private void cleanupGlow(ServerLevel serverLevel) {
         if (targetUUID == null || !glowingApplied) return;
 
@@ -136,9 +118,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
         return (tickCount / FRAME_DURATION) % FRAME_COUNT;
     }
 
-    // -------------------------------------------------------------------------
-    // Boilerplate
-    // -------------------------------------------------------------------------
 
     @Override protected void defineSynchedData(SynchedEntityData.Builder builder) { builder.define(DATA_SCALE, 1.0f); }
     @Override public boolean shouldBeSaved() { return false; }

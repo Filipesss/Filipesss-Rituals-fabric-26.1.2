@@ -1,6 +1,7 @@
 package net.filipes.rituals;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -33,6 +34,7 @@ import net.filipes.rituals.upgrade.UpgradeRecipeRegistry;
 import net.filipes.rituals.util.RosegoldPickaxeUsageEvent;
 import net.filipes.rituals.worldgen.RitualWorldGen;
 import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
@@ -46,6 +48,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
@@ -60,6 +63,8 @@ public class Rituals implements ModInitializer {
 	public static final String MOD_ID = "rituals";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	private static final Set<UUID> BONUS_GUARD = new HashSet<>();
+	private static int vortexFrame = 0;
+	private static int frameTicker = 0;
 
 	private static Vec3 randomSphere(double speed) {
 		double theta = Math.random() * Math.PI * 2.0;
@@ -105,6 +110,9 @@ public class Rituals implements ModInitializer {
 		RosegoldPickaxeUsageEvent.register();
 		KillUpgradeRegistry.registerAll();
 		PharathornStillHandler.register();
+		CinderboltShieldHandler.register();
+		CinderboltDeathSaveHandler.register();
+		TwinBladesHandler.register();
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 20 != 0) return;
@@ -174,6 +182,8 @@ public class Rituals implements ModInitializer {
 			}
 			ShadowguardItem.tickInvisibility();
 			LifestealMarkTracker.tick();
+			LunarMarkTracker.tick();
+			SolarMarkTracker.tick();
 		});
 
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, killed) -> {
@@ -279,7 +289,6 @@ public class Rituals implements ModInitializer {
 			}
 		});
 
-		PayloadTypeRegistry.serverboundPlay().register(FireDeathLaserPacket.TYPE, FireDeathLaserPacket.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(DoubleJumpPayload.ID, DoubleJumpPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(PharathornDashPacket.TYPE, PharathornDashPacket.CODEC);
 
@@ -292,6 +301,22 @@ public class Rituals implements ModInitializer {
 				LightningRapierTeleportPacket::handle
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
+				LunarMarkPacket.TYPE,
+				LunarMarkPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				LunarMarkPacket.TYPE,
+				LunarMarkPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				SolarMarkPacket.TYPE,
+				SolarMarkPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				SolarMarkPacket.TYPE,
+				SolarMarkPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
 				DepthstrikeAbilityPacket.TYPE,
 				DepthstrikeAbilityPacket.CODEC
 		);
@@ -302,6 +327,26 @@ public class Rituals implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(
 				DepthstrikeChargedBallPacket.TYPE,
 				DepthstrikeChargedBallPacket::handle
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				CinderboltSaveTriggeredPacket.TYPE,
+				CinderboltSaveTriggeredPacket.CODEC
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				CinderboltTriplePacket.TYPE,
+				CinderboltTriplePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				CinderboltTriplePacket.TYPE,
+				CinderboltTriplePacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				FireCinderboltBeamPacket.TYPE,
+				FireCinderboltBeamPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				FireCinderboltBeamPacket.TYPE,
+				FireCinderboltBeamPacket::handle
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
 				PharathornGroundSmashPacket.TYPE,
@@ -324,6 +369,7 @@ public class Rituals implements ModInitializer {
 				ShadowguardLaunchPacket.TYPE,
 				ShadowguardLaunchPacket::handle
 		);
+
 		PayloadTypeRegistry.serverboundPlay().register(
 				ShadowguardGrapplePacket.TYPE,
 				ShadowguardGrapplePacket.CODEC
@@ -333,12 +379,57 @@ public class Rituals implements ModInitializer {
 				ShadowguardGrapplePacket::handle
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
+				TwinsActionTwoPacket.TYPE,
+				TwinsActionTwoPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				TwinsActionTwoPacket.TYPE,
+				TwinsActionTwoPacket::handle
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				TwinsStartCooldownPacket.TYPE,
+				TwinsStartCooldownPacket.CODEC
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				TwinsResonancePacket.TYPE,
+				TwinsResonancePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				TwinsResonancePacket.TYPE,
+				TwinsResonancePacket::handle
+		);
+
+		PayloadTypeRegistry.serverboundPlay().register(
 				PharathornFortifyPacket.TYPE,
 				PharathornFortifyPacket.CODEC
 		);
 		ServerPlayNetworking.registerGlobalReceiver(
 				PharathornFortifyPacket.TYPE,
 				PharathornFortifyPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				PulseBlasterOverchargePacket.TYPE,
+				PulseBlasterOverchargePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				PulseBlasterOverchargePacket.TYPE,
+				PulseBlasterOverchargePacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				FireDeathLaserPacket.TYPE,
+				FireDeathLaserPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				FireDeathLaserPacket.TYPE,
+				FireDeathLaserPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				PulseBlasterShotgunPacket.TYPE,
+				PulseBlasterShotgunPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				PulseBlasterShotgunPacket.TYPE,
+				PulseBlasterShotgunPacket::handle
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
 				PharathornRevealPacket.TYPE,
@@ -446,53 +537,32 @@ public class Rituals implements ModInitializer {
 					LightningRapierStreakTracker.tick(server);
 				})
 		);
+		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+			if (client.player == null) return;
+
+			frameTicker++;
+			if (frameTicker % 4 != 0) return;
+			vortexFrame = (vortexFrame + 1) % 9;
+
+			ItemStack held = client.player.getMainHandItem();
+			if (held.is(ModItems.VORTEX_EDGE)) {
+				held.set(
+						DataComponents.CUSTOM_MODEL_DATA,
+						new CustomModelData(List.of((float) vortexFrame), List.of(), List.of(), List.of())
+				);
+			}
+		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
 				hasDoubleJumped.remove(handler.player.getUUID())
 		);
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+				TwinsActionTwoPacket.onPlayerDisconnect(handler.getPlayer().getUUID())
+		);
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+				TwinsResonancePacket.onPlayerDisconnect(handler.getPlayer().getUUID())
+		);
 
-		ServerPlayNetworking.registerGlobalReceiver(FireDeathLaserPacket.TYPE, (payload, context) -> {
-			ServerPlayer player = context.player();
-			ServerLevel level = (ServerLevel) player.level();
-
-			context.server().execute(() -> {
-				ItemStack stack = player.getMainHandItem();
-
-				if (!(stack.getItem() instanceof PulseBlasterItem)) return;
-
-				int ammo = PulseBlasterItem.getAmmo(stack);
-				if (ammo < 3) {
-					level.playSound(null, player.getX(), player.getY(), player.getZ(),
-							SoundEvents.DISPENSER_FAIL, SoundSource.PLAYERS, 0.5f, 1.0f);
-					return;
-				}
-
-				PulseBlasterItem.setAmmo(stack, ammo - 0);
-
-				double maxDist = 40.0;
-				Vec3 start = player.getEyePosition().subtract(0, 0.2, 0);
-				Vec3 look = player.getViewVector(1.0f);
-				Vec3 end = start.add(look.scale(maxDist));
-
-				HitResult hitResult = level.clip(new ClipContext(
-						start, end,
-						ClipContext.Block.COLLIDER,
-						ClipContext.Fluid.NONE,
-						player));
-				Vec3 actualEnd = hitResult.getLocation();
-
-				AABB hitBox = new AABB(start, actualEnd).inflate(1.0);
-				for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, hitBox, e -> e != player)) {
-					Optional<Vec3> hit = target.getBoundingBox().inflate(0.2).clip(start, actualEnd);
-					if (hit.isPresent()) {
-						target.hurt(level.damageSources().playerAttack(player), 15.0f);
-					}
-				}
-
-				level.playSound(null, player.getX(), player.getY(), player.getZ(),
-						SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 2.0f, 2.0f);
-			});
-		});
 
 		EntityRenderers.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
 

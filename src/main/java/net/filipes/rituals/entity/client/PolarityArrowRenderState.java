@@ -8,5 +8,5 @@ import java.util.List;
 
 public class PolarityArrowRenderState extends ArrowRenderState {
     public final List<Vec3> trail = new ArrayList<>();
-    public Vec3 cameraOffset = Vec3.ZERO; // camera pos relative to entity, for billboarding
+    public Vec3 cameraOffset = Vec3.ZERO;
 }

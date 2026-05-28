@@ -38,7 +38,6 @@ public class PharathornMarkEntity extends Entity implements Scalable {
     public UUID targetUUID;
     private boolean glowingApplied  = false;
 
-    /** When > 0 the mark ignores HP/range conditions and counts down to removal. */
     private int forcedTicksLeft = 0;
 
     public PharathornMarkEntity(EntityType<? extends PharathornMarkEntity> type, Level level) {
@@ -54,7 +53,6 @@ public class PharathornMarkEntity extends Entity implements Scalable {
 
     public void setTargetUUID(UUID uuid)   { this.targetUUID = uuid; }
 
-    /** Force-reveal this mark for the given number of ticks, bypassing HP/range checks. */
     public void setForced(int ticks)       { this.forcedTicksLeft = ticks; }
     public boolean isForced()              { return forcedTicksLeft > 0; }
 
@@ -72,12 +70,9 @@ public class PharathornMarkEntity extends Entity implements Scalable {
                 return;
             }
 
-            // Forced-reveal mode: count down and ignore passive conditions.
             if (forcedTicksLeft > 0) {
                 forcedTicksLeft--;
                 if (forcedTicksLeft == 0) {
-                    // Time's up — let the passive logic decide next tick.
-                    // If conditions aren't met we discard immediately.
                     if (!conditionsMet(target, serverLevel)) {
                         cleanupGlow(serverLevel);
                         PharathornMarkTracker.unmark(targetUUID);
@@ -86,7 +81,6 @@ public class PharathornMarkEntity extends Entity implements Scalable {
                     }
                 }
             } else {
-                // Normal passive mode: discard when conditions break.
                 if (!conditionsMet(target, serverLevel)) {
                     cleanupGlow(serverLevel);
                     PharathornMarkTracker.unmark(targetUUID);

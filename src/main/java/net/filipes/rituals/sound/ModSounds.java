@@ -38,6 +38,72 @@ public final class ModSounds {
                     SoundEvent.createVariableRangeEvent(LIGHTNING_RAPIER_ATTACK2_ID)
             );
 
+    public static final Identifier LASER_ID =
+            Identifier.fromNamespaceAndPath("rituals", "laser");
+
+    public static final SoundEvent LASER =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    LASER_ID,
+                    SoundEvent.createVariableRangeEvent(LASER_ID)
+            );
+
+    public static final Identifier CINDER_SHIELD_EQUIP_ID =
+            Identifier.fromNamespaceAndPath("rituals", "cinder_shield_equip");
+
+    public static final SoundEvent CINDER_SHIELD_EQUIP =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    CINDER_SHIELD_EQUIP_ID,
+                    SoundEvent.createVariableRangeEvent(CINDER_SHIELD_EQUIP_ID)
+            );
+    public static final Identifier GENERIC_DASH_ID =
+            Identifier.fromNamespaceAndPath("rituals", "generic_dash");
+
+    public static final SoundEvent GENERIC_DASH =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    GENERIC_DASH_ID,
+                    SoundEvent.createVariableRangeEvent(GENERIC_DASH_ID)
+            );
+    public static final Identifier ELECTRIC_TRAIL_ID =
+            Identifier.fromNamespaceAndPath("rituals", "elec_trail");
+
+    public static final SoundEvent ELECTRIC_TRAIL =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    ELECTRIC_TRAIL_ID,
+                    SoundEvent.createVariableRangeEvent(ELECTRIC_TRAIL_ID)
+            );
+    public static final Identifier LIGHTNING_BOLT_ID =
+            Identifier.fromNamespaceAndPath("rituals", "lightning_bolt");
+
+    public static final SoundEvent LIGHTNING_BOLT =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    LIGHTNING_BOLT_ID,
+                    SoundEvent.createVariableRangeEvent(LIGHTNING_BOLT_ID)
+            );
+    public static final Identifier LIGHTNING_BOLT_2_ID =
+            Identifier.fromNamespaceAndPath("rituals", "lightning_bolt_2");
+
+    public static final SoundEvent LIGHTNING_BOLT_2 =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    LIGHTNING_BOLT_2_ID,
+                    SoundEvent.createVariableRangeEvent(LIGHTNING_BOLT_2_ID)
+            );
+
+    public static final Identifier LIGHTNING_BOLT_3_ID =
+            Identifier.fromNamespaceAndPath("rituals", "lstrike1");
+
+    public static final SoundEvent LIGHTNING_BOLT_3 =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    LIGHTNING_BOLT_3_ID,
+                    SoundEvent.createVariableRangeEvent(LIGHTNING_BOLT_3_ID)
+            );
+
     public static void initialize() {
 
     }

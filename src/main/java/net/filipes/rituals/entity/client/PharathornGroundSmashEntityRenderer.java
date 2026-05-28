@@ -57,19 +57,18 @@ public class PharathornGroundSmashEntityRenderer
 
         float yOffset;
         if (animTick < PharathornGroundSmashEntity.EMERGE_TICKS) {
-            // Cubic ease-out emergence
+
             float t     = animTick / (float) PharathornGroundSmashEntity.EMERGE_TICKS;
             float eased = 1f - (float) Math.pow(1f - t, 3);
             yOffset = -BURIED_DEPTH * (1f - eased);
         } else if (animTick < PharathornGroundSmashEntity.EMERGE_TICKS
                 + PharathornGroundSmashEntity.HOLD_TICKS) {
-            // Organic wobble — phase is offset by the spike's random Y rotation so
-            // each spike in the group sways at a different phase, making the group feel alive.
+
             float holdTick   = animTick - PharathornGroundSmashEntity.EMERGE_TICKS;
             float wobblePhase = state.yRot * ((float) Math.PI / 180f);
             yOffset = (float) Math.sin(holdTick * 0.38f + wobblePhase) * 0.045f;
         } else {
-            // Quadratic ease-in retract
+
             float t = Math.min(1f, (animTick - PharathornGroundSmashEntity.EMERGE_TICKS
                     - PharathornGroundSmashEntity.HOLD_TICKS)
                     / (float) PharathornGroundSmashEntity.RETRACT_TICKS);

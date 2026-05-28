@@ -24,10 +24,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.client.*;
 import net.filipes.rituals.item.ModItems;
-import net.filipes.rituals.item.custom.LightningRapierItem;
-import net.filipes.rituals.item.custom.PharathornItem;
-import net.filipes.rituals.item.custom.RosegoldPickaxeItem;
-import net.filipes.rituals.item.custom.ShadowguardItem;
+import net.filipes.rituals.item.custom.*;
 import net.filipes.rituals.network.*;
 import net.filipes.rituals.particle.*;
 import net.filipes.rituals.screen.AmethystHourglassScreen;
@@ -42,6 +39,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderers;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
@@ -56,6 +54,11 @@ public class RitualsClient implements ClientModInitializer {
     public static KeyMapping actionOne;
     public static KeyMapping actionTwo;
     public static KeyMapping actionThree;
+    private static int laserAnimTicks = 0;
+    private static int solarChargeTicks      = -1;
+    private static final int SOLAR_CHARGE_DURATION = 12; // ~0.6 s
+    private static int     solarActiveTicks   = 0;
+    private static boolean resonanceActivated = false;
 
 
     @Override
@@ -106,9 +109,13 @@ public class RitualsClient implements ClientModInitializer {
                 ElectricBoltEntityRenderer::new
         );
         ModelLayerRegistry.registerModelLayer(
-                PulseBlasterBeamModel.LAYER,
-                PulseBlasterBeamModel::createBodyLayer
-        );
+                CinderboltShieldModel.LAYER,
+                CinderboltShieldModel::createBodyLayer);
+
+// Renderer:
+        EntityRendererRegistry.register(
+                ModEntities.CINDERBOLT_SHIELD,
+                CinderboltShieldEntityRenderer::new);
 
         ModelLayerRegistry.registerModelLayer(
                 PulseBlasterGunModel.LAYER,
@@ -132,8 +139,15 @@ public class RitualsClient implements ClientModInitializer {
                 PolarityTornadoRedModel.LAYER,
                 PolarityTornadoRedModel::getTexturedModelData);
         ModelLayerRegistry.registerModelLayer(
+                LunarFragmentModel.LAYER,
+                LunarFragmentModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(
                 DepthstrikeChargedBallModel.LAYER,
                 DepthstrikeChargedBallModel::createBodyLayer
+        );
+        ModelLayerRegistry.registerModelLayer(
+                SolarStormcellModel.LAYER,
+                SolarStormcellModel::createBodyLayer
         );
         EntityRendererRegistry.register(
                 ModEntities.POLARITY_TORNADO_BLUE,
@@ -165,6 +179,11 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.LIFESTEAL_MARK, LifestealMarkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.PHARATHORN_MARK, PharathornMarkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.PHARATHORN_GROUND_SMASH, PharathornGroundSmashEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.CINDERBOLT_SHIELD, CinderboltShieldEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LUNAR_FRAGMENT, LunarFragmentEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SOLAR_STORMCELL, SolarStormcellEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LUNAR_MARK, LunarMarkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SOLAR_MARK, SolarMarkEntityRenderer::new);
 
 
 
@@ -197,6 +216,15 @@ public class RitualsClient implements ClientModInitializer {
         CooldownManager.register("shadowguard_launch", "Shadow Launch", 12_000, 0x9B6DFF);
         CooldownManager.register("shadowguard_grapple", "Grapple", 15_000, 0x9B6DFF);
         CooldownManager.register("lifesteal_mark", "Lifesteal Mark", 8_000, 0x9B00FF);
+        CooldownManager.register("pulse_blaster_shotgun",   "Shotgun Blast", 8_000,  0xFF6600);
+        CooldownManager.register("pulse_blaster_overcharge","Overcharge",    30_000, 0xFFCC00);
+        CooldownManager.register("pulse_blaster_death_laser", "Death Laser", 20_000, 0xFF2200);
+        CooldownManager.register("cinderbolt_triple", "Triple Load", 20_000, 0xFF4400);
+        CooldownManager.register("fire_cinderbolt_beam", "Triple Load", 20_000, 0xFF4400);
+        CooldownManager.register("cinderbolt_death_save", "Last Stand", 1_200_000, 0xFF4400);
+        CooldownManager.register("twins_action_two", "Lunar Fragments", 20_000, 0xAADDFF);
+        CooldownManager.register("lunar_mark", "Lunar Mark", 15_000, 0xAADDFF);
+        CooldownManager.register("solar_mark", "Solar Mark", 15_000, 0xAADDFF);
 
 
 
@@ -206,9 +234,21 @@ public class RitualsClient implements ClientModInitializer {
 
 
 
+
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadowguardInvisiblePacket.TYPE,
                 (packet, context) -> ShadowguardHudOverlay.trigger()
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                CinderboltSaveTriggeredPacket.TYPE,
+                (packet, context) -> {
+                    CooldownManager.trigger("cinderbolt_death_save");
+                }
+        );
+        // it starts only once all fragments have been launched or have expired.
+        ClientPlayNetworking.registerGlobalReceiver(
+                TwinsStartCooldownPacket.TYPE,
+                (packet, context) -> CooldownManager.trigger("twins_action_two")
         );
 
         //PARTICLES
@@ -234,6 +274,26 @@ public class RitualsClient implements ClientModInitializer {
                 CooldownManager.tick();
             }
             PulseBlasterCylinderState.tick();
+            if (solarChargeTicks > 0) {
+                if (client.player != null) {
+                    var heldDuringCharge = client.player.getMainHandItem().getItem();
+                    if (heldDuringCharge instanceof SolarBladeItem
+                            || heldDuringCharge instanceof LunarBladeItem) {
+                        solarChargeTicks--;
+                        if (solarChargeTicks == 0) {
+                            solarChargeTicks = -1;
+                            ClientPlayNetworking.send(new TwinsActionTwoPacket(true));
+                            solarActiveTicks   = 120;
+                        }
+                    } else {
+                        solarChargeTicks = -1;
+                    }
+                } else {
+                    solarChargeTicks = -1;
+                }
+            }
+
+            if (solarActiveTicks > 0) solarActiveTicks--;
 
 
             while (actionOne.consumeClick()) {
@@ -247,21 +307,42 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new DepthstrikeChargedBallPacket());
                             CooldownManager.trigger("depthstrike_charged_ball");
                         }
-                    } else if (held.getItem() == ModItems.DEPTHSTRIKE && !mc.player.isShiftKeyDown()) {
+                    }  else if (held.getItem() == ModItems.DEPTHSTRIKE && !mc.player.isShiftKeyDown()) {
                         if (stage >= 4 && !CooldownManager.isOnCooldown("depthstrike_recall")) {
                             ClientPlayNetworking.send(new DepthstrikeRecallPacket());
                             CooldownManager.trigger("depthstrike_recall");
+                        }
+                    } else if (held.getItem() instanceof LunarBladeItem) {
+                        if (stage >= 1 && !CooldownManager.isOnCooldown("lunar_mark")) {
+                            ClientPlayNetworking.send(new LunarMarkPacket());
+                            CooldownManager.trigger("lunar_mark");
+                        }
+                    } else if (held.getItem() instanceof SolarBladeItem) {
+                        if (stage >= 1 && !CooldownManager.isOnCooldown("solar_mark")) {
+                            ClientPlayNetworking.send(new SolarMarkPacket());
+                            CooldownManager.trigger("solar_mark");
                         }
                     } else if (held.getItem() instanceof ShadowguardItem) {
                         if (stage >= 4 && !CooldownManager.isOnCooldown("shadowguard_launch")) {
                             ClientPlayNetworking.send(new ShadowguardLaunchPacket());
                             CooldownManager.trigger("shadowguard_launch");
                         }
+                    } else if (held.getItem() instanceof CinderboltItem
+                            && ModDataComponents.getStage(held) >= 4) {
+                        if (!CooldownManager.isOnCooldown("cinderbolt_triple")) {
+                            ClientPlayNetworking.send(new CinderboltTriplePacket());
+                            CooldownManager.trigger("cinderbolt_triple");
+                        }
+                    } else if (held.getItem() instanceof PulseBlasterItem) {
+                        if (!mc.player.isShiftKeyDown()
+                                && ModDataComponents.getStage(held) >= 4
+                                && !CooldownManager.isOnCooldown("pulse_blaster_shotgun")) {
+                            ClientPlayNetworking.send(new PulseBlasterShotgunPacket());
+                            CooldownManager.trigger("pulse_blaster_shotgun");
+                        }
                     } else if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         ClientPlayNetworking.send(new TogglePickaxeMiningPacket());
-                    } else if (held.getItem() instanceof net.filipes.rituals.item.custom.PulseBlasterItem) {
-                        ClientPlayNetworking.send(new FireDeathLaserPacket());
                     } else if (held.getItem() instanceof LightningRapierItem
                             && ModDataComponents.getStage(held) >= 4) {
                         if (!CooldownManager.isOnCooldown("lightning_rapier_charge")) {
@@ -294,6 +375,31 @@ public class RitualsClient implements ClientModInitializer {
                         if (stage >= 5 && !CooldownManager.isOnCooldown("lifesteal_mark")) {
                             ClientPlayNetworking.send(new LifestealMarkPacket());
                             CooldownManager.trigger("lifesteal_mark");
+                        }
+
+                    } else if (held.getItem() instanceof LunarBladeItem) {
+                        if (!CooldownManager.isOnCooldown("twins_action_two")) {
+                            ClientPlayNetworking.send(new TwinsActionTwoPacket());
+                        }
+
+                    } else if (held.getItem() instanceof SolarBladeItem) {
+                        if (!CooldownManager.isOnCooldown("twins_action_two")
+                                && solarChargeTicks == -1) {
+                            solarChargeTicks   = SOLAR_CHARGE_DURATION;
+                            resonanceActivated = false;
+                        }
+                    } else if (held.getItem() instanceof CinderboltItem
+                            && ModDataComponents.getStage(held) >= 5) {
+                        if (!CooldownManager.isOnCooldown("fire_cinderbolt_beam")) {
+                            ClientPlayNetworking.send(new FireCinderboltBeamPacket());
+                            CooldownManager.trigger("fire_cinderbolt_beam");
+                        }
+                    } else if (held.getItem() instanceof PulseBlasterItem) {
+                        if (ModDataComponents.getStage(held) >= 5
+                                && !CooldownManager.isOnCooldown("pulse_blaster_overcharge")) {
+                            ClientPlayNetworking.send(new PulseBlasterOverchargePacket());
+                            CooldownManager.trigger("pulse_blaster_overcharge");
+                            PulseBlasterHudOverlay.triggerOvercharge();
                         }
                     } else if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
@@ -335,6 +441,13 @@ public class RitualsClient implements ClientModInitializer {
                         if (stage >= 7 && !CooldownManager.isOnCooldown("shadowguard_grapple")) {
                             ClientPlayNetworking.send(new ShadowguardGrapplePacket());
                             CooldownManager.trigger("shadowguard_grapple");
+                        }
+
+                    } else if (held.getItem() instanceof PulseBlasterItem) {
+                        if (ModDataComponents.getStage(held) >= 6
+                                && !CooldownManager.isOnCooldown("pulse_blaster_death_laser")) {
+                            ClientPlayNetworking.send(new FireDeathLaserPacket());
+                            CooldownManager.trigger("pulse_blaster_death_laser");
                         }
                     } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
                         if (stage >= 6 && !CooldownManager.isOnCooldown("depthstrike_ground_ability")) {

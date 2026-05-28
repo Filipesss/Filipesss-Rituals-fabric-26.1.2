@@ -110,11 +110,11 @@ public class LifestealMarkPacket implements CustomPacketPayload {
                 Vec3 velocity;
                 if (i < 3) {
                     velocity = toPlayer
-                            .add(randomSpread(0.25)) // was 0.1
+                            .add(randomSpread(0.25))
                             .normalize()
-                            .scale(0.35 + Math.random() * 0.3); // was 0.15
+                            .scale(0.35 + Math.random() * 0.3);
                 } else {
-                    velocity = randomSphere(0.25 + Math.random() * 0.35); // was 0.1+0.2
+                    velocity = randomSphere(0.25 + Math.random() * 0.35);
                 }
                 SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, spawnX, spawnY, spawnZ);
                 spark.applyPreset(SparkPresets.LIFESTEAL_SHADOWGUARD);

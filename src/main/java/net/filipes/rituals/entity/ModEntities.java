@@ -100,11 +100,19 @@ public class ModEntities {
             BuiltInRegistries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "death_laser"),
             EntityType.Builder.<DeathLaserEntity>of(
-                            (type, level) -> new DeathLaserEntity((EntityType<? extends DeathLaserEntity>) type, level),
+                            (type, level) -> new DeathLaserEntity(
+                                    (EntityType<? extends DeathLaserEntity>) type,
+                                    level
+                            ),
                             MobCategory.MISC
-                    ).sized(0.25f, 0.25f).clientTrackingRange(64).updateInterval(1)
-                    .build(ResourceKey.create(Registries.ENTITY_TYPE,
-                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "death_laser")))
+                    )
+                    .sized(0.1f, 0.1f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "death_laser")
+                    ))
     );
     public static final EntityType<SpiralStabEntity> SPIRAL_STAB = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
@@ -377,6 +385,86 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "pharathorn_mark")
+                    ))
+    );
+    public static final EntityType<LunarMarkEntity> LUNAR_MARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lunar_mark"),
+            EntityType.Builder.<LunarMarkEntity>of(
+                            (type, level) -> new LunarMarkEntity(
+                                    (EntityType<? extends LunarMarkEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lunar_mark")
+                    ))
+    );
+    public static final EntityType<SolarMarkEntity> SOLAR_MARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "solar_mark"),
+            EntityType.Builder.<SolarMarkEntity>of(
+                            (type, level) -> new SolarMarkEntity(
+                                    (EntityType<? extends SolarMarkEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "solar_mark")
+                    ))
+    );
+    public static final EntityType<CinderboltShieldEntity> CINDERBOLT_SHIELD = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "cinderbolt_shield"),
+            EntityType.Builder.<CinderboltShieldEntity>of(
+                            (type, level) -> new CinderboltShieldEntity(
+                                    (EntityType<? extends CinderboltShieldEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "cinderbolt_shield")
+                    ))
+    );
+    public static final EntityType<LunarFragmentEntity> LUNAR_FRAGMENT = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lunar_fragment"),
+            EntityType.Builder.<LunarFragmentEntity>of(
+                            (type, level) -> new LunarFragmentEntity(
+                                    (EntityType<? extends LunarFragmentEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lunar_fragment")
+                    ))
+    );
+    public static final EntityType<SolarStormcellEntity> SOLAR_STORMCELL = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "solar_stormcell"),
+            EntityType.Builder.<SolarStormcellEntity>of(
+                            (type, level) -> new SolarStormcellEntity(
+                                    (EntityType<? extends SolarStormcellEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "solar_stormcell")
                     ))
     );
 

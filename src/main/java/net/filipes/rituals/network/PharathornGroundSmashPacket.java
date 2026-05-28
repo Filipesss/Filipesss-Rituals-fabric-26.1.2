@@ -57,21 +57,18 @@ public class PharathornGroundSmashPacket implements CustomPacketPayload {
 
             ServerLevel level = (ServerLevel) player.level();
 
-            // Attack swing animation
             player.swing(InteractionHand.MAIN_HAND, true);
 
-            // Explosion sound at cast origin
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.GENERIC_EXPLODE,
                     SoundSource.PLAYERS, 1.0f, 0.6f);
 
-            // Screen shake centered on player
             level.addFreshEntity(new ScreenShakeEntity(
                     level,
                     player.position(),
-                    20.0f,   // radius in blocks
-                    1.2f,    // strength
-                    25       // duration in ticks
+                    20.0f,
+                    1.2f,
+                    25
             ));
 
             float  yawRad = (float) Math.toRadians(player.getYRot());
@@ -106,7 +103,6 @@ public class PharathornGroundSmashPacket implements CustomPacketPayload {
                 }
             }
 
-            // Original impact sound still plays underneath
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.EVOKER_FANGS_ATTACK,
                     SoundSource.PLAYERS, 1.2f, 0.5f);
@@ -117,12 +113,11 @@ public class PharathornGroundSmashPacket implements CustomPacketPayload {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(
                 (int) Math.floor(x), (int) Math.floor(startY), (int) Math.floor(z));
 
-        // Scan downward until we hit something with solid collision
         for (int i = 0; i < 10; i++) {
             if (isSolidGround(level, pos)) return pos.getY() + 1.0;
             pos.move(Direction.DOWN);
         }
-        // Scan upward from start as fallback
+
         pos.set((int) Math.floor(x), (int) Math.floor(startY), (int) Math.floor(z));
         for (int i = 0; i < 10; i++) {
             if (isSolidGround(level, pos) && !isSolidGround(level, pos.above())) return pos.getY() + 1.0;

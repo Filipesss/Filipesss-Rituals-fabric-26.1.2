@@ -159,7 +159,7 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
 
         if (s.age > 20f && len > 0.1f) {
             drawLightningBolts(s, ps, snc);
-            drawImpactBolts(s, ps, snc);
+
         }
     }
 
@@ -276,109 +276,6 @@ public class DeathLaserEntityRenderer extends EntityRenderer<DeathLaserEntity, D
         }
     }
 
-
-    // ── Impact bolts ─────────────────────────────────────────────────────────
-
-    private static final int   IMP_NUM_SPARKS = 20;
-    private static final float IMP_CYCLE      = 10f;   // ticks per fire cycle
-    private static final int   IMP_NUM_SEGS   = 3;     // segments per spark
-    private static final float IMP_FADE       = 1.0f;  // ticks to fade each segment in/out
-
-    private static void drawImpactBolts(LaserRenderState s, PoseStack ps, SubmitNodeCollector snc) {
-        Vec3 impact = new Vec3(s.colX, s.colY, s.colZ);
-
-        Vec3 normal;
-        if (s.blockSide != null) {
-            normal = new Vec3(s.blockSide.getStepX(),
-                    s.blockSide.getStepY(),
-                    s.blockSide.getStepZ());
-        } else {
-            Vec3 beamDir = impact.subtract(new Vec3(s.posX, s.posY, s.posZ));
-            normal = beamDir.lengthSqr() > 1e-6 ? beamDir.normalize() : new Vec3(0, 1, 0);
-        }
-
-        Vec3 helper = (Math.abs(normal.y) > 0.95) ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
-        Vec3 axisA  = normal.cross(helper).normalize();
-        Vec3 axisB  = normal.cross(axisA).normalize();
-
-        // Alive window: one tick per segment to reveal + one fade-out tick
-        final float totalAliveTime = IMP_NUM_SEGS + IMP_FADE;
-
-        for (int slot = 0; slot < IMP_NUM_SPARKS; slot++) {
-
-            float offset   = (hash(s.seed + slot * 0xA7B3L) * 0.5f + 0.5f) * IMP_CYCLE;
-            float localAge = (s.age + offset) % IMP_CYCLE;
-
-            if (localAge >= totalAliveTime) continue;
-
-            int  cycleNum  = (int)((s.age + offset) / IMP_CYCLE);
-            long shapeSeed = rehash(s.seed ^ ((long)slot * 0x9E3779B97F4A7C15L)
-                    + (long)cycleNum * 0x6C62272E07BB0142L);
-
-            float angle  = (hash(shapeSeed) * 0.5f + 0.5f) * (float)(2.0 * Math.PI);
-            Vec3 boltDir = axisA.scale(Math.cos(angle)).add(axisB.scale(Math.sin(angle)));
-            Vec3 perp    = normal.cross(boltDir).normalize();
-
-            // Longer sparks, much less lateral wiggle
-            float totalLen = 1.5f + (hash(shapeSeed + 1L) * 0.5f + 0.5f) * 2.0f;
-
-            Vec3[] pts = new Vec3[IMP_NUM_SEGS + 1];
-            pts[0] = impact;
-            for (int k = 1; k <= IMP_NUM_SEGS; k++) {
-                float t      = k / (float) IMP_NUM_SEGS;
-                float env    = (float) Math.sin(t * Math.PI);
-                float maxOff = totalLen * 0.12f;   // subtle deviation only
-                float offP   = hash(shapeSeed + k * 997L)  * env * maxOff;
-                float offN   = hash(shapeSeed + k * 1009L) * env * maxOff;
-                pts[k] = impact
-                        .add(boltDir.scale(totalLen * t))
-                        .add(perp.scale(offP))
-                        .add(normal.scale(offN));
-            }
-
-
-            final double sqrt3over2 = Math.sqrt(3.0) / 2.0;
-            final Vec3 tubeA = perp;
-            final Vec3 tubeB = perp.scale(-0.5).add(normal.scale(sqrt3over2));
-
-            for (int seg = 0; seg < IMP_NUM_SEGS; seg++) {
-
-                float segRevealAge = localAge - seg;
-                if (segRevealAge < 0f) continue;
-
-                float alpha;
-                if (segRevealAge < IMP_FADE) {
-                    alpha = segRevealAge / IMP_FADE;
-                } else if (localAge > totalAliveTime - IMP_FADE) {
-                    alpha = (totalAliveTime - localAge) / IMP_FADE;
-                } else {
-                    alpha = 1.0f;
-                }
-                alpha = Mth.clamp(alpha, 0f, 1f);
-
-                final int al = (int)(alpha * 230);
-                if (al < 4) continue;
-
-                final Vec3 a = pts[seg];
-                final Vec3 b = pts[seg + 1];
-                final Vec3 tA = tubeA, tB = tubeB;
-
-                snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) -> {
-                    crossQuad(pose, v, a, b, tA, 0.09f, 255, 80, 0, al);
-                    crossQuad(pose, v, a, b, tB, 0.09f, 255, 80, 0, al);
-                });
-            }
-        }
-    }
-
-    private static long rehash(long seed) {
-        seed ^= (seed >>> 33);
-        seed *= 0xFF51AFD7ED558CCDL;
-        seed ^= (seed >>> 33);
-        seed *= 0xC4CEB9FE1A85EC53L;
-        seed ^= (seed >>> 33);
-        return seed;
-    }
 
     private static void crossQuad(PoseStack.Pose pose, VertexConsumer v,
                                   Vec3 a, Vec3 b, Vec3 axis, float w,

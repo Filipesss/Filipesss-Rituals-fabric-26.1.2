@@ -236,8 +236,167 @@ public final class SparkPresets {
             .windowSize(3)
             .trailAlpha(95)
             .build();
-
-
+    public static final SparkPreset DEATH_LASER_IMPACT = SparkPreset.builder()
+            .color(255, 150, 31)
+            .trailAmount(1)
+            .gravity(0.08)
+            .trailJitter(0f)
+            .windowSize(4)
+            .trailWidth(0.10f)
+            .noBurst()
+            .build();
+    public static final SparkPreset CINDERBOLT_BEAM_IMPACT = SparkPreset.builder()
+            .color(255, 78, 3)
+            .trailAmount(1)
+            .gravity(0.08)
+            .trailJitter(0f)
+            .windowSize(4)
+            .trailWidth(0.10f)
+            .noBurst()
+            .build();
+    public static final SparkPreset PULSE_BEAM_IMPACT = SparkPreset.builder()
+            .color(255, 47, 2)
+            .trailAmount(1)
+            .gravity(0.09)
+            .trailJitter(0f)
+            .windowSize(2)
+            .trailWidth(0.05f)
+            .noBurst()
+            .build();
+    public static final SparkPreset CINDERBOLT_EXPLOSION = SparkPreset.builder()
+            .color(252, 45, 3)
+            .trailAmount(1)
+            .gravity(0.09)
+            .trailJitter(0f)
+            .windowSize(6)
+            .trailWidth(0.1f)
+            .build();
+    public static final SparkPreset CINDERBOLT_SHIELD_TRAIL = SparkPreset.builder()
+            .color(255, 100, 0)
+            .trailAlpha(90)
+            .gravity(0)
+            .trailJitter(0.05f)
+            .windowSize(10)
+            .trailAmount(2)
+            .trailSpacing(0.05f)
+            .trailWidth(0.1f)
+            .noBurst()
+            .build();
+    public static final SparkPreset CINDERBOLT_SHIELD_SPARK = SparkPreset.builder()
+            .color(255, 100, 0)
+            .trailAlpha(90)
+            .gravity(0.06)
+            .trailJitter(0.02f)
+            .windowSize(5)
+            .trailAmount(1)
+            .trailSpacing(0f)
+            .trailWidth(0.1f)
+            .noBurst()
+            .build();
+    public static final SparkPreset SOLAR_STORMCELL_TRAIL = SparkPreset.builder()
+            .color(255, 234, 158)
+            .trailAlpha(90)
+            .gravity(0.06)
+            .trailJitter(0.4f)
+            .windowSize(10)
+            .maxLifetime(600)
+            .trailAmount(6)
+            .burstCount(10)
+            .trailGapChance(0.2f)
+            .trailRotation(0.65f)
+            .trailSpacing(0.1f)
+            .build();
+    public static final SparkPreset SOLAR_MARK_START = SparkPreset.builder()
+            .color(255, 234, 158)
+            .trailAlpha(90)
+            .gravity(0.06)
+            .trailJitter(0.05f)
+            .windowSize(5)
+            .trailAmount(1)
+            .burstCount(10)
+            .trailGapChance(0.1f)
+            .trailRotation(0.25f)
+            .build();
+    public static final SparkPreset SOLAR_MARK_END = SparkPreset.builder()
+            .color(255, 234, 158)
+            .trailAlpha(90)
+            .gravity(0.06)
+            .trailJitter(0.1f)
+            .windowSize(5)
+            .trailAmount(3)
+            .burstCount(10)
+            .trailSpacing(0.05f)
+            .trailGapChance(0.12f)
+            .trailRotation(0.35f)
+            .build();
+    public static final SparkPreset SOLAR_STORMCELL_SINGLE = SparkPreset.builder()
+            .color(255, 234, 158)
+            .trailAlpha(90)
+            .gravity(0.06)
+            .trailJitter(0.02f)
+            .windowSize(5)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset LUNAR_FRAGMENT_TRAIL = SparkPreset.builder()
+            .color(200, 210, 255)
+            .trailAlpha(90)
+            .trailAmount(2)
+            .trailSpacing(0.02f)
+            .trailRotation(0.4f)
+            .gravity(0.06)
+            .trailJitter(0.01f)
+            .windowSize(5)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset LUNAR_FRAGMENT_SINGLE = SparkPreset.builder()
+            .color(200, 210, 255)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.01f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset LUNAR_FRAGMENT_SINGLE_SHORT = SparkPreset.builder()
+            .color(200, 210, 255)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.01f)
+            .windowSize(4)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset LUNAR_FRAGMENT_RESONANCE = SparkPreset.builder()
+            .color(122, 147, 255)
+            .trailAlpha(90)
+            .trailAmount(3)
+            .trailSpacing(0.03f)
+            .trailRotation(0.6f)
+            .gravity(0.06)
+            .trailJitter(0.1f)
+            .windowSize(6)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset LUNAR_MARK_END = SparkPreset.builder()
+            .color(156, 174, 255)
+            .trailAlpha(110)
+            .trailAmount(2)
+            .trailSpacing(0.03f)
+            .trailRotation(0.6f)
+            .gravity(0.06)
+            .trailJitter(0.1f)
+            .windowSize(6)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset LUNAR_MARK_START = SparkPreset.builder()
+            .color(156, 174, 255)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.01f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
 
 
 
@@ -263,6 +422,22 @@ public final class SparkPresets {
         register("pharathorn_immunity", PHARATHORN_IMMUNITY);
         register("pharathorn_dash", PHARATHORN_DASH);
         register("pharathorn_dash_main", PHARATHORN_DASH_MAIN);
+        register("death_laser_impact", DEATH_LASER_IMPACT);
+        register("pulse_beam_impact", PULSE_BEAM_IMPACT);
+        register("cinderbolt_explosion", CINDERBOLT_EXPLOSION);
+        register("cinderbolt_beam_impact", CINDERBOLT_BEAM_IMPACT);
+        register("cinderbolt_shield_trail", CINDERBOLT_SHIELD_TRAIL);
+        register("cinderbolt_shield_spark", CINDERBOLT_SHIELD_SPARK);
+        register("solar_stormcell_trail", SOLAR_STORMCELL_TRAIL);
+        register("solar_stormcell_single", SOLAR_STORMCELL_SINGLE);
+        register("solar_mark_start", SOLAR_MARK_START);
+        register("solar_mark_end", SOLAR_MARK_END);
+        register("lunar_fragment_trail", LUNAR_FRAGMENT_TRAIL);
+        register("lunar_fragment_single", LUNAR_FRAGMENT_SINGLE);
+        register("lunar_fragment_single_short", LUNAR_FRAGMENT_SINGLE_SHORT);
+        register("lunar_fragment_resonance", LUNAR_FRAGMENT_RESONANCE);
+        register("lunar_mark_end", LUNAR_MARK_END);
+        register("lunar_mark_start", LUNAR_MARK_START);
 
     }
     public static Optional<String> nameOf(SparkPreset preset) {
