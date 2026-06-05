@@ -2,8 +2,16 @@ package net.filipes.rituals.item.custom;
 
 import net.filipes.rituals.item.ModToolMaterials;
 import net.filipes.rituals.util.RitualsTooltipStyle;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 public class BlightspearItem extends Item implements RitualsTooltipStyle {
 
@@ -20,6 +28,20 @@ public class BlightspearItem extends Item implements RitualsTooltipStyle {
                 8.75f,
                 4.6f
         ));
+    }
+
+    @Override
+    public void inventoryTick(final ItemStack itemStack, final ServerLevel level, final Entity owner, final @Nullable EquipmentSlot slot) {
+        super.inventoryTick(itemStack, level, owner, slot);
+        if (!level.isClientSide() && owner instanceof LivingEntity living) {
+
+            if (living.getMainHandItem() == itemStack || living.getOffhandItem() == itemStack) {
+
+                if (living.hasEffect(MobEffects.SLOWNESS)) {
+                    living.removeEffect(MobEffects.SLOWNESS);
+                }
+            }
+        }
     }
 
     @Override

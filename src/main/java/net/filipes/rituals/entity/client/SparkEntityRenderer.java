@@ -42,7 +42,7 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
                     .build()
     );
 
-    private static final RenderType SPARK_TRAIL = RenderType.create(
+    public static final RenderType SPARK_TRAIL = RenderType.create(
             "spark_trail",
             RenderSetup.builder(SPARK_PIPELINE)
                     .sortOnUpload()

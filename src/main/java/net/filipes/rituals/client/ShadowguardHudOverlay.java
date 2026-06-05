@@ -15,7 +15,7 @@ public class ShadowguardHudOverlay {
     private static final long FADE_MS = 500;
 
     private static final Identifier VIGNETTE_TEXTURE =
-            Identifier.fromNamespaceAndPath("rituals", "textures/misc/shadowguard_vignette.png");
+            Identifier.fromNamespaceAndPath("rituals", "textures/misc/basic_vignette.png");
 
     private static long activeUntil = 0;
 

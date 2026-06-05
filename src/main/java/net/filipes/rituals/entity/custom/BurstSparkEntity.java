@@ -17,7 +17,7 @@ public class BurstSparkEntity extends SparkEntity {
         trailRotation  = 0f;
         trailWidth     = 0.045f;
         trailJitter    = 0f;
-        trailAlpha     = 220;
+        trailAlpha     = 95;
         maxLifetime    = 55;
         trailLength    = 22;
         windowSize     = 5;

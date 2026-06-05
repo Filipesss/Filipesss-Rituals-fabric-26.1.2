@@ -1,6 +1,5 @@
 package net.filipes.rituals.network;
 
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.effect.ModStatusEffects;
@@ -19,43 +18,10 @@ import java.util.UUID;
 
 public class TwinBladesHandler {
 
-    private static final Set<UUID>          processing       = new HashSet<>();
-    private static final Map<UUID, Boolean> lastWasSolar     = new HashMap<>();
-    private static final Set<UUID>          alternatePending = new HashSet<>();
+    private static final Map<UUID, Boolean> lastWasSolar = new HashMap<>();
+    private static final Set<UUID> alternatePending = new HashSet<>();
 
     public static void register() {
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
-            if (!(source.getEntity() instanceof Player player)) return true;
-            if (!isTwinPairEquipped(player)) return true;
-
-            UUID uuid = player.getUUID();
-            if (processing.contains(uuid)) return true;
-
-            ItemStack main = player.getMainHandItem();
-            boolean currentIsSolar = main.getItem() instanceof SolarBladeItem;
-            int stage = ModDataComponents.getStage(main);
-
-            float multiplier = 1.5f;
-
-            if (stage >= 6) {
-                Boolean lastSolar = lastWasSolar.get(uuid);
-                boolean isAlternate = lastSolar != null && lastSolar != currentIsSolar;
-
-                if (alternatePending.contains(uuid) && isAlternate) {
-                    multiplier = 2.0f;
-                    alternatePending.remove(uuid);
-                } else {
-                    alternatePending.add(uuid);
-                }
-                lastWasSolar.put(uuid, currentIsSolar);
-            }
-
-            processing.add(uuid);
-            entity.hurt(source, amount * multiplier);
-            processing.remove(uuid);
-
-            return false;
-        });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 ItemStack main = player.getMainHandItem();
@@ -64,15 +30,17 @@ public class TwinBladesHandler {
                 boolean hasSolar = main.getItem() instanceof SolarBladeItem || off.getItem() instanceof SolarBladeItem;
                 boolean hasLunar = main.getItem() instanceof LunarBladeItem || off.getItem() instanceof LunarBladeItem;
 
-                int stage = ModDataComponents.getStage(
+                ItemStack bladeStack =
                         main.getItem() instanceof SolarBladeItem || main.getItem() instanceof LunarBladeItem
-                                ? main : off);
+                                ? main
+                                : off;
 
+                int stage = ModDataComponents.getStage(bladeStack);
                 if (stage < 5) continue;
 
                 ServerLevel level = (ServerLevel) player.level();
-                long timeOfDay  = level.getDefaultClockTime() % 24000L;
-                boolean isDay   = timeOfDay < 13000L;
+                long timeOfDay = level.getDefaultClockTime() % 24000L;
+                boolean isDay = timeOfDay < 13000L;
                 boolean isNight = timeOfDay >= 13000L;
 
                 if (hasSolar && isDay) {
@@ -86,6 +54,33 @@ public class TwinBladesHandler {
                 }
             }
         });
+    }
+
+    public static float getDamageMultiplier(Player player) {
+        if (!isTwinPairEquipped(player)) return 1.0f;
+
+        ItemStack main = player.getMainHandItem();
+        boolean currentIsSolar = main.getItem() instanceof SolarBladeItem;
+        int stage = ModDataComponents.getStage(main);
+
+        float multiplier = 1.5f;
+
+        if (stage >= 6) {
+            UUID uuid = player.getUUID();
+            Boolean lastSolar = lastWasSolar.get(uuid);
+            boolean isAlternate = lastSolar != null && lastSolar != currentIsSolar;
+
+            if (alternatePending.contains(uuid) && isAlternate) {
+                multiplier = 2.0f;
+                alternatePending.remove(uuid);
+            } else {
+                alternatePending.add(uuid);
+            }
+
+            lastWasSolar.put(uuid, currentIsSolar);
+        }
+
+        return multiplier;
     }
 
     public static boolean isTwinPairEquipped(Player player) {

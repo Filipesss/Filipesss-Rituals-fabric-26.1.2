@@ -20,9 +20,6 @@ public class DepthstrikeGroundModel {
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("rituals", "textures/entity/depthstrike_ground.png");
 
-    private static final float PHASE_A_END   = 10f;
-    private static final float PHASE_B_END   = 16.667f;
-    private static final float PHASE_C_END   = 27.5f;
 
     private final ModelPart root;
     private final ModelPart bone;

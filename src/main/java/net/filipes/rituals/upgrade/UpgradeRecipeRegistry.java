@@ -15,7 +15,6 @@ public class UpgradeRecipeRegistry {
 
     private static final Map<UpgradeKey, UpgradeRecipe> RECIPES = new HashMap<>();
 
-    /** Call this once during mod initialization to register all upgrade recipes. */
     public static void registerAll() {
         register(ModItems.ROSEGOLD_PICKAXE, 1, new UpgradeRecipe(2, List.of(
                 new IngredientRequirement(Items.DIRT, 1)
@@ -115,6 +114,23 @@ public class UpgradeRecipeRegistry {
                 new IngredientRequirement(Items.DIRT, 1)
         )));
         register(ModItems.SOLAR_BLADE, 5, new UpgradeRecipe(6, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+
+
+        register(ModItems.VORTEX_EDGE, 1, new UpgradeRecipe(2, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.VORTEX_EDGE, 2, new UpgradeRecipe(3, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.VORTEX_EDGE, 3, new UpgradeRecipe(4, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.VORTEX_EDGE, 4, new UpgradeRecipe(5, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.VORTEX_EDGE, 5, new UpgradeRecipe(6, List.of(
                 new IngredientRequirement(Items.DIRT, 1)
         )));
 

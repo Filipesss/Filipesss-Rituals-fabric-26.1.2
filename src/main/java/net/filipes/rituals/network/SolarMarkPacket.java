@@ -48,7 +48,7 @@ public class SolarMarkPacket implements CustomPacketPayload {
             if (!(stack.getItem() instanceof SolarBladeItem)) return;
 
             int stage = ModDataComponents.getStage(stack);
-            if (stage < 1) return;
+            if (stage < 2) return;
 
             UUID uuid = player.getUUID();
             long now = System.currentTimeMillis();

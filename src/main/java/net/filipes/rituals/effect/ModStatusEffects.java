@@ -32,6 +32,11 @@ public class ModStatusEffects {
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "conductivity"),
             new ConductivityEffect()
     );
+    public static final Holder<MobEffect> BLIGHTED = Registry.registerForHolder(
+            BuiltInRegistries.MOB_EFFECT,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "blighted"),
+            new BlightedEffect()
+    );
 
     public static void registerModStatusEffects() {
         Rituals.LOGGER.info("Registering Mod Mob Effects for " + Rituals.MOD_ID);

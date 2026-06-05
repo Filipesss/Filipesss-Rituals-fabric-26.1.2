@@ -397,6 +397,39 @@ public final class SparkPresets {
             .windowSize(7)
             .burstCount(10)
             .build();
+    public static final SparkPreset VORTEX_SPARK_THIN = SparkPreset.builder()
+            .color(222, 138, 204)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.01f)
+            .windowSize(5)
+            .burstCount(4)
+            .build();
+    public static final SparkPreset VORTEX_SPARK_TRIPLE = SparkPreset.builder()
+            .color(222, 138, 204)
+            .trailAlpha(90)
+            .trailAmount(3)
+            .trailSpacing(0.05f)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.08f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset VORTEX_SPARK_TRIPLE_BLACK = SparkPreset.builder()
+            .color(31, 0, 24)
+            .trailAlpha(255)
+            .trailAmount(3)
+            .trailSpacing(0.05f)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.08f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+
+
 
 
 
@@ -438,6 +471,9 @@ public final class SparkPresets {
         register("lunar_fragment_resonance", LUNAR_FRAGMENT_RESONANCE);
         register("lunar_mark_end", LUNAR_MARK_END);
         register("lunar_mark_start", LUNAR_MARK_START);
+        register("vortex_spark_thin", VORTEX_SPARK_THIN);
+        register("vortex_spark_triple", VORTEX_SPARK_TRIPLE);
+        register("vortex_spark_triple_black", VORTEX_SPARK_TRIPLE_BLACK);
 
     }
     public static Optional<String> nameOf(SparkPreset preset) {

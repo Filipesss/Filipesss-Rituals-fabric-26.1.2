@@ -196,27 +196,25 @@ public class SparkEntity extends ThrowableProjectile {
     }
 
     private void spawnBurst(Vec3 pos) {
-        for (int i = 0; i < burstCount; i++) {
-            double angle = random.nextDouble() * 2.0 * Math.PI;
-            double elev  = (random.nextDouble() * 0.7 - 0.15) * Math.PI;
-            double speed = burstSpeedMin + random.nextDouble() * (burstSpeedMax - burstSpeedMin);
-            double cosE  = Math.cos(elev);
-            Vec3 vel = new Vec3(cosE * Math.cos(angle) * speed,
-                    Math.sin(elev)         * speed,
-                    cosE * Math.sin(angle) * speed);
+        if (burstCount <= 0) return;
 
-            BurstSparkEntity burst = new BurstSparkEntity(ModEntities.BURST_SPARK, level());
-            burst.setPos(pos.x, pos.y, pos.z);
-            burst.forcedVelocity = vel;
-            burst.setTrailColor(trailR, trailG, trailB);
-            burst.trailAlpha     = trailAlpha;
-            burst.trailWidth     = burstWidth;
-            burst.maxLifetime    = burstLifetime;
-            burst.trailLength    = burstTrailLength;
-            burst.windowSize     = burstWindowSize;
-            burst.trailJitter    = burstJitter;
-            level().addFreshEntity(burst);
-        }
+        MultiBurstSparkEntity multi =
+                new MultiBurstSparkEntity(ModEntities.MULTI_BURST_SPARK, level());
+        multi.setPos(pos.x, pos.y, pos.z);
+        multi.setup(
+                burstCount,
+                trailR, trailG, trailB,
+                burstWidth,
+                trailAlpha,
+                burstLifetime,
+                burstTrailLength,
+                burstWindowSize,
+                burstJitter,
+                0.055f,
+                (float) burstSpeedMin,
+                (float) burstSpeedMax
+        );
+        level().addFreshEntity(multi);
     }
 
     private void spawnOnHitEntities(Vec3 pos) {

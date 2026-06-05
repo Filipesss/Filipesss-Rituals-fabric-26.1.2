@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.SolarStormcellEntity;
 import net.filipes.rituals.item.custom.LunarBladeItem;
 import net.filipes.rituals.item.custom.SolarBladeItem;
@@ -34,10 +35,10 @@ public class TwinsResonancePacket implements CustomPacketPayload {
         ctx.server().execute(() -> {
             ItemStack main = player.getMainHandItem();
             ItemStack off  = player.getOffhandItem();
-            boolean hasSolar = main.getItem() instanceof SolarBladeItem
-                    || off.getItem() instanceof SolarBladeItem;
-            boolean hasLunar = main.getItem() instanceof LunarBladeItem
-                    || off.getItem() instanceof LunarBladeItem;
+            boolean hasSolar = (main.getItem() instanceof SolarBladeItem && ModDataComponents.getStage(main) >= 5)
+                    || (off.getItem() instanceof SolarBladeItem && ModDataComponents.getStage(off) >= 5);
+            boolean hasLunar = (main.getItem() instanceof LunarBladeItem && ModDataComponents.getStage(main) >= 5)
+                    || (off.getItem() instanceof LunarBladeItem && ModDataComponents.getStage(off) >= 5);
             if (!hasSolar || !hasLunar) return;
 
             ServerLevel level = (ServerLevel) player.level();

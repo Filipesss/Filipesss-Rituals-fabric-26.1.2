@@ -35,10 +35,11 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, TwinsActionTwoPacket> CODEC =
             StreamCodec.of(
-                    (buf, pkt) -> buf.writeBoolean(pkt.isSolarCast),
-                    buf -> new TwinsActionTwoPacket(buf.readBoolean())
+                    (buf, pkt) -> { buf.writeBoolean(pkt.isSolarCast); buf.writeBoolean(pkt.dualCombo); },
+                    buf -> new TwinsActionTwoPacket(buf.readBoolean(), buf.readBoolean())
             );
     public final boolean isSolarCast;
+    public final boolean dualCombo;
     private static final int  FRAGMENT_COUNT    = 4;
     private static final long SPAWN_DEBOUNCE_MS = 500L;
 
@@ -47,10 +48,12 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
-    public TwinsActionTwoPacket(boolean isSolarCast) {
+    public TwinsActionTwoPacket(boolean isSolarCast, boolean dualCombo) {
         this.isSolarCast = isSolarCast;
+        this.dualCombo   = dualCombo;
     }
-    public TwinsActionTwoPacket() { this(false); }
+    public TwinsActionTwoPacket(boolean isSolarCast) { this(isSolarCast, false); }
+    public TwinsActionTwoPacket()                    { this(false, false); }
 
     public static void handle(TwinsActionTwoPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
@@ -60,7 +63,7 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
             UUID uuid = player.getUUID();
 
             if (!pkt.isSolarCast) {
-                if (ModDataComponents.getStage(stack) < 1) return;
+                if (ModDataComponents.getStage(stack) < 5) return;
 
                 List<LunarFragmentEntity> orbiting = level.getEntitiesOfClass(
                         LunarFragmentEntity.class,
@@ -98,7 +101,7 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
                 ItemStack solarStack = stack.getItem() instanceof SolarBladeItem ? stack
                         : player.getOffhandItem().getItem() instanceof SolarBladeItem
                         ? player.getOffhandItem() : stack;
-                if (ModDataComponents.getStage(solarStack) < 1) return;
+                if (ModDataComponents.getStage(solarStack) < 5) return;
 
                 long now = System.currentTimeMillis();
                 Long last = LAST_SPAWN_TIME.get(uuid);
@@ -135,13 +138,15 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
                 stormcell.launch(target, player.getLookAngle());
                 level.addFreshEntity(stormcell);
 
-                ItemStack offhand = player.getOffhandItem();
-                boolean bothEquipped = offhand.getItem() instanceof LunarBladeItem;
-                if (bothEquipped || TwinsResonancePacket.PENDING_RESONANCE.remove(player.getUUID())) {
-                    stormcell.activateResonance();
+                if (pkt.dualCombo) {
+                    ItemStack offhand = player.getOffhandItem();
+                    boolean bothEquipped = offhand.getItem() instanceof LunarBladeItem
+                            && ModDataComponents.getStage(offhand) >= 5;
+                    if (bothEquipped || TwinsResonancePacket.PENDING_RESONANCE.remove(player.getUUID())) {
+                        stormcell.activateResonance();
+                    }
                 }
-
-                if (orbiting.size() <= toConsume) {
+                if (!pkt.dualCombo || orbiting.size() <= toConsume) {
                     ServerPlayNetworking.send(player, new TwinsStartCooldownPacket());
                 }
 

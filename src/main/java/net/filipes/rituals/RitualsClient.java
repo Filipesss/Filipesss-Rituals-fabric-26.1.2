@@ -40,6 +40,7 @@ import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderers;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
@@ -59,6 +60,8 @@ public class RitualsClient implements ClientModInitializer {
     private static final int SOLAR_CHARGE_DURATION = 12; // ~0.6 s
     private static int     solarActiveTicks   = 0;
     private static boolean resonanceActivated = false;
+    private static int clientBlightDashCount = 0;
+    private static long clientBlightDashTime = 0;
 
 
     @Override
@@ -184,6 +187,11 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.SOLAR_STORMCELL, SolarStormcellEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.LUNAR_MARK, LunarMarkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.SOLAR_MARK, SolarMarkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.LUNAR_STAR, LunarStarEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SOLAR_STAR, SolarStarEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.MULTI_BURST_SPARK, MultiBurstSparkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.BLIGHTED_PUDDLE, BlightedPuddleEntityRenderer::new);
+
 
 
 
@@ -225,12 +233,25 @@ public class RitualsClient implements ClientModInitializer {
         CooldownManager.register("twins_action_two", "Lunar Fragments", 20_000, 0xAADDFF);
         CooldownManager.register("lunar_mark", "Lunar Mark", 15_000, 0xAADDFF);
         CooldownManager.register("solar_mark", "Solar Mark", 15_000, 0xAADDFF);
+        CooldownManager.register("solar_blade_charge", "Solar Charge", 15_000, 0xFFDD00);
+        CooldownManager.register("lunar_blade_on_hit", "Lunar Burst", 15_000, 0xAADDFF);
+        CooldownManager.register("vortex_swap", "Vortex Swap", 15_000, 0x550000);
+        CooldownManager.register("vortex_shockwave", "Vortex Shockwave", 22_000, 0x110022);
+        CooldownManager.register("vortex_slam", "Vortex Slam", 18_000, 0xAA0000);
+        CooldownManager.register("blight_web", "Blight Trap", 16_000, 0x2E4D2A);
+        CooldownManager.register("blight_drain", "Life Drain", 50_000, 0x880000);
+        CooldownManager.register("blight_dash", "Blight Shift", 15_000, 0x1C3318);
+        CooldownManager.register("blight_tether", "Shadow Tether", 24_000, 0x4B2A5E);
 
 
 
         CooldownHudOverlay.register();
         PulseBlasterHudOverlay.register();
         ShadowguardHudOverlay.register();
+        LunarBladeHudOverlay.register();
+        SolarBladeHudOverlay.register();
+        LunarBladeActivePacket.registerClient();
+        SolarBladeActivePacket.registerClient();
 
 
 
@@ -245,7 +266,7 @@ public class RitualsClient implements ClientModInitializer {
                     CooldownManager.trigger("cinderbolt_death_save");
                 }
         );
-        // it starts only once all fragments have been launched or have expired.
+
         ClientPlayNetworking.registerGlobalReceiver(
                 TwinsStartCooldownPacket.TYPE,
                 (packet, context) -> CooldownManager.trigger("twins_action_two")
@@ -268,6 +289,7 @@ public class RitualsClient implements ClientModInitializer {
                 ModParticles.LIGHTNING_SPARK,
                 spriteSet -> new LightningSparkParticle.Factory(spriteSet)
         );
+        ParticleProviderRegistry.getInstance().register(ModParticles.BLIGHTED, BlightedParticle.Factory::new);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null) {
@@ -282,8 +304,11 @@ public class RitualsClient implements ClientModInitializer {
                         solarChargeTicks--;
                         if (solarChargeTicks == 0) {
                             solarChargeTicks = -1;
-                            ClientPlayNetworking.send(new TwinsActionTwoPacket(true));
-                            solarActiveTicks   = 120;
+                            ItemStack offhand = client.player.getOffhandItem();
+                            boolean dualCombo = offhand.getItem() instanceof LunarBladeItem
+                                    && ModDataComponents.getStage(offhand) >= 5;
+                            ClientPlayNetworking.send(new TwinsActionTwoPacket(true, dualCombo));
+                            solarActiveTicks = 120;
                         }
                     } else {
                         solarChargeTicks = -1;
@@ -313,14 +338,63 @@ public class RitualsClient implements ClientModInitializer {
                             CooldownManager.trigger("depthstrike_recall");
                         }
                     } else if (held.getItem() instanceof LunarBladeItem) {
-                        if (stage >= 1 && !CooldownManager.isOnCooldown("lunar_mark")) {
+                        if (stage >= 2 && !CooldownManager.isOnCooldown("lunar_mark")) {
                             ClientPlayNetworking.send(new LunarMarkPacket());
                             CooldownManager.trigger("lunar_mark");
                         }
                     } else if (held.getItem() instanceof SolarBladeItem) {
-                        if (stage >= 1 && !CooldownManager.isOnCooldown("solar_mark")) {
+                        if (stage >= 2 && !CooldownManager.isOnCooldown("solar_mark")) {
                             ClientPlayNetworking.send(new SolarMarkPacket());
                             CooldownManager.trigger("solar_mark");
+                        }
+                    } else if (held.getItem() instanceof BlightspearItem) {
+                        if (mc.player != null) {
+                            // --- IF SHIFT IS HELD DOWN: CAST SHADOW TETHER ---
+                            if (mc.player.isShiftKeyDown()) {
+                                if (!CooldownManager.isOnCooldown("blight_tether")) {
+                                    double maxDist = 20.0;
+
+                                    net.minecraft.world.phys.Vec3 eyePos = mc.player.getEyePosition(1.0F);
+                                    net.minecraft.world.phys.Vec3 lookDir = mc.player.getLookAngle();
+                                    net.minecraft.world.phys.Vec3 endPos = eyePos.add(lookDir.scale(maxDist));
+                                    net.minecraft.world.phys.AABB searchBox = mc.player.getBoundingBox().expandTowards(lookDir.scale(maxDist)).inflate(1.0D);
+
+                                    net.minecraft.world.phys.EntityHitResult entityHit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(
+                                            mc.player, eyePos, endPos, searchBox, entity -> !entity.isSpectator() && entity.isAlive(), maxDist * maxDist
+                                    );
+
+                                    if (entityHit != null) {
+                                        ClientPlayNetworking.send(new BlightTetherPacket(entityHit.getEntity().getId()));
+                                        CooldownManager.trigger("blight_tether");
+                                    } else {
+                                        // Fail cue if you cast tether into empty thin air
+                                        mc.player.playSound(SoundEvents.CHAIN_BREAK, 0.6f, 1.5f);
+                                    }
+                                }
+                            }
+                            // --- IF SHIFT IS NOT HELD DOWN: CAST BLIGHT TRAP (COBWEB) ---
+                            else {
+                                if (!CooldownManager.isOnCooldown("blight_web")) {
+                                    double maxDist = 20.0;
+
+                                    net.minecraft.world.phys.Vec3 eyePos = mc.player.getEyePosition(1.0F);
+                                    net.minecraft.world.phys.Vec3 lookDir = mc.player.getLookAngle();
+                                    net.minecraft.world.phys.Vec3 endPos = eyePos.add(lookDir.scale(maxDist));
+                                    net.minecraft.world.phys.AABB searchBox = mc.player.getBoundingBox().expandTowards(lookDir.scale(maxDist)).inflate(1.0D);
+
+                                    net.minecraft.world.phys.EntityHitResult entityHit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(
+                                            mc.player, eyePos, endPos, searchBox, entity -> !entity.isSpectator() && entity.isAlive(), maxDist * maxDist
+                                    );
+
+                                    if (entityHit != null) {
+                                        net.minecraft.world.entity.Entity target = entityHit.getEntity();
+                                        ClientPlayNetworking.send(new BlightWebPacket(target.getId()));
+                                        CooldownManager.trigger("blight_web");
+                                    } else {
+                                        mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.5f);
+                                    }
+                                }
+                            }
                         }
                     } else if (held.getItem() instanceof ShadowguardItem) {
                         if (stage >= 4 && !CooldownManager.isOnCooldown("shadowguard_launch")) {
@@ -333,12 +407,27 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new CinderboltTriplePacket());
                             CooldownManager.trigger("cinderbolt_triple");
                         }
-                    } else if (held.getItem() instanceof PulseBlasterItem) {
+                    }  else if (held.getItem() instanceof PulseBlasterItem) {
                         if (!mc.player.isShiftKeyDown()
                                 && ModDataComponents.getStage(held) >= 4
                                 && !CooldownManager.isOnCooldown("pulse_blaster_shotgun")) {
                             ClientPlayNetworking.send(new PulseBlasterShotgunPacket());
                             CooldownManager.trigger("pulse_blaster_shotgun");
+                        }
+                    } else if (held.getItem() instanceof VortexEdgeItem) {
+                        if (!CooldownManager.isOnCooldown("vortex_swap")) {
+
+                            if (mc.hitResult != null && mc.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.ENTITY) {
+                                net.minecraft.world.phys.EntityHitResult entityHit = (net.minecraft.world.phys.EntityHitResult) mc.hitResult;
+                                net.minecraft.world.entity.Entity target = entityHit.getEntity();
+
+                                ClientPlayNetworking.send(new VortexSwapPacket(target.getId()));
+                                CooldownManager.trigger("vortex_swap");
+                            } else {
+                                if (mc.player != null) {
+                                    mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.5f);
+                                }
+                            }
                         }
                     } else if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
@@ -377,16 +466,43 @@ public class RitualsClient implements ClientModInitializer {
                             CooldownManager.trigger("lifesteal_mark");
                         }
 
-                    } else if (held.getItem() instanceof LunarBladeItem) {
-                        if (!CooldownManager.isOnCooldown("twins_action_two")) {
-                            ClientPlayNetworking.send(new TwinsActionTwoPacket());
-                        }
-
                     } else if (held.getItem() instanceof SolarBladeItem) {
-                        if (!CooldownManager.isOnCooldown("twins_action_two")
-                                && solarChargeTicks == -1) {
-                            solarChargeTicks   = SOLAR_CHARGE_DURATION;
-                            resonanceActivated = false;
+                        if (stage >= 4 && !CooldownManager.isOnCooldown("solar_blade_charge")) {
+                            ClientPlayNetworking.send(new SolarBladeChargePacket());
+                            CooldownManager.trigger("solar_blade_charge");
+                        }
+                    } else if (held.getItem() instanceof LunarBladeItem) {
+                        if (stage >= 4 && !CooldownManager.isOnCooldown("lunar_blade_on_hit")) {
+                            ClientPlayNetworking.send(new LunarBladeOnHitPacket());
+                            CooldownManager.trigger("lunar_blade_on_hit");
+                        }
+                    } else if (held.getItem() instanceof BlightspearItem) {
+                        if (!CooldownManager.isOnCooldown("blight_drain")) {
+                            CooldownManager.trigger("blight_drain");
+
+                            if (mc.player != null) {
+                                double maxDist = 20.0;
+
+                                net.minecraft.world.phys.Vec3 eyePos = mc.player.getEyePosition(1.0F);
+                                net.minecraft.world.phys.Vec3 lookDir = mc.player.getLookAngle();
+                                net.minecraft.world.phys.Vec3 endPos = eyePos.add(lookDir.scale(maxDist));
+                                net.minecraft.world.phys.AABB searchBox = mc.player.getBoundingBox().expandTowards(lookDir.scale(maxDist)).inflate(1.0D);
+
+                                net.minecraft.world.phys.EntityHitResult entityHit = net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(
+                                        mc.player, eyePos, endPos, searchBox, entity -> !entity.isSpectator() && entity.isAlive(), maxDist * maxDist
+                                );
+
+                                if (entityHit != null) {
+                                    ClientPlayNetworking.send(new BlightDrainPacket(entityHit.getEntity().getId()));
+                                } else {
+                                    mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.2f);
+                                }
+                            }
+                        }
+                    } else if (held.getItem() instanceof VortexEdgeItem) {
+                        if (!CooldownManager.isOnCooldown("vortex_shockwave")) {
+                            ClientPlayNetworking.send(new VortexShockwavePacket());
+                            CooldownManager.trigger("vortex_shockwave");
                         }
                     } else if (held.getItem() instanceof CinderboltItem
                             && ModDataComponents.getStage(held) >= 5) {
@@ -443,11 +559,55 @@ public class RitualsClient implements ClientModInitializer {
                             CooldownManager.trigger("shadowguard_grapple");
                         }
 
+                    } else if (held.getItem() instanceof LunarBladeItem) {
+                        if (stage >= 5 && !CooldownManager.isOnCooldown("twins_action_two")) {
+                            ClientPlayNetworking.send(new TwinsActionTwoPacket());
+                        }
+
+                    } else if (held.getItem() instanceof SolarBladeItem) {
+                        if (stage >= 5 && !CooldownManager.isOnCooldown("twins_action_two")
+                                && solarChargeTicks == -1) {
+                            solarChargeTicks   = SOLAR_CHARGE_DURATION;
+                            resonanceActivated = false;
+                        }
                     } else if (held.getItem() instanceof PulseBlasterItem) {
                         if (ModDataComponents.getStage(held) >= 6
                                 && !CooldownManager.isOnCooldown("pulse_blaster_death_laser")) {
                             ClientPlayNetworking.send(new FireDeathLaserPacket());
                             CooldownManager.trigger("pulse_blaster_death_laser");
+                        }
+                    } else if (held.getItem() instanceof VortexEdgeItem) {
+                        if (!CooldownManager.isOnCooldown("vortex_slam")) {
+                            // Check if the player is airborne before attempting to dispatch
+                            if (mc.player != null && !mc.player.onGround()) {
+                                ClientPlayNetworking.send(new VortexSlamPacket());
+                                CooldownManager.trigger("vortex_slam");
+                            } else if (mc.player != null) {
+                                // Feedback sound if trying to slam while already standing on solid ground
+                                mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.2f);
+                            }
+                        }
+                    } else if (held.getItem() instanceof BlightspearItem) {
+                        if (!CooldownManager.isOnCooldown("blight_dash")) {
+                            long now = System.currentTimeMillis();
+
+                            // If the window to press it again closed, reset the client indicator count
+                            if (clientBlightDashCount == 1 && now - clientBlightDashTime > 4000) {
+                                clientBlightDashCount = 0;
+                            }
+
+                            // Fire the network packet to the server
+                            ClientPlayNetworking.send(new BlightDashPacket());
+
+                            if (clientBlightDashCount == 0) {
+                                // First jump completed; hold off visual cooldown overlay
+                                clientBlightDashCount = 1;
+                                clientBlightDashTime = now;
+                            } else {
+                                // Second jump completed; activate UI cooldown indicator
+                                clientBlightDashCount = 0;
+                                CooldownManager.trigger("blight_dash");
+                            }
                         }
                     } else if (held.getItem() == ModItems.DEPTHSTRIKE) {
                         if (stage >= 6 && !CooldownManager.isOnCooldown("depthstrike_ground_ability")) {

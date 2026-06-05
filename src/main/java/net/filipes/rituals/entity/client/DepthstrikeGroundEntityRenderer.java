@@ -80,7 +80,7 @@ public class DepthstrikeGroundEntityRenderer
 
         poseStack.pushPose();
         poseStack.translate(0.0, yOffset, 0.0);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-state.yRot)); // orient perpendicular to line
+        poseStack.mulPose(Axis.YP.rotationDegrees(-state.yRot));
         poseStack.scale(state.visualScale, state.visualScale, state.visualScale);
         model.render(poseStack, bufferSource, 15728880, animTick);
         poseStack.popPose();

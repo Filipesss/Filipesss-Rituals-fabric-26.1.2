@@ -21,4 +21,12 @@ public class LivingEntityMixin {
         }
         return amount;
     }
+    @ModifyVariable(method = "heal", at = @At("HEAD"), argsOnly = true)
+    private float rituals$modifyHealAmount(float amount) {
+        LivingEntity self = (LivingEntity)(Object)this;
+        if (self.hasEffect(ModStatusEffects.BLIGHTED)) {
+            amount *= 0.5f;
+        }
+        return amount;
+    }
 }

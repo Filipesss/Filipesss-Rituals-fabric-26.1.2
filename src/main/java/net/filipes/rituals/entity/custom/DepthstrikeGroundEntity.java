@@ -27,10 +27,7 @@ public class DepthstrikeGroundEntity extends Entity {
             SynchedEntityData.defineId(DepthstrikeGroundEntity.class, EntityDataSerializers.INT);
 
     private static final int ACTIVE_LIFETIME = 50;
-    private static final int DAMAGE_TICK     = 17; // peak of emerge animation
-    private static final int RETRACT_START   = 35;
-    private static final int RETRACT_TICKS   = 15;
-
+    private static final int DAMAGE_TICK     = 17;
     private boolean hasDamaged = false;
 
     public DepthstrikeGroundEntity(EntityType<? extends DepthstrikeGroundEntity> type, Level level) {

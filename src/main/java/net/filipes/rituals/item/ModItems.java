@@ -76,7 +76,7 @@ public class ModItems {
                                             .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
                             ))));
     public static final Item VORTEX_EDGE = registerItem("vortex_edge",
-            settings -> new LunarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
+            settings -> new VortexEdgeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)

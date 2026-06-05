@@ -39,6 +39,7 @@ public class LunarFragmentEntity extends Entity {
     private static final EntityDataAccessor<Integer> TARGET_ID =
             SynchedEntityData.defineId(LunarFragmentEntity.class, EntityDataSerializers.INT);
 
+
     public LivingEntity owner;
     private SparkEntity trailSpark;
 
@@ -64,13 +65,13 @@ public class LunarFragmentEntity extends Entity {
     private static final float ACCELERATION      = 0.045f;
     private static final float RESONANCE_ACCELERATION = 0.12f;
     private static final float TURN_RATE         = 0.55f;
-    private static final float HIT_RADIUS_SQ     = 1.8f * 1.8f;
+    private static final float HIT_RADIUS_SQ     = 0.2f * 0.2f;
     private static final float LAUNCH_DAMAGE     = 12.0f;
     private static final float DAMAGE_RAMP       = 3.0f;
     private static final float SPEED_RAMP        = 0.08f;
     private static final int   MAX_LAUNCH_TICKS  = 100;
-    private static final float LAUNCH_SPARK_HEIGHT = 0.55f;
-    private static final float LAUNCH_SPARK_LEAD   = 0.55f;
+    private static final float LAUNCH_SPARK_HEIGHT = 0.35f;
+    private static final float LAUNCH_SPARK_LEAD   = 0.45f;
     private boolean shardMode             = false;
     private boolean shardOutward          = false;
     private UUID    shardOriginalTarget   = null;
@@ -81,6 +82,11 @@ public class LunarFragmentEntity extends Entity {
     private float shardTurnRate    = TURN_RATE;
     private float shardAcceleration = ACCELERATION;
     private int shardTick = 0;
+    private float damageMult = 1.0f;
+    public void setDamageMult(float mult) { this.damageMult = mult; }
+    private boolean customSpawnPos = false;
+
+    public void setCustomSpawnPos(boolean v) { this.customSpawnPos = v; }
 
     public LunarFragmentEntity(EntityType<? extends LunarFragmentEntity> type, Level level) {
         super(type, level);
@@ -104,8 +110,8 @@ public class LunarFragmentEntity extends Entity {
         this.currentSpeed        = (float) startVelocity.length();
         this.entityData.set(LAUNCHED, true);
 
-        this.shardTurnRate    = 0.30f + (float) Math.random() * 0.45f;   // 0.30 – 0.75
-        this.shardAcceleration = 0.025f + (float) Math.random() * 0.040f; // 0.025 – 0.065
+        this.shardTurnRate    = 0.30f + (float) Math.random() * 0.45f;
+        this.shardAcceleration = 0.025f + (float) Math.random() * 0.040f;
     }
 
     public void setShardInwardTarget(LivingEntity target) {
@@ -122,7 +128,7 @@ public class LunarFragmentEntity extends Entity {
     public void setResonanceMode(boolean v) { this.resonanceMode = v; }
     public void launch(LivingEntity target, int launchIndex) {
 
-        if (owner != null && !resonanceMode) {
+        if (owner != null && !resonanceMode && !customSpawnPos) {  // ← check flag
             int   slot       = getSlot();
             float t          = this.tickCount;
             float slotOffset = slot * (float)(Math.PI * 2.0 / 4);
@@ -332,8 +338,8 @@ public class LunarFragmentEntity extends Entity {
             ServerLevel sl  = (ServerLevel) level();
 
             float damage = resonanceMode
-                    ? LAUNCH_DAMAGE * 1.5f * getNightBonus()
-                    : (LAUNCH_DAMAGE + launchIndex * DAMAGE_RAMP) * getNightBonus();
+                    ? LAUNCH_DAMAGE * 1.5f * getNightBonus() * damageMult
+                    : (LAUNCH_DAMAGE + launchIndex * DAMAGE_RAMP) * getNightBonus() * damageMult;
             DamageSource src = (owner != null && owner.isAlive())
                     ? sl.damageSources().indirectMagic(this, owner)
                     : sl.damageSources().magic();
@@ -409,7 +415,7 @@ public class LunarFragmentEntity extends Entity {
                 );
 
         double spd = velocity.length();
-        if (spd > 0.52) velocity = velocity.normalize().scale(0.52);   // ← was 0.38
+        if (spd > 0.52) velocity = velocity.normalize().scale(0.52);
 
         if (level().isClientSide()) {
             setPos(position().add(velocity));
@@ -548,7 +554,7 @@ public class LunarFragmentEntity extends Entity {
                         searchBox,
                         f -> f != this && f.getOwnerId() == ownerId && f.isAlive()
                 );
-                if (remaining.isEmpty() && !consumedForSolar && !resonanceMode) {
+                if (remaining.isEmpty() && !consumedForSolar && !resonanceMode && !customSpawnPos) {
                     ServerPlayNetworking.send(sp, new TwinsStartCooldownPacket());
                 }
             }

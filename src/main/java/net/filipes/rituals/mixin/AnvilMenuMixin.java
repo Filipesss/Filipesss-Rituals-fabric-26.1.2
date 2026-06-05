@@ -1,5 +1,6 @@
 package net.filipes.rituals.mixin;
 
+import net.filipes.rituals.item.custom.BlightspearItem; // Your new item
 import net.filipes.rituals.item.custom.RosegoldPickaxeItem;
 import net.filipes.rituals.item.custom.ShadowguardItem;
 import net.filipes.rituals.component.ModDataComponents;
@@ -9,6 +10,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+// Import your custom enchantment registry class here
+// import net.filipes.rituals.enchantment.ModEnchantments;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -46,6 +50,22 @@ public class AnvilMenuMixin {
                 if (enchantment.is(Enchantments.BREACH) && stage < 5) forbidden = true;
 
                 if (forbidden) {
+                    self.getSlot(2).set(ItemStack.EMPTY);
+                    return;
+                }
+            }
+        }
+
+        // Blightspear: Enchants allowed from Stage 1, but LUNGE is gated behind Stage 4+
+        if (left.getItem() instanceof BlightspearItem) {
+            int stage = ModDataComponents.getStage(left);
+            ItemStack result = self.getSlot(2).getItem();
+            if (result.isEmpty()) return;
+
+            ItemEnchantments enchantments = result.getEnchantments();
+            for (Holder<Enchantment> enchantment : enchantments.keySet()) {
+                // Change 'ModEnchantments.LUNGE' to match your actual custom registry reference
+                if (enchantment.is(Enchantments.LUNGE) && stage < 4) {
                     self.getSlot(2).set(ItemStack.EMPTY);
                     return;
                 }

@@ -291,6 +291,21 @@ public class ModEntities {
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "burst_spark")))
     );
+    public static final EntityType<MultiBurstSparkEntity> MULTI_BURST_SPARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "multi_burst_spark"),
+            EntityType.Builder.<MultiBurstSparkEntity>of(
+                            (type, level) -> new MultiBurstSparkEntity(type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.25f, 0.25f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "multi_burst_spark")))
+    );
+
     public static final EntityType<DepthstrikeGroundEntity> DEPTHSTRIKE_GROUND = Registry.register(
             BuiltInRegistries.ENTITY_TYPE,
             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_ground"),
@@ -465,6 +480,54 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "solar_stormcell")
+                    ))
+    );
+    public static final EntityType<LunarStarEntity> LUNAR_STAR = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lunar_star"),
+            EntityType.Builder.<LunarStarEntity>of(
+                            (type, level) -> new LunarStarEntity(
+                                    (EntityType<? extends LunarStarEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "lunar_star")
+                    ))
+    );
+    public static final EntityType<SolarStarEntity> SOLAR_STAR = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "solar_star"),
+            EntityType.Builder.<SolarStarEntity>of(
+                            (type, level) -> new SolarStarEntity(
+                                    (EntityType<? extends SolarStarEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "solar_star")
+                    ))
+    );
+    public static final EntityType<BlightedPuddleEntity> BLIGHTED_PUDDLE = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "blighted_puddle"),
+            EntityType.Builder.<BlightedPuddleEntity>of(
+                            (type, level) -> new BlightedPuddleEntity(
+                                    (EntityType<? extends BlightedPuddleEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.8f, 0.5f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "blighted_puddle")
                     ))
     );
 

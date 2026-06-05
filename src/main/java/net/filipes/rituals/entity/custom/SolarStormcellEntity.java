@@ -62,7 +62,9 @@ public class SolarStormcellEntity extends Entity {
     private boolean bounceMode       = false;
     private UUID    lastHitUUID      = null;
     private static final float BOUNCE_CHAIN_RADIUS = 3.0f;
-    private static final int   BOUNCE_MAX_CHAINS   = 6;
+    private static final int   BOUNCE_MAX_CHAINS   = 60;
+    private int chainDelayTick = 0;
+    private static final int CHAIN_DELAY = 4;
 
     public SolarStormcellEntity(EntityType<? extends SolarStormcellEntity> type, Level level) {
         super(type, level);
@@ -88,7 +90,8 @@ public class SolarStormcellEntity extends Entity {
         if (firstTarget != null) {
             this.target = firstTarget;
             this.entityData.set(TARGET_ID, firstTarget.getId());
-            this.hitUUIDs.add(firstTarget.getUUID());
+            if (!bounceMode) hitUUIDs.add(firstTarget.getUUID());
+            lastHitUUID = firstTarget.getUUID();
         }
 
         trailSpark = new SparkEntity(ModEntities.SPARK, level(),
@@ -124,6 +127,16 @@ public class SolarStormcellEntity extends Entity {
         if (target == null && getTargetId() != -1) {
             Entity e = level().getEntity(getTargetId());
             if (e instanceof LivingEntity le) target = le;
+        }
+        if (chainDelayTick > 0) {
+            chainDelayTick--;
+            // Keep trail spark in place during the pause
+            if (trailSpark != null && trailSpark.isAlive()) {
+                trailSpark.setPos(getX(), getY() + SPARK_Y_OFFSET, getZ());
+                trailSpark.setDeltaMovement(Vec3.ZERO);
+                trailSpark.forcedVelocity = Vec3.ZERO;
+            }
+            return;
         }
 
         if (!velocityInitialized) {
@@ -211,6 +224,7 @@ public class SolarStormcellEntity extends Entity {
         velocity            = null;
         velocityInitialized = false;
         flightTick          = 0;
+        chainDelayTick      = CHAIN_DELAY;
     }
 
     private LivingEntity findChainTarget(ServerLevel sl) {

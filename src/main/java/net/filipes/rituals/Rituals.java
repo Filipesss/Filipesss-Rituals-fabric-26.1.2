@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -47,6 +48,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.ClipContext;
@@ -184,6 +186,23 @@ public class Rituals implements ModInitializer {
 			LifestealMarkTracker.tick();
 			LunarMarkTracker.tick();
 			SolarMarkTracker.tick();
+			SolarBladeChargeTracker.tickServer(server);
+			LunarBladeOnHitTracker.tickServer(server);
+		});
+		AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+			if (world.isClientSide()) return net.minecraft.world.InteractionResult.PASS;
+			if (!(player instanceof ServerPlayer sp)) return net.minecraft.world.InteractionResult.PASS;
+			if (!(entity instanceof LivingEntity target)) return net.minecraft.world.InteractionResult.PASS;
+			if (!(sp.getMainHandItem().getItem() instanceof LunarBladeItem))
+				return net.minecraft.world.InteractionResult.PASS;
+			if (LunarBladeOnHitTracker.isActive(sp.getUUID())) {
+				LunarBladeOnHitTracker.onHit(sp, target);
+			}
+			if (sp.getMainHandItem().getItem() instanceof SolarBladeItem
+					&& SolarBladeChargeTracker.isActive(sp.getUUID())) {
+				SolarBladeChargeTracker.onHit(sp, target);
+			}
+			return net.minecraft.world.InteractionResult.PASS;
 		});
 
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, killed) -> {
@@ -196,14 +215,12 @@ public class Rituals implements ModInitializer {
 					&& PharathornMarkTracker.isMarked(entity.getUUID())
 					&& entity.level() instanceof ServerLevel serverLevel) {
 
-				// +2 bonus damage (guarded against recursion)
 				if (!BONUS_GUARD.contains(entity.getUUID())) {
 					BONUS_GUARD.add(entity.getUUID());
 					entity.hurtServer(serverLevel, source, 2.0f);
 					BONUS_GUARD.remove(entity.getUUID());
 				}
 
-				// Inward sparks converging on the target
 				double cx = entity.getX();
 				double cy = entity.getY() + entity.getBbHeight() * 0.5;
 				double cz = entity.getZ();
@@ -328,9 +345,33 @@ public class Rituals implements ModInitializer {
 				DepthstrikeChargedBallPacket.TYPE,
 				DepthstrikeChargedBallPacket::handle
 		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				SolarBladeChargePacket.TYPE,
+				SolarBladeChargePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				SolarBladeChargePacket.TYPE,
+				SolarBladeChargePacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				LunarBladeOnHitPacket.TYPE,
+				LunarBladeOnHitPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				LunarBladeOnHitPacket.TYPE,
+				LunarBladeOnHitPacket::handle
+		);
 		PayloadTypeRegistry.clientboundPlay().register(
 				CinderboltSaveTriggeredPacket.TYPE,
 				CinderboltSaveTriggeredPacket.CODEC
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				LunarBladeActivePacket.TYPE,
+				LunarBladeActivePacket.CODEC
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				SolarBladeActivePacket.TYPE,
+				SolarBladeActivePacket.CODEC
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
 				CinderboltTriplePacket.TYPE,
@@ -347,6 +388,62 @@ public class Rituals implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(
 				FireCinderboltBeamPacket.TYPE,
 				FireCinderboltBeamPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				VortexSwapPacket.TYPE,
+				VortexSwapPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				VortexSwapPacket.TYPE,
+				VortexSwapPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				VortexShockwavePacket.TYPE,
+				VortexShockwavePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				VortexShockwavePacket.TYPE,
+				VortexShockwavePacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				VortexSlamPacket.TYPE,
+				VortexSlamPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				VortexSlamPacket.TYPE,
+				VortexSlamPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				BlightWebPacket.TYPE,
+				BlightWebPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				BlightWebPacket.TYPE,
+				BlightWebPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				BlightDrainPacket.TYPE,
+				BlightDrainPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				BlightDrainPacket.TYPE,
+				BlightDrainPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				BlightDashPacket.TYPE,
+				BlightDashPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				BlightDashPacket.TYPE,
+				BlightDashPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				BlightTetherPacket.TYPE,
+				BlightTetherPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				BlightTetherPacket.TYPE,
+				BlightTetherPacket::handle
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
 				PharathornGroundSmashPacket.TYPE,
@@ -535,6 +632,73 @@ public class Rituals implements ModInitializer {
 				server.getPlayerList().getPlayers().forEach(p -> {
 					if (p.onGround()) hasDoubleJumped.remove(p.getUUID());
 					LightningRapierStreakTracker.tick(server);
+					ServerTickEvents.END_SERVER_TICK.register(VortexSlamPacket::tickServerSlams);
+					long currentTime = server.overworld().getGameTime();
+
+					BlightDrainPacket.ACTIVE_DRAINS.entrySet().removeIf(entry -> {
+						if (currentTime >= entry.getValue()) {
+							var player = server.getPlayerList().getPlayer(entry.getKey());
+							if (player != null) {
+								var attribute = player.getAttribute(Attributes.MAX_HEALTH);
+								if (attribute != null) {
+									// Pass the identifier instead of the UUID
+									attribute.removeModifier(BlightDrainPacket.MODIFIER_ID);
+								}
+							}
+							return true;
+						}
+						return false;
+					});
+					BlightTetherPacket.ACTIVE_TETHERS.removeIf(tether -> {
+						// 1. Terminate when the 5 seconds expire
+						if (currentTime >= tether.expiryTick) {
+							return true;
+						}
+
+						ServerLevel level = server.getLevel(tether.dimension);
+						if (level != null) {
+							Entity entity = level.getEntity(tether.targetUuid);
+							if (entity instanceof LivingEntity living && living.isAlive()) {
+								Vec3 currentPos = living.position();
+								Vec3 root = tether.rootPos;
+
+								double distance = currentPos.distanceTo(root);
+
+								// 2. If they attempt to breach the 3-block boundary radius
+								if (distance > BlightTetherPacket.TETHER_RADIUS) {
+									Vec3 directionFromRoot = currentPos.subtract(root).normalize();
+									// Calculate exact edge coordinate vector along their escape vector
+									Vec3 boundarySnapPos = root.add(directionFromRoot.scale(BlightTetherPacket.TETHER_RADIUS));
+
+									// Hard snap them back to the edge line
+									living.setPos(boundarySnapPos.x, currentPos.y, boundarySnapPos.z);
+
+									// Apply a strong inward rubber-band velocity pulling them back down
+									Vec3 elasticPull = root.subtract(currentPos).normalize().scale(0.35);
+									living.setDeltaMovement(elasticPull.x, living.getDeltaMovement().y, elasticPull.z);
+
+									if (living instanceof ServerPlayer player) {
+										player.hurtMarked = true;
+									}
+
+									// Play a snapping chain audio alert when they stress the line
+									if (currentTime % 4 == 0) {
+										level.playSound(null, boundarySnapPos.x, boundarySnapPos.y, boundarySnapPos.z,
+												net.minecraft.sounds.SoundEvents.CHAIN_FALL, SoundSource.HOSTILE, 0.8f, 1.2f);
+									}
+								}
+
+								// 3. Ambient visual particles outlining the tether link status
+								if (currentTime % 3 == 0) {
+									// Particle marker on the floor center anchor spot
+									level.sendParticles(ParticleTypes.CHERRY_LEAVES, root.x, root.y + 0.1, root.z, 4, 0.05, 0.0, 0.05, 0.0);
+									// Swirling particle field tracking around the target feet
+									level.sendParticles(ParticleTypes.WITCH, living.getX(), living.getY() + 0.3, living.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+								}
+							}
+						}
+						return false;
+					});
 				})
 		);
 		ClientTickEvents.END_CLIENT_TICK.register(client -> {

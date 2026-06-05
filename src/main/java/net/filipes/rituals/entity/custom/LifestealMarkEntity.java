@@ -28,6 +28,11 @@ public class LifestealMarkEntity extends Entity implements Scalable {
 
     private static final String GLOW_TEAM = "rituals_marked";
 
+    private String appliedGlowTeamName = null;
+    private String targetScoreboardName = null;
+
+
+
     private static final EntityDataAccessor<Float> DATA_SCALE =
             SynchedEntityData.defineId(LifestealMarkEntity.class, EntityDataSerializers.FLOAT);
 
@@ -88,31 +93,60 @@ public class LifestealMarkEntity extends Entity implements Scalable {
 
     private void applyGreenGlow(Entity target, ServerLevel serverLevel) {
         Scoreboard scoreboard = serverLevel.getServer().getScoreboard();
+        String targetName = target.getScoreboardName();
+        targetScoreboardName = targetName;
 
         PlayerTeam team = scoreboard.getPlayerTeam(GLOW_TEAM);
         if (team == null) {
             team = scoreboard.addPlayerTeam(GLOW_TEAM);
-            team.setColor(ChatFormatting.GREEN);
+            team.setColor(ChatFormatting.AQUA);
             team.setNameTagVisibility(net.minecraft.world.scores.Team.Visibility.NEVER);
         }
 
-        scoreboard.addPlayerToTeam(target.getScoreboardName(), team);
+        // If the target is already on a different glow team, move it cleanly.
+        PlayerTeam currentTeam = scoreboard.getPlayersTeam(targetName);
+        if (currentTeam != null && currentTeam != team) {
+            scoreboard.removePlayerFromTeam(targetName, currentTeam);
+        }
+
+        scoreboard.addPlayerToTeam(targetName, team);
         target.setGlowingTag(true);
+
+        appliedGlowTeamName = team.getName();
+        glowingApplied = true;
     }
 
     private void cleanupGlow(ServerLevel serverLevel) {
-        if (targetUUID == null || !glowingApplied) return;
-
-        Entity target = serverLevel.getEntity(targetUUID);
-        if (target == null) return;
+        if (!glowingApplied) return;
 
         Scoreboard scoreboard = serverLevel.getServer().getScoreboard();
-        PlayerTeam team = scoreboard.getPlayerTeam(GLOW_TEAM);
-        if (team != null) {
-            scoreboard.removePlayerFromTeam(target.getScoreboardName(), team);
+        Entity target = targetUUID != null ? serverLevel.getEntity(targetUUID) : null;
+
+        String targetName = targetScoreboardName;
+        if (targetName == null && target != null) {
+            targetName = target.getScoreboardName();
         }
-        target.setGlowingTag(false);
+
+        if (targetName != null && appliedGlowTeamName != null) {
+            PlayerTeam currentTeam = scoreboard.getPlayersTeam(targetName);
+
+            // Only remove if the target is still on the same team this mark applied.
+            if (currentTeam != null && appliedGlowTeamName.equals(currentTeam.getName())) {
+                scoreboard.removePlayerFromTeam(targetName, currentTeam);
+            }
+
+            // Only clear the glow flag if there is no other team still owning it.
+            if (target != null && scoreboard.getPlayersTeam(targetName) == null) {
+                target.setGlowingTag(false);
+            }
+        } else if (target != null) {
+            // Fallback: if we don't know the team anymore, don't crash; just clear glow safely.
+            target.setGlowingTag(false);
+        }
+
         glowingApplied = false;
+        appliedGlowTeamName = null;
+        targetScoreboardName = null;
     }
     public int getCurrentFrame() {
         return (tickCount / FRAME_DURATION) % FRAME_COUNT;
