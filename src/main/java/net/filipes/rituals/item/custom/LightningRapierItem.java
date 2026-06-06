@@ -2,6 +2,8 @@ package net.filipes.rituals.item.custom;
 
 import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.effect.ModStatusEffects;
+import net.filipes.rituals.enchantment.EnchantmentPolicy;
+import net.filipes.rituals.enchantment.RitualsEnchantable;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.ElectricBoltEntity;
 import net.filipes.rituals.entity.custom.LightningStrikeEntity;
@@ -18,11 +20,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 
 import java.util.List;
 
-public class LightningRapierItem extends Item implements RitualsTooltipStyle {
+public class LightningRapierItem extends Item implements RitualsTooltipStyle, RitualsEnchantable {
 
     private static final float  WEATHER_BONUS_DAMAGE = 3.0f;
     private static final double CHAIN_RADIUS         = 8.0;
@@ -33,10 +36,9 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
     public LightningRapierItem(ToolMaterial material, float attackDamage, float attackSpeed, Properties settings) {
         super(settings.sword(material, attackDamage, attackSpeed));
     }
+    private static final EnchantmentPolicy POLICY =
+            EnchantmentPolicy.restricted(Enchantments.SHARPNESS);
 
-    // =========================================================================
-    //  Core attack logic
-    // =========================================================================
 
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
@@ -207,10 +209,12 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle {
         int b = 0;
         return (r << 16) | (g << 8) | b;
     }
+    @Override
+    public EnchantmentPolicy getEnchantmentPolicy() {
+        return POLICY;
+    }
 
-    // =========================================================================
-    //  RitualsTooltipStyle
-    // =========================================================================
+
 
     @Override
     public Component getName(ItemStack stack) {

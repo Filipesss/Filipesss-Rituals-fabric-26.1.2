@@ -428,6 +428,48 @@ public final class SparkPresets {
             .windowSize(7)
             .burstCount(10)
             .build();
+    public static final SparkPreset BLIGHT_SINGLE = SparkPreset.builder()
+            .color(169, 214, 73)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.4f)
+            .windowSize(5)
+            .burstCount(4)
+            .build();
+    public static final SparkPreset BLIGHT_TRIPLE = SparkPreset.builder()
+            .color(169, 214, 73)
+            .trailAlpha(90)
+            .trailAmount(3)
+            .trailSpacing(0.05f)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.38f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset BLIGHT_WEB = SparkPreset.builder()
+            .color(252, 255, 245)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.4f)
+            .trailAmount(2)
+            .trailSpacing(0.04f)
+            .windowSize(18)
+            .burstCount(4)
+            .build();
+    public static final SparkPreset BLIGHT_DRAIN = SparkPreset.builder()
+            .color(255, 71, 20)
+            .trailAlpha(90)
+            .trailRotation(0.4f)
+            .gravity(0.06)
+            .trailJitter(0.2f)
+            .trailAmount(2)
+            .trailSpacing(0.04f)
+            .windowSize(7)
+            .burstCount(6)
+            .build();
 
 
 
@@ -474,6 +516,10 @@ public final class SparkPresets {
         register("vortex_spark_thin", VORTEX_SPARK_THIN);
         register("vortex_spark_triple", VORTEX_SPARK_TRIPLE);
         register("vortex_spark_triple_black", VORTEX_SPARK_TRIPLE_BLACK);
+        register("blight_single", BLIGHT_SINGLE);
+        register("blight_triple", BLIGHT_TRIPLE);
+        register("blight_web", BLIGHT_WEB);
+        register("blight_drain", BLIGHT_DRAIN);
 
     }
     public static Optional<String> nameOf(SparkPreset preset) {

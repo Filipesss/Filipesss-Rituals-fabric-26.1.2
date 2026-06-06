@@ -530,6 +530,22 @@ public class ModEntities {
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "blighted_puddle")
                     ))
     );
+    public static final EntityType<VortexProjectileEntity> VORTEX_PROJECTILE = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_projectile"),
+            EntityType.Builder.<VortexProjectileEntity>of(
+                            (type, level) -> new VortexProjectileEntity(
+                                    (EntityType<? extends VortexProjectileEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.4f, 0.4f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_projectile")
+                    ))
+    );
 
 
 

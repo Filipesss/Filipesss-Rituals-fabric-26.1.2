@@ -1,6 +1,7 @@
 package net.filipes.rituals.entity.custom;
 
 import net.filipes.rituals.effect.ModStatusEffects;
+import net.filipes.rituals.particle.ModParticles;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -36,7 +37,19 @@ public class BlightedPuddleEntity extends Entity {
     public void tick() {
         super.tick();
 
-        if (level().isClientSide()) return;
+        if (level().isClientSide()) {
+            if (this.random.nextInt(4) == 0) {
+                double angle = this.random.nextDouble() * 2.0 * Math.PI;
+                double radius = this.random.nextDouble() * CONTACT_RADIUS;
+
+                double pX = this.getX() + Math.cos(angle) * radius;
+                double pY = this.getY() + 0.05;
+                double pZ = this.getZ() + Math.sin(angle) * radius;
+
+                level().addParticle(ModParticles.BLIGHTED, pX, pY, pZ, 0.0, 0.02, 0.0);
+            }
+            return;
+        }
         if (!(level() instanceof ServerLevel sl)) return;
 
         if (tickCount >= LIFETIME) { discard(); return; }
@@ -46,7 +59,6 @@ public class BlightedPuddleEntity extends Entity {
 
         for (LivingEntity entity : nearby) {
             if (ownerUUID != null && entity.getUUID().equals(ownerUUID)) continue;
-            // 2 second duration refreshed every tick while standing in the puddle
             entity.addEffect(new MobEffectInstance(ModStatusEffects.BLIGHTED, 40, 0, false, true, true));
         }
     }

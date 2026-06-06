@@ -131,6 +131,9 @@ public class RitualsClient implements ClientModInitializer {
                 DepthstrikeGroundModel.LAYER,
                 DepthstrikeGroundModel::createBodyLayer);
         ModelLayerRegistry.registerModelLayer(
+                VortexProjectileModel.LAYER,
+                VortexProjectileModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(
                 PharathornGroundSmashModel.LAYER,
                 PharathornGroundSmashModel::createBodyLayer);
         EntityRendererRegistry.register(
@@ -191,6 +194,7 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.SOLAR_STAR, SolarStarEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.MULTI_BURST_SPARK, MultiBurstSparkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.BLIGHTED_PUDDLE, BlightedPuddleEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.VORTEX_PROJECTILE, VortexProjectileEntityRenderer::new);
 
 
 
@@ -295,6 +299,7 @@ public class RitualsClient implements ClientModInitializer {
             if (client.player != null) {
                 CooldownManager.tick();
             }
+            if (client.player == null) return;
             PulseBlasterCylinderState.tick();
             if (solarChargeTicks > 0) {
                 if (client.player != null) {
@@ -315,6 +320,14 @@ public class RitualsClient implements ClientModInitializer {
                     }
                 } else {
                     solarChargeTicks = -1;
+                }
+            }
+            if (clientBlightDashCount == 1) {
+                long now = System.currentTimeMillis();
+
+                if (now - clientBlightDashTime > 10000L) {
+                    clientBlightDashCount = 0;
+                    CooldownManager.trigger("blight_dash");
                 }
             }
 
@@ -365,11 +378,13 @@ public class RitualsClient implements ClientModInitializer {
 
                                     if (entityHit != null) {
                                         ClientPlayNetworking.send(new BlightTetherPacket(entityHit.getEntity().getId()));
-                                        CooldownManager.trigger("blight_tether");
                                     } else {
                                         // Fail cue if you cast tether into empty thin air
                                         mc.player.playSound(SoundEvents.CHAIN_BREAK, 0.6f, 1.5f);
                                     }
+
+                                    // ALWAYS trigger the cooldown now, forcing precision
+                                    CooldownManager.trigger("blight_tether");
                                 }
                             }
                             // --- IF SHIFT IS NOT HELD DOWN: CAST BLIGHT TRAP (COBWEB) ---
@@ -389,10 +404,13 @@ public class RitualsClient implements ClientModInitializer {
                                     if (entityHit != null) {
                                         net.minecraft.world.entity.Entity target = entityHit.getEntity();
                                         ClientPlayNetworking.send(new BlightWebPacket(target.getId()));
-                                        CooldownManager.trigger("blight_web");
                                     } else {
+                                        // Fail sound context
                                         mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.5f);
                                     }
+
+                                    // ALWAYS trigger the cooldown now, forcing precision
+                                    CooldownManager.trigger("blight_web");
                                 }
                             }
                         }
@@ -588,23 +606,18 @@ public class RitualsClient implements ClientModInitializer {
                             }
                         }
                     } else if (held.getItem() instanceof BlightspearItem) {
+                        // The background tick handler will automatically lock this down if the 10s expires
                         if (!CooldownManager.isOnCooldown("blight_dash")) {
-                            long now = System.currentTimeMillis();
-
-                            // If the window to press it again closed, reset the client indicator count
-                            if (clientBlightDashCount == 1 && now - clientBlightDashTime > 4000) {
-                                clientBlightDashCount = 0;
-                            }
 
                             // Fire the network packet to the server
                             ClientPlayNetworking.send(new BlightDashPacket());
 
                             if (clientBlightDashCount == 0) {
-                                // First jump completed; hold off visual cooldown overlay
+                                // First dash executed: Start the 10s tracking window
                                 clientBlightDashCount = 1;
-                                clientBlightDashTime = now;
+                                clientBlightDashTime = System.currentTimeMillis();
                             } else {
-                                // Second jump completed; activate UI cooldown indicator
+                                // Second dash executed successfully: Reset combo and trigger cooldown immediately
                                 clientBlightDashCount = 0;
                                 CooldownManager.trigger("blight_dash");
                             }

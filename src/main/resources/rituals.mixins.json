@@ -9,7 +9,8 @@
     "LivingEntityMixin",
     "MaceDamageMixin",
     "TntMinecartDamageMixin",
-    "TwinBladeAttackMixin"
+    "TwinBladeAttackMixin",
+    "EnchantmentHelperMixin"
   ],
   "injectors": {
     "defaultRequire": 1

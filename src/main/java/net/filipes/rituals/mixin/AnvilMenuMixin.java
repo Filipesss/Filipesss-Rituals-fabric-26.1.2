@@ -1,74 +1,58 @@
 package net.filipes.rituals.mixin;
 
-import net.filipes.rituals.item.custom.BlightspearItem; // Your new item
-import net.filipes.rituals.item.custom.RosegoldPickaxeItem;
-import net.filipes.rituals.item.custom.ShadowguardItem;
 import net.filipes.rituals.component.ModDataComponents;
+import net.filipes.rituals.enchantment.EnchantmentPolicy;
+import net.filipes.rituals.enchantment.RitualsEnchantable;
 import net.minecraft.core.Holder;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-// Import your custom enchantment registry class here
-// import net.filipes.rituals.enchantment.ModEnchantments;
-
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+/**
+ * Intercepts the anvil result slot and removes it if any *newly added*
+ * enchantment violates the item's {@link EnchantmentPolicy}.
+ *
+ * "Newly added" = present on the result but absent from the left input.
+ * Existing enchantments (renames, repairs, same-enchant level-ups) are untouched.
+ *
+ * NOTE: We deliberately avoid Holder.getKey() / Holder.unwrapKey() here because
+ * the Holder API changed in 26.1.  Instead we use ItemEnchantments.getLevel(),
+ * which returns 0 when the enchantment is absent — no key lookup needed.
+ */
 @Mixin(AnvilMenu.class)
 public class AnvilMenuMixin {
 
     @Inject(method = "createResult", at = @At("TAIL"))
     private void rituals$gateAnvilEnchanting(CallbackInfo ci) {
         AnvilMenu self = (AnvilMenu)(Object)this;
+
         ItemStack left = self.getSlot(0).getItem();
+        if (left.isEmpty() || !(left.getItem() instanceof RitualsEnchantable enchantable)) return;
 
-        // Rosegold: block all enchants below stage 2
-        if (left.getItem() instanceof RosegoldPickaxeItem
-                && RosegoldPickaxeItem.getStage(left) < 2) {
-            self.getSlot(2).set(ItemStack.EMPTY);
-            return;
-        }
+        ItemStack result = self.getSlot(2).getItem();
+        if (result.isEmpty()) return;
 
-        // Shadowguard: enforce per-stage enchant gates
-        if (left.getItem() instanceof ShadowguardItem) {
-            int stage = ModDataComponents.getStage(left);
-            ItemStack result = self.getSlot(2).getItem();
-            if (result.isEmpty()) return;
+        int stage = ModDataComponents.getStage(left);
+        EnchantmentPolicy policy = enchantable.getEnchantmentPolicy();
 
-            ItemEnchantments enchantments = result.getEnchantments();
-            for (Holder<Enchantment> enchantment : enchantments.keySet()) {
-                boolean forbidden = false;
+        ItemEnchantments leftEnchants   = left.getEnchantments();
+        ItemEnchantments resultEnchants = result.getEnchantments();
 
-                // Wind Burst requires stage 3
-                if (enchantment.is(Enchantments.WIND_BURST) && stage < 3) forbidden = true;
-                // Density and Breach require stage 5
-                if (enchantment.is(Enchantments.DENSITY) && stage < 5) forbidden = true;
-                if (enchantment.is(Enchantments.BREACH) && stage < 5) forbidden = true;
+        for (Holder<Enchantment> ench : resultEnchants.keySet()) {
+            // getLevel() returns 0 if the enchantment is absent on the left item.
+            // If it returns > 0, the enchantment was already there — skip the check
+            // so that renames and same-enchantment upgrades still work fine.
+            if (leftEnchants.getLevel(ench) > 0) continue;
 
-                if (forbidden) {
-                    self.getSlot(2).set(ItemStack.EMPTY);
-                    return;
-                }
-            }
-        }
-
-        // Blightspear: Enchants allowed from Stage 1, but LUNGE is gated behind Stage 4+
-        if (left.getItem() instanceof BlightspearItem) {
-            int stage = ModDataComponents.getStage(left);
-            ItemStack result = self.getSlot(2).getItem();
-            if (result.isEmpty()) return;
-
-            ItemEnchantments enchantments = result.getEnchantments();
-            for (Holder<Enchantment> enchantment : enchantments.keySet()) {
-                // Change 'ModEnchantments.LUNGE' to match your actual custom registry reference
-                if (enchantment.is(Enchantments.LUNGE) && stage < 4) {
-                    self.getSlot(2).set(ItemStack.EMPTY);
-                    return;
-                }
+            // Newly introduced enchantment — check against the policy.
+            if (!policy.isAllowed(ench, stage)) {
+                self.getSlot(2).set(ItemStack.EMPTY);
+                return;
             }
         }
     }
