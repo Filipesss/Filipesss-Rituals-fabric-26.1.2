@@ -8,13 +8,10 @@ import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.fabricmc.fabric.api.client.model.loading.v1.ExtraModelKey;
-import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.filipes.rituals.blocks.entity.ModBlockEntities;
 import net.filipes.rituals.client.*;
 import net.filipes.rituals.client.cooldown.CooldownHudOverlay;
@@ -33,16 +30,12 @@ import net.filipes.rituals.util.TooltipStyleHolder;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.model.Model;
-import net.minecraft.client.particle.EndRodParticle;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderers;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.Vec3;
-import org.joml.Vector3d;
 import org.lwjgl.glfw.GLFW;
 
 @Environment(EnvType.CLIENT)
@@ -131,9 +124,6 @@ public class RitualsClient implements ClientModInitializer {
                 DepthstrikeGroundModel.LAYER,
                 DepthstrikeGroundModel::createBodyLayer);
         ModelLayerRegistry.registerModelLayer(
-                VortexProjectileModel.LAYER,
-                VortexProjectileModel::createBodyLayer);
-        ModelLayerRegistry.registerModelLayer(
                 PharathornGroundSmashModel.LAYER,
                 PharathornGroundSmashModel::createBodyLayer);
         EntityRendererRegistry.register(
@@ -161,9 +151,13 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(
                 ModEntities.POLARITY_TORNADO_RED,
                 PolarityTornadoRedEntityRenderer::new);
+        ModelLayerRegistry.registerModelLayer(
+                PolarityShieldModel.LAYER,
+                PolarityShieldModel::createBodyLayer);
 
 
-        EntityRendererRegistry.register(ModEntities.POLARITY_ARROW, PolarityArrowEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.POLARITY_ARROW_BLUE, PolarityArrowBlueEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.POLARITY_ARROW_RED, PolarityArrowRedEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CINDER_ARROW, CinderArrowEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CINDERBOLT_BEAM, CinderboltBeamEntityRenderer::new);
@@ -195,6 +189,8 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.MULTI_BURST_SPARK, MultiBurstSparkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.BLIGHTED_PUDDLE, BlightedPuddleEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.VORTEX_PROJECTILE, VortexProjectileEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.REVERSE_POLARITY_ARROW, ReversePolarityArrowEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.POLARITY_SHIELD, PolarityShieldEntityRenderer::new);
 
 
 
@@ -204,10 +200,7 @@ public class RitualsClient implements ClientModInitializer {
                 Identifier.fromNamespaceAndPath("rituals", "pulse_blaster"),
                 (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PulseBlasterSpecialRenderer.Unbaked.CODEC
         );
-        SpecialModelRenderers.ID_MAPPER.put(
-                Identifier.fromNamespaceAndPath("rituals", "polarity_bow"),
-                (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PolarityBowSpecialRenderer.Unbaked.CODEC
-        );
+
 
         MenuScreens.register(ModMenuTypes.AMETHYST_HOURGLASS, AmethystHourglassScreen::new);
         RosegoldPickaxeHudOverlay.register();
@@ -246,6 +239,10 @@ public class RitualsClient implements ClientModInitializer {
         CooldownManager.register("blight_drain", "Life Drain", 50_000, 0x880000);
         CooldownManager.register("blight_dash", "Blight Shift", 15_000, 0x1C3318);
         CooldownManager.register("blight_tether", "Shadow Tether", 24_000, 0x4B2A5E);
+        CooldownManager.register("polarity_bow_switch", "Polarity Switch", 6_000, 0x6644FF);
+        CooldownManager.register("polarity_reverse_charge", "Reverse Shot", 20_000, 0xFFDD00);
+        CooldownManager.register("polarity_tornado", "Polarity Tornado", 12_000, 0x6644FF);
+        CooldownManager.register("polarity_bow_dash", "Polarity Dash", 10_000, 0x6644FF);
 
 
 
@@ -263,6 +260,10 @@ public class RitualsClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadowguardInvisiblePacket.TYPE,
                 (packet, context) -> ShadowguardHudOverlay.trigger()
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ReverseControlsPacket.TYPE,
+                (packet, context) -> ReverseControlsHandler.trigger(packet.durationTicks)
         );
         ClientPlayNetworking.registerGlobalReceiver(
                 CinderboltSaveTriggeredPacket.TYPE,
@@ -298,6 +299,7 @@ public class RitualsClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null) {
                 CooldownManager.tick();
+                ReverseControlsHandler.tick();
             }
             if (client.player == null) return;
             PulseBlasterCylinderState.tick();
@@ -350,6 +352,18 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new DepthstrikeRecallPacket());
                             CooldownManager.trigger("depthstrike_recall");
                         }
+                    } else if (held.getItem() instanceof PolarityBowItem) {
+                        if (mc.player.isShiftKeyDown()) {
+                            if (!CooldownManager.isOnCooldown("polarity_bow_dash")) {
+                                ClientPlayNetworking.send(new PolarityBowDashPacket());
+                                CooldownManager.trigger("polarity_bow_dash");
+                            }
+                        } else {
+                            if (!CooldownManager.isOnCooldown("polarity_bow_switch")) {
+                                ClientPlayNetworking.send(new PolarityBowSwitchPacket());
+                                CooldownManager.trigger("polarity_bow_switch");
+                            }
+                        }
                     } else if (held.getItem() instanceof LunarBladeItem) {
                         if (stage >= 2 && !CooldownManager.isOnCooldown("lunar_mark")) {
                             ClientPlayNetworking.send(new LunarMarkPacket());
@@ -362,7 +376,6 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     } else if (held.getItem() instanceof BlightspearItem) {
                         if (mc.player != null) {
-                            // --- IF SHIFT IS HELD DOWN: CAST SHADOW TETHER ---
                             if (mc.player.isShiftKeyDown()) {
                                 if (!CooldownManager.isOnCooldown("blight_tether")) {
                                     double maxDist = 20.0;
@@ -379,15 +392,12 @@ public class RitualsClient implements ClientModInitializer {
                                     if (entityHit != null) {
                                         ClientPlayNetworking.send(new BlightTetherPacket(entityHit.getEntity().getId()));
                                     } else {
-                                        // Fail cue if you cast tether into empty thin air
                                         mc.player.playSound(SoundEvents.CHAIN_BREAK, 0.6f, 1.5f);
                                     }
 
-                                    // ALWAYS trigger the cooldown now, forcing precision
                                     CooldownManager.trigger("blight_tether");
                                 }
                             }
-                            // --- IF SHIFT IS NOT HELD DOWN: CAST BLIGHT TRAP (COBWEB) ---
                             else {
                                 if (!CooldownManager.isOnCooldown("blight_web")) {
                                     double maxDist = 20.0;
@@ -405,11 +415,9 @@ public class RitualsClient implements ClientModInitializer {
                                         net.minecraft.world.entity.Entity target = entityHit.getEntity();
                                         ClientPlayNetworking.send(new BlightWebPacket(target.getId()));
                                     } else {
-                                        // Fail sound context
                                         mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.5f);
                                     }
 
-                                    // ALWAYS trigger the cooldown now, forcing precision
                                     CooldownManager.trigger("blight_web");
                                 }
                             }
@@ -522,6 +530,11 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new VortexShockwavePacket());
                             CooldownManager.trigger("vortex_shockwave");
                         }
+                    } else if (held.getItem() instanceof PolarityBowItem) {
+                        if (!CooldownManager.isOnCooldown("polarity_reverse_charge")) {
+                            ClientPlayNetworking.send(new ReversePolarityChargePacket());
+                            CooldownManager.trigger("polarity_reverse_charge");
+                        }
                     } else if (held.getItem() instanceof CinderboltItem
                             && ModDataComponents.getStage(held) >= 5) {
                         if (!CooldownManager.isOnCooldown("fire_cinderbolt_beam")) {
@@ -582,6 +595,11 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new TwinsActionTwoPacket());
                         }
 
+                    } else if (held.getItem() instanceof PolarityBowItem) {
+                        if (!CooldownManager.isOnCooldown("polarity_tornado")) {
+                            ClientPlayNetworking.send(new PolarityTornadoLaunchPacket());
+                            CooldownManager.trigger("polarity_tornado");
+                        }
                     } else if (held.getItem() instanceof SolarBladeItem) {
                         if (stage >= 5 && !CooldownManager.isOnCooldown("twins_action_two")
                                 && solarChargeTicks == -1) {
@@ -596,28 +614,22 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     } else if (held.getItem() instanceof VortexEdgeItem) {
                         if (!CooldownManager.isOnCooldown("vortex_slam")) {
-                            // Check if the player is airborne before attempting to dispatch
                             if (mc.player != null && !mc.player.onGround()) {
                                 ClientPlayNetworking.send(new VortexSlamPacket());
                                 CooldownManager.trigger("vortex_slam");
                             } else if (mc.player != null) {
-                                // Feedback sound if trying to slam while already standing on solid ground
                                 mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.2f);
                             }
                         }
                     } else if (held.getItem() instanceof BlightspearItem) {
-                        // The background tick handler will automatically lock this down if the 10s expires
                         if (!CooldownManager.isOnCooldown("blight_dash")) {
 
-                            // Fire the network packet to the server
                             ClientPlayNetworking.send(new BlightDashPacket());
 
                             if (clientBlightDashCount == 0) {
-                                // First dash executed: Start the 10s tracking window
                                 clientBlightDashCount = 1;
                                 clientBlightDashTime = System.currentTimeMillis();
                             } else {
-                                // Second dash executed successfully: Reset combo and trigger cooldown immediately
                                 clientBlightDashCount = 0;
                                 CooldownManager.trigger("blight_dash");
                             }

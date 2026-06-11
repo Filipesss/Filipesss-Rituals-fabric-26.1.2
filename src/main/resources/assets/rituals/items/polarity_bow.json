@@ -1,12 +1,47 @@
 {
   "model": {
-    "type": "minecraft:special",
-    "model": {
-      "type": "rituals:polarity_bow"
+    "type": "minecraft:condition",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "on_false": {
+      "type": "minecraft:condition",
+      "property": "minecraft:using_item",
+      "on_false": {
+        "type": "minecraft:model",
+        "model": "rituals:item/polarity_bow_blue_idle"
+      },
+      "on_true": {
+        "type": "minecraft:range_dispatch",
+        "property": "minecraft:use_duration",
+        "scale": 0.05,
+        "fallback": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_blue_idle" },
+        "entries": [
+          { "threshold": 0.25, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_blue_charge_0" } },
+          { "threshold": 0.50, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_blue_charge_1" } },
+          { "threshold": 0.75, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_blue_charge_2" } },
+          { "threshold": 1.00, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_blue_charged" } }
+        ]
+      }
     },
-    "base": "rituals:item/polarity_bow_transforms",
-    "textures": {
-      "layer0": "rituals:item/polarity_bow"
+    "on_true": {
+      "type": "minecraft:condition",
+      "property": "minecraft:using_item",
+      "on_false": {
+        "type": "minecraft:model",
+        "model": "rituals:item/polarity_bow_red_idle"
+      },
+      "on_true": {
+        "type": "minecraft:range_dispatch",
+        "property": "minecraft:use_duration",
+        "scale": 0.05,
+        "fallback": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_red_idle" },
+        "entries": [
+          { "threshold": 0.25, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_red_charge_0" } },
+          { "threshold": 0.50, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_red_charge_1" } },
+          { "threshold": 0.75, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_red_charge_2" } },
+          { "threshold": 1.00, "model": { "type": "minecraft:model", "model": "rituals:item/polarity_bow_red_charged" } }
+        ]
+      }
     }
   }
 }

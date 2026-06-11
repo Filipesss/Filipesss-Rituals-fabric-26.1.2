@@ -48,23 +48,19 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
         if (!world.isClientSide() && attacker instanceof ServerPlayer player) {
             ServerLevel serverLevel = (ServerLevel) world;
 
-            // Passive (all stages): weather damage bonus
             if (hasWeatherBonus(player, serverLevel)) {
                 target.hurt(serverLevel.damageSources().lightningBolt(), WEATHER_BONUS_DAMAGE);
             }
 
-            // Stage 3+: supercharge system
             if (stage >= 3) {
                 handleChargeSystem(stack, target, player, serverLevel, stage);
             }
 
-            // Stage 2+: chain lightning
             List<LivingEntity> chainedTargets = List.of();
             if (stage >= 2) {
                 chainedTargets = doChainLightning(world, serverLevel, target, attacker, stage);
             }
 
-            // Sounds
             boolean didChain = !chainedTargets.isEmpty();
             float pitch = 0.6f + world.getRandom().nextFloat() * 0.7f;
 
@@ -72,7 +68,6 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
                     didChain ? ModSounds.LIGHTNING_BOLT_3 : ModSounds.LIGHTNING_BOLT,
                     SoundSource.PLAYERS, 1.0f, pitch);
 
-            // Stage 6+: stun primary target
             if (stage >= 6) {
                 applyStun(target);
             }
@@ -143,10 +138,6 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
         return nearby;
     }
 
-    // =========================================================================
-    //  Helpers
-    // =========================================================================
-
     private static boolean hasWeatherBonus(ServerPlayer player, ServerLevel level) {
         if (player.isInWater()) return true;
         if (level.isRaining() && level.canSeeSky(player.blockPosition())) return true;
@@ -167,8 +158,6 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
                 18);
     }
 
-    // ── Charge component accessors ────────────────────────────────────────────
-
     public static int getCharge(ItemStack stack) {
         Integer c = stack.get(ModDataComponents.LIGHTNING_RAPIER_CHARGE);
         return c != null ? c : 0;
@@ -184,25 +173,18 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
         return next;
     }
 
-    // =========================================================================
-    //  Charge bar  (reuses the item durability bar slot)
-    // =========================================================================
-
     @Override
     public boolean isBarVisible(ItemStack stack) {
-        // Show the bar at stage 3+ whenever there is any charge built up
         return ModDataComponents.getStage(stack) >= 3 && getCharge(stack) > 0;
     }
 
     @Override
     public int getBarWidth(ItemStack stack) {
-        // 13 is the full bar width Minecraft uses for durability
         return Math.round((getCharge(stack) / 6f) * 13);
     }
 
     @Override
     public int getBarColor(ItemStack stack) {
-        // Interpolate from red (charge 1) → yellow (charge 6)
         float t = getCharge(stack) / 6f;
         int r = 0xFF;
         int g = (int) (t * 0xFF);

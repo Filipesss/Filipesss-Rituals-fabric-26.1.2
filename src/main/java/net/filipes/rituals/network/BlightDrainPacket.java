@@ -70,16 +70,14 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
                     caster.heal(4.0f);
                     ACTIVE_DRAINS.put(caster.getUUID(), level.getGameTime() + 600);
 
-                    // --- VISUAL FX: TARGET SHATTER BURST ---
-                    // Spawns a multi-directional chaotic splatter of sparks around the target being stolen from
                     double targetCenterY = target.getY() + (target.getBbHeight() * 0.5);
                     for (int i = 0; i < 6; i++) {
                         double angle = level.getRandom().nextDouble() * 2.0 * Math.PI;
-                        double horizSpd = 0.08 + level.getRandom().nextDouble() * 0.12;
-                        double vertSpd = 0.05 + level.getRandom().nextDouble() * 0.15;
+                        double horizSpd = 0.14 + level.getRandom().nextDouble() * 0.22;
+                        double vertSpd = (level.getRandom().nextDouble() - 0.4) * 0.08;
 
                         SparkEntity targetSpurt = new SparkEntity(ModEntities.SPARK, level, target.getX(), targetCenterY, target.getZ());
-                        targetSpurt.applyPreset(SparkPresets.BLIGHT_SINGLE);
+                        targetSpurt.applyPreset(SparkPresets.BLIGHT_DRAIN_SINGLE);
                         targetSpurt.forcedVelocity = new Vec3(
                                 Math.cos(angle) * horizSpd,
                                 vertSpd,
@@ -88,26 +86,21 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
                         level.addFreshEntity(targetSpurt);
                     }
 
-                    // --- VISUAL FX: CURVED HOMING SIPHONS ---
                     Vec3 targetTorso = target.position().add(0, target.getBbHeight() * 0.5, 0);
                     Vec3 casterTorso = caster.position().add(0, caster.getBbHeight() * 0.5, 0);
                     Vec3 travelVector = casterTorso.subtract(targetTorso);
 
                     if (travelVector.lengthSqr() > 0.01) {
                         Vec3 flatDir = new Vec3(travelVector.x, 0, travelVector.z).normalize();
-                        // Compute a horizontal vector exactly perpendicular to the line of sight
                         Vec3 lateralPerpend = new Vec3(-flatDir.z, 0, flatDir.x).normalize();
 
-                        // Siphon 1: Arcs widely out to the left and flies slightly higher
                         Vec3 curveOffset1 = lateralPerpend.scale(1.4).add(0, 0.8, 0);
-                        spawnCurvedSiphon(level, target, caster, curveOffset1, 25, SparkPresets.BLIGHT_DRAIN, server);
+                        spawnCurvedSiphon(level, target, caster, curveOffset1, 22, SparkPresets.BLIGHT_DRAIN, server);
 
-                        // Siphon 2: Arcs widely out to the right, takes a slightly staggered path
                         Vec3 curveOffset2 = lateralPerpend.scale(-1.4).add(0, 0.4, 0);
-                        spawnCurvedSiphon(level, target, caster, curveOffset2, 32, SparkPresets.BLIGHT_DRAIN, server);
+                        spawnCurvedSiphon(level, target, caster, curveOffset2, 28, SparkPresets.BLIGHT_DRAIN, server);
                     }
 
-                    // --- VANILLA PARTICLE COUPLING ---
                     level.sendParticles(ParticleTypes.DAMAGE_INDICATOR, target.getX(), targetCenterY, target.getZ(), 8, 0.25, 0.3, 0.25, 0.05);
                     level.sendParticles(ParticleTypes.HEART, caster.getX(), caster.getY() + (caster.getBbHeight() * 0.5), caster.getZ(), 4, 0.3, 0.4, 0.3, 0.0);
                 }
@@ -132,23 +125,25 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
 
     private static void runDrainCurveTicker(LivingEntity target, ServerPlayer caster, SparkEntity spark,
                                             int currentTick, int maxTicks, Vec3 curveOffset, MinecraftServer server) {
+
         if (currentTick >= maxTicks || !caster.isAlive() || !spark.isAlive()) {
-            if (spark.isAlive()) spark.discard();
+            if (spark.isAlive()) {
+                if (currentTick >= maxTicks && caster.isAlive()) {
+                    triggerArrivalBurst((ServerLevel) caster.level(), caster);
+                }
+                spark.discard();
+            }
             return;
         }
 
         ServerLevel level = (ServerLevel) caster.level();
 
-        // Dynamically track entity anchors each frame to guarantee perfect homing math
         Vec3 startPos = target.isAlive() ? target.position().add(0, target.getBbHeight() * 0.5, 0) : spark.position();
         Vec3 endPos = caster.position().add(0, caster.getBbHeight() * 0.5, 0);
 
         double pct = (double) currentTick / maxTicks;
-
-        // Base direct path coordinate
         Vec3 baseLinePos = startPos.lerp(endPos, pct);
 
-        // Apply sine wave transformation: sin(pi * pct) smoothly grows from 0.0 -> 1.0 (at midpoint) -> 0.0
         double waveEnvelope = Math.sin(Math.PI * pct);
         Vec3 finalArcPos = baseLinePos.add(curveOffset.scale(waveEnvelope));
 
@@ -156,13 +151,30 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
         spark.setDeltaMovement(Vec3.ZERO);
         spark.forcedVelocity = Vec3.ZERO;
 
-        // Leave a beautiful, pulsing trail of misty magical particles tracing along the arc coordinate
         if (level.getRandom().nextInt(2) == 0) {
-            level.sendParticles(ParticleTypes.WITCH, finalArcPos.x, finalArcPos.y, finalArcPos.z, 1, 0.0, 0.0, 0.0, 0.0);
+            level.sendParticles(ParticleTypes.WARPED_SPORE, finalArcPos.x, finalArcPos.y, finalArcPos.z, 1, 0.0, 0.0, 0.0, 0.0);
         }
 
         CompletableFuture.delayedExecutor(50, TimeUnit.MILLISECONDS).execute(() ->
                 server.execute(() -> runDrainCurveTicker(target, caster, spark, currentTick + 1, maxTicks, curveOffset, server))
         );
+    }
+
+    private static void triggerArrivalBurst(ServerLevel level, ServerPlayer caster) {
+        double centerY = caster.getY() + (caster.getBbHeight() * 0.5);
+        for (int i = 0; i < 4; i++) {
+            double angle = level.getRandom().nextDouble() * 2.0 * Math.PI;
+            double horizSpd = 0.06 + level.getRandom().nextDouble() * 0.12;
+            double vertSpd = 0.04 + level.getRandom().nextDouble() * 0.12;
+
+            SparkEntity impactSpark = new SparkEntity(ModEntities.SPARK, level, caster.getX(), centerY, caster.getZ());
+            impactSpark.applyPreset(SparkPresets.BLIGHT_DRAIN_SINGLE);
+            impactSpark.forcedVelocity = new Vec3(
+                    Math.cos(angle) * horizSpd,
+                    vertSpd,
+                    Math.sin(angle) * horizSpd
+            );
+            level.addFreshEntity(impactSpark);
+        }
     }
 }

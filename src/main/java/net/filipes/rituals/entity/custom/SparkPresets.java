@@ -470,6 +470,93 @@ public final class SparkPresets {
             .windowSize(7)
             .burstCount(6)
             .build();
+    public static final SparkPreset BLIGHT_DRAIN_SINGLE = SparkPreset.builder()
+            .color(255, 71, 20)
+            .trailAlpha(90)
+            .trailRotation(0.4f)
+            .gravity(0.06)
+            .trailJitter(0.05f)
+            .trailAmount(1)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset BLIGHT_TETHER_BORDER = SparkPreset.builder()
+            .color(169, 214, 73)
+            .trailAlpha(90)
+            .trailRotation(0.4f)
+            .gravity(0.06)
+            .trailJitter(0.2f)
+            .windowSize(11)
+            .burstCount(8)
+            .build();
+    public static final SparkPreset BLIGHT_TETHER_HOOK = SparkPreset.builder()
+            .color(169, 214, 73)
+            .trailAlpha(90)
+            .trailAmount(3)
+            .trailSpacing(0.03f)
+            .trailRotation(0.6f)
+            .gravity(0.06)
+            .trailJitter(0.28f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset POLARITY_BLUE_SINGLE = SparkPreset.builder()
+            .color(66, 126, 245)
+            .trailAmount(1)
+            .gravity(0.01)
+            .windowSize(5)
+            .trailAlpha(95)
+            .maxLifetime(7)
+            .trailJitter(0.09f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset POLARITY_RED_SINGLE = SparkPreset.builder()
+            .color(255, 43, 43)
+            .trailAmount(1)
+            .gravity(0.01)
+            .windowSize(5)
+            .trailAlpha(95)
+            .maxLifetime(7)
+            .trailJitter(0.09f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset POLARITY_RED_DASH = SparkPreset.builder()
+            .color(255, 43, 43)
+            .trailAmount(3)
+            .gravity(0.06)
+            .trailSpacing(0.3f)
+            .windowSize(5)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.2f)
+            .trailRotation(0.3f)
+            .trailGapChance(0.1f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset POLARITY_BLUE_DASH = SparkPreset.builder()
+            .color(66, 126, 245)
+            .trailAmount(3)
+            .gravity(0.06)
+            .trailSpacing(0.3f)
+            .windowSize(5)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.2f)
+            .trailRotation(0.3f)
+            .trailGapChance(0.1f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset POLARITY_REVERSE = SparkPreset.builder()
+            .color(255, 207, 74)
+            .gravity(0.06)
+            .trailAmount(2)
+            .trailSpacing(0.01f)
+            .windowSize(7)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.09f)
+            .burstCount(0)
+            .build();
 
 
 
@@ -520,6 +607,14 @@ public final class SparkPresets {
         register("blight_triple", BLIGHT_TRIPLE);
         register("blight_web", BLIGHT_WEB);
         register("blight_drain", BLIGHT_DRAIN);
+        register("blight_drain_single", BLIGHT_DRAIN_SINGLE);
+        register("blight_tether_border", BLIGHT_TETHER_BORDER);
+        register("blight_tether_hook", BLIGHT_TETHER_HOOK);
+        register("polarity_blue_single", POLARITY_BLUE_SINGLE);
+        register("polarity_red_single", POLARITY_RED_SINGLE);
+        register("polarity_reverse", POLARITY_REVERSE);
+        register("polarity_blue_dash", POLARITY_BLUE_DASH);
+        register("polarity_red_dash", POLARITY_RED_DASH);
 
     }
     public static Optional<String> nameOf(SparkPreset preset) {

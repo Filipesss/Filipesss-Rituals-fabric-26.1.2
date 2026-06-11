@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "rituals:lightning_rapier",
+    "rituals:solar_blade",
+    "rituals:lunar_blade",
+    "rituals:vortex_edge",
+    "rituals:pulse_blaster",
+    "rituals:shadowguard",
+    "rituals:blightspear",
+    "rituals:polarity_bow",
+    "rituals:cinderbolt",
+    "rituals:depthstrike",
+    "rituals:pharathorn",
+    "rituals:temporal_glassreaver",
+    "rituals:rosegold_pickaxe",
+    "rituals:rosegold_helmet",
+    "rituals:rosegold_chestplate",
+    "rituals:rosegold_leggings",
+    "rituals:rosegold_boots"
+  ]
+}

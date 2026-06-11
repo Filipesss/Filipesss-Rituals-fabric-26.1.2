@@ -1,6 +1,8 @@
 package net.filipes.rituals.item.custom;
 
 import net.filipes.rituals.component.ModDataComponents;
+import net.filipes.rituals.enchantment.EnchantmentPolicy;
+import net.filipes.rituals.enchantment.RitualsEnchantable;
 import net.filipes.rituals.network.ShadowguardInvisiblePacket;
 import net.filipes.rituals.util.RitualsTooltipStyle;
 import net.minecraft.network.chat.Component;
@@ -16,19 +18,25 @@ import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.world.item.enchantment.Enchantments;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public class ShadowguardItem extends MaceItem implements RitualsTooltipStyle {
+public class ShadowguardItem extends MaceItem implements RitualsTooltipStyle, RitualsEnchantable {
 
     private static final Map<UUID, Long> invisibleUntil = new HashMap<>();
 
     public ShadowguardItem(Properties settings) {
         super(settings);
     }
+    private static final EnchantmentPolicy POLICY = EnchantmentPolicy.layered()
+            .stage(1, 2).deny()
+            .stage(3, 5).allow(Enchantments.WIND_BURST)
+            .stage(6, Integer.MAX_VALUE).allowAll()
+            .build();
 
     public static void markInvisible(UUID uuid) {
         invisibleUntil.put(uuid, System.currentTimeMillis() + 3000);
@@ -98,4 +106,9 @@ public class ShadowguardItem extends MaceItem implements RitualsTooltipStyle {
     @Override public int getTooltipBorderColorTop()    { return 0xFF9B6DFF; }
     @Override public int getTooltipBorderColorBottom() { return 0xFF330066; }
     @Override public int getTooltipBackgroundColor()   { return 0xFF550000; }
+
+    @Override
+    public EnchantmentPolicy getEnchantmentPolicy() {
+        return POLICY;
+    }
 }

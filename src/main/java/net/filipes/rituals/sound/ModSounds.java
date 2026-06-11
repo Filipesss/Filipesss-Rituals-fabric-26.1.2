@@ -103,6 +103,15 @@ public final class ModSounds {
                     LIGHTNING_BOLT_3_ID,
                     SoundEvent.createVariableRangeEvent(LIGHTNING_BOLT_3_ID)
             );
+    public static final Identifier POLARTIY_CHANGE_ID =
+            Identifier.fromNamespaceAndPath("rituals", "polarity_change");
+
+    public static final SoundEvent POLARITY_CHANGE =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    POLARTIY_CHANGE_ID,
+                    SoundEvent.createVariableRangeEvent(POLARTIY_CHANGE_ID)
+            );
 
     public static void initialize() {
 

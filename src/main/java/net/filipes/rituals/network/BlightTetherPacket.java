@@ -1,8 +1,10 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.entity.custom.SparkEntity;
+import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.BlightspearItem;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -32,18 +34,29 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
             BlightTetherPacket::new
     );
 
-    // Data structure to hold active tethers globally on the server
     public static class TetherInstance {
         public final UUID targetUuid;
         public final Vec3 rootPos;
         public final ResourceKey<Level> dimension;
+        public final long startTick;
         public final long expiryTick;
 
-        public TetherInstance(UUID targetUuid, Vec3 rootPos, ResourceKey<Level> dimension, long expiryTick) {
+        public final SparkEntity hookSpark;
+        public final SparkEntity orbitSpark;
+        public final SparkEntity radiusSpark; // Tracks the outer boundary line
+        public double hookPhase = 0.0;
+
+        public TetherInstance(UUID targetUuid, Vec3 rootPos, ResourceKey<Level> dimension,
+                              long startTick, long expiryTick, SparkEntity hookSpark,
+                              SparkEntity orbitSpark, SparkEntity radiusSpark) {
             this.targetUuid = targetUuid;
             this.rootPos = rootPos;
             this.dimension = dimension;
+            this.startTick = startTick;
             this.expiryTick = expiryTick;
+            this.hookSpark = hookSpark;
+            this.orbitSpark = orbitSpark;
+            this.radiusSpark = radiusSpark;
         }
     }
 
@@ -62,15 +75,46 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
             Entity targetEntity = level.getEntity(pkt.targetId());
 
             if (targetEntity instanceof LivingEntity target && target.isAlive()) {
-                // Set anchor exactly where the target is standing right now
                 Vec3 rootPosition = target.position();
-                long durationTicks = 100; // 5 seconds * 20 ticks
-                long expiry = level.getGameTime() + durationTicks;
+                long start = level.getGameTime();
+                long durationTicks = 100; // 5 seconds
+                long expiry = start + durationTicks;
 
-                // Add to active ticking loop
-                ACTIVE_TETHERS.add(new TetherInstance(target.getUUID(), rootPosition, level.dimension(), expiry));
+                // --- INITIAL PUNCH: INSTANT IMPACT KNOCKBACK ---
+                Vec3 rawKnockbackDir = target.position().subtract(player.position());
+                Vec3 flatDir = new Vec3(rawKnockbackDir.x, 0, rawKnockbackDir.z).normalize();
+                if (rawKnockbackDir.lengthSqr() < 0.01) {
+                    flatDir = new Vec3(0, 0, 1);
+                }
 
-                // Audio cue at position
+                // Add a forceful horizontal push combined with a slight upward pop
+                target.setDeltaMovement(target.getDeltaMovement().add(flatDir.scale(0.55).add(0, 0.28, 0)));
+                if (target instanceof ServerPlayer sp) {
+                    sp.hurtMarked = true; // Sync velocity directly to the target client tracker
+                }
+
+                // --- VISUAL FX: INITIALIZE SPARKS ---
+                SparkEntity hook = new SparkEntity(ModEntities.SPARK, level, rootPosition.x, rootPosition.y + 0.2, rootPosition.z);
+                hook.applyPreset(SparkPresets.BLIGHT_TETHER_HOOK);
+                hook.setNoGravity(true);
+                hook.maxLifetime = 120;
+                level.addFreshEntity(hook);
+
+                SparkEntity orbit = new SparkEntity(ModEntities.SPARK, level, target.getX(), target.getY() + 1.0, target.getZ());
+                orbit.applyPreset(SparkPresets.BLIGHT_TETHER_BORDER);
+                orbit.setNoGravity(true);
+                orbit.maxLifetime = 120;
+                level.addFreshEntity(orbit);
+
+                // Perimeter Guard Spark: Starts exactly on the outer edge
+                SparkEntity radiusSpark = new SparkEntity(ModEntities.SPARK, level, rootPosition.x + TETHER_RADIUS, rootPosition.y + 0.15, rootPosition.z);
+                radiusSpark.applyPreset(SparkPresets.BLIGHT_TETHER_BORDER);
+                radiusSpark.setNoGravity(true);
+                radiusSpark.maxLifetime = 120;
+                level.addFreshEntity(radiusSpark);
+
+                ACTIVE_TETHERS.add(new TetherInstance(target.getUUID(), rootPosition, level.dimension(), start, expiry, hook, orbit, radiusSpark));
+
                 level.playSound(null, rootPosition.x, rootPosition.y, rootPosition.z,
                         SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 1.5f, 0.5f);
             }

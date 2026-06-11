@@ -170,17 +170,28 @@ public class ModEntities {
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "thrown_depthstrike")
                     ))
     );
-    public static final EntityType<PolarityArrowEntity> POLARITY_ARROW =
+    public static final EntityType<PolarityArrowBlueEntity> POLARITY_ARROW_BLUE =
             Registry.register(
                     BuiltInRegistries.ENTITY_TYPE,
-                    Identifier.fromNamespaceAndPath("rituals", "polarity_arrow"),
-                    EntityType.Builder.<PolarityArrowEntity>of(
-                            PolarityArrowEntity::new,
+                    Identifier.fromNamespaceAndPath("rituals", "polarity_arrow_blue"),
+                    EntityType.Builder.<PolarityArrowBlueEntity>of(
+                            PolarityArrowBlueEntity::new,
                             MobCategory.MISC
                     ).sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(20).build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
-                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "polarity_arrow"))
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "polarity_arrow_blue"))
             ));
+    public static final EntityType<PolarityArrowRedEntity> POLARITY_ARROW_RED =
+            Registry.register(
+                    BuiltInRegistries.ENTITY_TYPE,
+                    Identifier.fromNamespaceAndPath("rituals", "polarity_arrow_red"),
+                    EntityType.Builder.<PolarityArrowRedEntity>of(
+                            PolarityArrowRedEntity::new,
+                            MobCategory.MISC
+                    ).sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(20).build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "polarity_arrow_red"))
+                    ));
     public static final EntityType<CinderArrowEntity> CINDER_ARROW =
             Registry.register(
                     BuiltInRegistries.ENTITY_TYPE,
@@ -544,6 +555,33 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_projectile")
+                    ))
+    );
+    public static final EntityType<ReversePolarityArrowEntity> REVERSE_POLARITY_ARROW =
+            Registry.register(
+                    BuiltInRegistries.ENTITY_TYPE,
+                    Identifier.fromNamespaceAndPath("rituals", "reverse_polarity_arrow"),
+                    EntityType.Builder.<ReversePolarityArrowEntity>of(
+                            ReversePolarityArrowEntity::new,
+                            MobCategory.MISC
+                    ).sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(20).build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "reverse_polarity_arrow"))
+                    ));
+    public static final EntityType<PolarityShieldEntity> POLARITY_SHIELD = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "polarity_shield"),
+            EntityType.Builder.<PolarityShieldEntity>of(
+                            (type, level) -> new PolarityShieldEntity(
+                                    (EntityType<? extends PolarityShieldEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "polarity_shield")
                     ))
     );
 

@@ -576,6 +576,44 @@ public class Rituals implements ModInitializer {
 				ShadowguardInvisiblePacket.TYPE,
 				ShadowguardInvisiblePacket.CODEC
 		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				PolarityBowSwitchPacket.TYPE,
+				PolarityBowSwitchPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				PolarityBowSwitchPacket.TYPE,
+				PolarityBowSwitchPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				PolarityBowDashPacket.TYPE,
+				PolarityBowDashPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				PolarityBowDashPacket.TYPE,
+				PolarityBowDashPacket::handle
+		);
+
+
+		PayloadTypeRegistry.serverboundPlay().register(
+				ReversePolarityChargePacket.TYPE,
+				ReversePolarityChargePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				ReversePolarityChargePacket.TYPE,
+				ReversePolarityChargePacket::handle
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				ReverseControlsPacket.TYPE,
+				ReverseControlsPacket.CODEC
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				PolarityTornadoLaunchPacket.TYPE,
+				PolarityTornadoLaunchPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				PolarityTornadoLaunchPacket.TYPE,
+				PolarityTornadoLaunchPacket::handle);
+
 
 		Set<UUID> hasDoubleJumped = ConcurrentHashMap.newKeySet();
 
@@ -628,6 +666,7 @@ public class Rituals implements ModInitializer {
 				server.getPlayerList().getPlayers().forEach(p -> {
 					if (p.onGround()) hasDoubleJumped.remove(p.getUUID());
 					LightningRapierStreakTracker.tick(server);
+					PolarityBowSwitchPacket.tickServerSparks(server);
 					ServerTickEvents.END_SERVER_TICK.register(VortexSlamPacket::tickServerSlams);
 					long currentTime = server.overworld().getGameTime();
 
@@ -646,52 +685,154 @@ public class Rituals implements ModInitializer {
 						return false;
 					});
 					BlightTetherPacket.ACTIVE_TETHERS.removeIf(tether -> {
-						// 1. Terminate when the 5 seconds expire
-						if (currentTime >= tether.expiryTick) {
+						ServerLevel level = server.getLevel(tether.dimension);
+
+						// 1. Terminate visual systems cleanly if lifetime runs dry or level unloads
+						if (currentTime >= tether.expiryTick || level == null) {
+							if (tether.hookSpark != null && tether.hookSpark.isAlive()) tether.hookSpark.discard();
+							if (tether.orbitSpark != null && tether.orbitSpark.isAlive()) tether.orbitSpark.discard();
+							if (tether.radiusSpark != null && tether.radiusSpark.isAlive()) tether.radiusSpark.discard();
 							return true;
 						}
 
-						ServerLevel level = server.getLevel(tether.dimension);
-						if (level != null) {
-							Entity entity = level.getEntity(tether.targetUuid);
-							if (entity instanceof LivingEntity living && living.isAlive()) {
-								Vec3 currentPos = living.position();
-								Vec3 root = tether.rootPos;
+						Entity entity = level.getEntity(tether.targetUuid);
+						if (entity instanceof LivingEntity living && living.isAlive()) {
+							Vec3 currentPos = living.position();
+							Vec3 root = tether.rootPos;
+							double distance = currentPos.distanceTo(root);
 
-								double distance = currentPos.distanceTo(root);
+							// Calculate tension ratio (0.0 at center, 1.0 at maximum boundary edge)
+							double tension = Math.min(1.0, distance / BlightTetherPacket.TETHER_RADIUS);
 
-								// 2. If they attempt to breach the 3-block boundary radius
-								if (distance > BlightTetherPacket.TETHER_RADIUS) {
-									Vec3 directionFromRoot = currentPos.subtract(root).normalize();
-									// Calculate exact edge coordinate vector along their escape vector
-									Vec3 boundarySnapPos = root.add(directionFromRoot.scale(BlightTetherPacket.TETHER_RADIUS));
+							// 2. Escape Constraint Enforcement & Rubberbanding
+							if (distance > BlightTetherPacket.TETHER_RADIUS) {
+								Vec3 directionFromRoot = currentPos.subtract(root).normalize();
+								Vec3 boundarySnapPos = root.add(directionFromRoot.scale(BlightTetherPacket.TETHER_RADIUS));
 
-									// Hard snap them back to the edge line
-									living.setPos(boundarySnapPos.x, currentPos.y, boundarySnapPos.z);
+								// Hard snap to boundary line
+								living.setPos(boundarySnapPos.x, currentPos.y, boundarySnapPos.z);
 
-									// Apply a strong inward rubber-band velocity pulling them back down
-									Vec3 elasticPull = root.subtract(currentPos).normalize().scale(0.35);
-									living.setDeltaMovement(elasticPull.x, living.getDeltaMovement().y, elasticPull.z);
+								// Apply elastic pull velocity vector back inside
+								Vec3 elasticPull = root.subtract(currentPos).normalize().scale(0.35);
+								living.setDeltaMovement(elasticPull.x, living.getDeltaMovement().y, elasticPull.z);
 
-									if (living instanceof ServerPlayer player) {
-										player.hurtMarked = true;
-									}
+								if (living instanceof ServerPlayer player) {
+									player.hurtMarked = true;
+								}
 
-									// Play a snapping chain audio alert when they stress the line
-									if (currentTime % 4 == 0) {
-										level.playSound(null, boundarySnapPos.x, boundarySnapPos.y, boundarySnapPos.z,
-												net.minecraft.sounds.SoundEvents.CHAIN_FALL, SoundSource.HOSTILE, 0.8f, 1.2f);
+								// FIX: Throttled crash bursts (Every 6 ticks) to prevent crazy entity flooding when grinding against the border
+								if (currentTime % 6 == 0) {
+									Vec3 crashOrigin = boundarySnapPos.add(0, living.getBbHeight() * 0.5, 0);
+									for (int i = 0; i < 5; i++) {
+										double spreadAngle = (level.getRandom().nextDouble() - 0.5) * 0.5;
+										double cos = Math.cos(spreadAngle);
+										double sin = Math.sin(spreadAngle);
+
+										Vec3 outwardConeDir = new Vec3(
+												directionFromRoot.x * cos - directionFromRoot.z * sin,
+												0,
+												directionFromRoot.x * sin + directionFromRoot.z * cos
+										).normalize();
+
+										double speed = 0.16 + level.getRandom().nextDouble() * 0.22;
+										SparkEntity crashSpark = new SparkEntity(ModEntities.SPARK, level, crashOrigin.x, crashOrigin.y, crashOrigin.z);
+										crashSpark.applyPreset(SparkPresets.BLIGHT_SINGLE);
+
+										crashSpark.forcedVelocity = outwardConeDir.scale(speed).add(0, 0.08 + level.getRandom().nextDouble() * 0.12, 0);
+										level.addFreshEntity(crashSpark);
 									}
 								}
 
-								// 3. Ambient visual particles outlining the tether link status
-								if (currentTime % 3 == 0) {
-									// Particle marker on the floor center anchor spot
-									level.sendParticles(ParticleTypes.CHERRY_LEAVES, root.x, root.y + 0.1, root.z, 4, 0.05, 0.0, 0.05, 0.0);
-									// Swirling particle field tracking around the target feet
-									level.sendParticles(ParticleTypes.WITCH, living.getX(), living.getY() + 0.3, living.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+								if (currentTime % 4 == 0) {
+									level.playSound(null, boundarySnapPos.x, boundarySnapPos.y, boundarySnapPos.z,
+											net.minecraft.sounds.SoundEvents.CHAIN_FALL, SoundSource.HOSTILE, 0.8f, 1.2f);
 								}
 							}
+
+							// --- VISUAL FX: LIVE TICK SYNCHRONIZATION ---
+
+							// Update Hook Spark (Middle Bouncing Spark)
+							if (tether.hookSpark != null && tether.hookSpark.isAlive()) {
+								Vec3 targetTorso = living.position().add(0, living.getBbHeight() * 0.4, 0);
+								Vec3 anchorCenter = root.add(0, 0.1, 0);
+
+								// Pure mathematical frequency blending to speed up motion seamlessly without extra fields
+								double slowPhase = (currentTime % 20) / 20.0 * Math.PI; // Base speed (slower)
+								double fastPhase = (currentTime % 7) / 7.0 * Math.PI;   // Aggressive speed (faster)
+
+								double pingPongSlow = Math.abs(Math.sin(slowPhase));
+								double pingPongFast = Math.abs(Math.sin(fastPhase));
+
+								// Blend frequencies together based on tension distance
+								double blendedPingPong = pingPongSlow + (pingPongFast - pingPongSlow) * tension;
+								Vec3 currentHookPos = anchorCenter.lerp(targetTorso, blendedPingPong);
+
+								// Physical wire strain jitter
+								if (tension > 0.5) {
+									double shakeStrength = (tension - 0.5) * 0.28;
+									currentHookPos = currentHookPos.add(
+											(level.getRandom().nextDouble() - 0.5) * shakeStrength,
+											(level.getRandom().nextDouble() - 0.5) * shakeStrength,
+											(level.getRandom().nextDouble() - 0.5) * shakeStrength
+									);
+								}
+
+								tether.hookSpark.setPos(currentHookPos.x, currentHookPos.y, currentHookPos.z);
+								tether.hookSpark.setDeltaMovement(Vec3.ZERO);
+								tether.hookSpark.forcedVelocity = Vec3.ZERO;
+							}
+
+							// Update Orbit Spark
+							if (tether.orbitSpark != null && tether.orbitSpark.isAlive()) {
+								double speed = 0.22;
+								double radius = 0.65;
+								double angle = currentTime * speed;
+
+								double ox = living.getX() + Math.cos(angle) * radius;
+								double oz = living.getZ() + Math.sin(angle) * radius;
+								double oy = living.getY() + (living.getBbHeight() * 0.5) + (Math.sin(currentTime * 0.2) * 0.15);
+
+								tether.orbitSpark.setPos(ox, oy, oz);
+								tether.orbitSpark.setDeltaMovement(Vec3.ZERO);
+								tether.orbitSpark.forcedVelocity = Vec3.ZERO;
+							}
+
+							// Update Boundary Track Spark
+							if (tether.radiusSpark != null && tether.radiusSpark.isAlive()) {
+								long elapsedTicks = currentTime - tether.startTick;
+								long totalLifetime = tether.expiryTick - tether.startTick;
+
+								double progress = (double) elapsedTicks / totalLifetime;
+								double perimeterAngle = progress * 2.0 * Math.PI;
+
+								double rx = root.x + Math.cos(perimeterAngle) * BlightTetherPacket.TETHER_RADIUS;
+								double rz = root.z + Math.sin(perimeterAngle) * BlightTetherPacket.TETHER_RADIUS;
+								double ry = root.y + 0.15;
+
+								tether.radiusSpark.setPos(rx, ry, rz);
+								tether.radiusSpark.setDeltaMovement(Vec3.ZERO);
+								tether.radiusSpark.forcedVelocity = Vec3.ZERO;
+							}
+
+							// --- FIX: HIGH-DENSITY CAGE BOUNDARY LIGHTS ---
+							// Increased particle iterations to 24 per tick to explicitly paint a visible green ring layout
+							for (int i = 0; i < 24; i++) {
+								double randomAngle = level.getRandom().nextDouble() * 2.0 * Math.PI;
+								double px = root.x + Math.cos(randomAngle) * BlightTetherPacket.TETHER_RADIUS;
+								double pz = root.z + Math.sin(randomAngle) * BlightTetherPacket.TETHER_RADIUS;
+								level.sendParticles(ParticleTypes.HAPPY_VILLAGER, px, root.y + 0.12, pz, 1, 0.01, 0.01, 0.01, 0.0);
+							}
+
+							// Emerald center aura
+							if (currentTime % 3 == 0) {
+								level.sendParticles(ParticleTypes.HAPPY_VILLAGER, root.x, root.y + 0.15, root.z, 5, 0.12, 0.02, 0.12, 0.01);
+							}
+
+						} else {
+							if (tether.hookSpark != null && tether.hookSpark.isAlive()) tether.hookSpark.discard();
+							if (tether.orbitSpark != null && tether.orbitSpark.isAlive()) tether.orbitSpark.discard();
+							if (tether.radiusSpark != null && tether.radiusSpark.isAlive()) tether.radiusSpark.discard();
+							return true;
 						}
 						return false;
 					});

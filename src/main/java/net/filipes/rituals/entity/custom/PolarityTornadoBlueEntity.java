@@ -1,6 +1,7 @@
 package net.filipes.rituals.entity.custom;
 
 import net.filipes.rituals.entity.ModEntities;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -30,6 +31,8 @@ public class PolarityTornadoBlueEntity extends Entity {
     private static final double MAX_PUSH_PER_TICK = 0.4;
 
     private int lifetime = -1;
+    private Vec3 travelVelocity = Vec3.ZERO;
+    private boolean landed = false;
 
     public PolarityTornadoBlueEntity(EntityType<? extends PolarityTornadoBlueEntity> type, Level level) {
         super(type, level);
@@ -64,6 +67,10 @@ public class PolarityTornadoBlueEntity extends Entity {
     public void setVisualScale(float scale) {
         this.entityData.set(DATA_VISUAL_SCALE, scale);
     }
+    public void launch(Vec3 velocity) {
+        this.travelVelocity = velocity;
+        this.landed = false;
+    }
 
     @Override
     public void tick() {
@@ -75,7 +82,32 @@ public class PolarityTornadoBlueEntity extends Entity {
         }
 
         if (!this.level().isClientSide()) {
+            if (!landed) applyTrajectory();
             applyPush();
+        }
+    }
+    private void applyTrajectory() {
+        double nx = getX() + travelVelocity.x;
+        double ny = getY() + travelVelocity.y;
+        double nz = getZ() + travelVelocity.z;
+
+        // Check the block just below the projected position
+        BlockPos groundCheck = BlockPos.containing(nx, ny - 0.4, nz);
+        boolean wouldHitGround = !level().getBlockState(groundCheck).isAir()
+                && !level().getBlockState(groundCheck).getFluidState().isEmpty() == false
+                || !level().getBlockState(groundCheck).isAir();
+
+        if (wouldHitGround && travelVelocity.y <= 0) {
+            setPos(nx, groundCheck.getY() + 1.0, nz);
+            landed = true;
+            travelVelocity = Vec3.ZERO;
+        } else {
+            setPos(nx, ny, nz);
+            travelVelocity = new Vec3(
+                    travelVelocity.x * 0.99,
+                    travelVelocity.y - 0.025,
+                    travelVelocity.z * 0.99
+            );
         }
     }
 
@@ -117,12 +149,14 @@ public class PolarityTornadoBlueEntity extends Entity {
     protected void readAdditionalSaveData(ValueInput input) {
         this.lifetime  = input.getIntOr("Lifetime", this.lifetime);
         this.tickCount = Math.max(0, input.getIntOr("Age", this.tickCount));
+        this.landed = input.getBooleanOr("Landed", false);
         this.setVisualScale(input.getFloatOr("VisualScale", 1.0f));
     }
 
     @Override
     protected void addAdditionalSaveData(ValueOutput output) {
         output.putInt("Lifetime", this.lifetime);
+        output.putBoolean("Landed", this.landed);
         output.putInt("Age", this.tickCount);
         output.putFloat("VisualScale", this.getVisualScale());
     }

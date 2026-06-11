@@ -15,20 +15,17 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 public class VortexProjectileEntityRenderer
         extends EntityRenderer<VortexProjectileEntity, VortexProjectileEntityRenderer.VortexProjectileRenderState> {
 
-    private final VortexProjectileModel model;
+    // No bakeLayer needed — model is fully manual, no ModelPart / texture.
+    // Register with: EntityRendererRegistry.register(ModEntities.VORTEX_PROJECTILE, VortexProjectileEntityRenderer::new);
+    private final VortexProjectileModel model = new VortexProjectileModel();
 
-    // ── Render state ─────────────────────────────────────────────────────────
+    // ── Render state ──────────────────────────────────────────────────────────
     public static class VortexProjectileRenderState extends EntityRenderState {
         public float ageInTicks;
     }
 
-    // ── Constructor ───────────────────────────────────────────────────────────
-    // Register this in your client initializer:
-    //   EntityRendererRegistry.register(ModEntities.VORTEX_PROJECTILE, VortexProjectileEntityRenderer::new);
     public VortexProjectileEntityRenderer(EntityRendererProvider.Context context) {
         super(context);
-        this.model = new VortexProjectileModel(
-                context.bakeLayer(VortexProjectileModel.LAYER));
     }
 
     // ── State plumbing ────────────────────────────────────────────────────────
@@ -59,10 +56,10 @@ public class VortexProjectileEntityRenderer
         MultiBufferSource.BufferSource bufferSource =
                 Minecraft.getInstance().renderBuffers().bufferSource();
 
-        // All transforms (flip, centering, scale) and the GL_FRONT culling trick
-        // live inside VortexProjectileModel.render() — see that class for details.
         poseStack.pushPose();
-        model.render(poseStack, bufferSource, 15728880, state.ageInTicks);
+        // No light param — debugFilledBox and lines use POSITION_COLOR,
+        // which has no lightmap slot and always renders at full brightness.
+        model.render(poseStack, bufferSource, state.ageInTicks);
         poseStack.popPose();
     }
 

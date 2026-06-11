@@ -38,5 +38,9 @@
   "lstrike1": {
     "subtitle": "Electricity",
     "sounds": ["rituals:lstrike1"]
+  },
+  "polarity_change": {
+    "subtitle": "Polarity change",
+    "sounds": ["rituals:polarity_change"]
   }
 }

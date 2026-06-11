@@ -17,26 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/**
- * Filters the enchantment list that the enchanting TABLE may offer/apply,
- * according to the item's {@link EnchantmentPolicy}.
- *
- * This runs after vanilla's own tag-based filtering, so vanilla restrictions
- * still apply first — we only narrow it further.
- *
- * ── Target method ─────────────────────────────────────────────────────────
- * Mojang mapping (26.1+):  EnchantmentHelper.getAvailableEnchantmentResults
- * Signature:               (int level, ItemStack stack, Stream<Holder<Enchantment>> possible)
- *
- * If your IDE shows a different name or signature, do the following:
- *   1. Open EnchantmentHelper in IntelliJ (Ctrl+N → type EnchantmentHelper)
- *   2. Find the method that takes an ItemStack and returns List<EnchantmentInstance>
- *   3. Update the `method` string in @Inject below and match the parameter list here.
- *
- * ── Common alternative names ──────────────────────────────────────────────
- *  • getAvailableEnchantmentResults  (1.21.x – 26.1 Mojang mappings)
- *  • selectEnchantment               (some 1.21.x builds / older Mojang names)
- */
 @Mixin(EnchantmentHelper.class)
 public class EnchantmentHelperMixin {
 

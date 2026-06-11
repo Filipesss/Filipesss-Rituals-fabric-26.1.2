@@ -10,7 +10,10 @@
     "MaceDamageMixin",
     "TntMinecartDamageMixin",
     "TwinBladeAttackMixin",
-    "EnchantmentHelperMixin"
+    "EnchantmentHelperMixin",
+    "ItemEntityDespawnMixin",
+    "EntityInvulnerabilityMixin",
+    "ItemStackGlintMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -23,6 +26,8 @@
     "client.LivingEntityRenderStateMixin",
     "client.LivingEntityRendererMixin",
     "client.CameraMixin",
-    "client.ClientPlayerMixin"
+    "client.ClientPlayerMixin",
+    "client.LivingEntityTravelMixin",
+    "client.EntityTurnMixin"
   ]
 }

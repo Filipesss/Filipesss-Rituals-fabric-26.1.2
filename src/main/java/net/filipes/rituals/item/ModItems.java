@@ -52,6 +52,7 @@ public class ModItems {
             settings -> new LightningRapierItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
                     .stacksTo(1)
+                    .fireResistant()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(15))
                     );
@@ -59,6 +60,7 @@ public class ModItems {
             settings -> new SolarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
                     .stacksTo(1)
+                    .fireResistant()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
@@ -69,6 +71,7 @@ public class ModItems {
             settings -> new LunarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
                     .stacksTo(1)
+                    .fireResistant()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
@@ -79,6 +82,7 @@ public class ModItems {
             settings -> new VortexEdgeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
                     .stacksTo(1)
+                    .fireResistant()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
@@ -102,6 +106,7 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .fireResistant()
                     .component(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.builder()
                             .add(
                                     Attributes.ATTACK_DAMAGE,
@@ -138,13 +143,16 @@ public class ModItems {
                     1.2f,
                     settings
             ),
-            new Item.Properties().stacksTo(1).component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+            new Item.Properties().stacksTo(1)
+                    .fireResistant()
+                            .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
     );
 
     public static final Item ROSEGOLD_HELMET = registerItem("rosegold_helmet",
             settings -> new RosegoldHelmetItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.HELMET)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
+                    .fireResistant()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
@@ -155,6 +163,7 @@ public class ModItems {
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.CHESTPLATE)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .fireResistant()
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
                                     .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
@@ -164,6 +173,7 @@ public class ModItems {
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.LEGGINGS)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .fireResistant()
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
                                     .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
@@ -173,6 +183,7 @@ public class ModItems {
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.BOOTS)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .fireResistant()
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
                                     .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
@@ -182,6 +193,7 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .fireResistant()
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
                                     Component.translatable("tooltip.rituals.polarity_bow")
@@ -192,6 +204,7 @@ public class ModItems {
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .fireResistant()
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
                                     Component.translatable("tooltip.rituals.cinderbolt")
@@ -203,6 +216,7 @@ public class ModItems {
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
+                    .fireResistant()
                     .component(DataComponents.ATTRIBUTE_MODIFIERS, TridentItem.createAttributes())
                     .component(DataComponents.TOOL, TridentItem.createToolProperties())
                     .component(DataComponents.LORE,
@@ -217,6 +231,7 @@ public class ModItems {
             settings -> new PharathornItem(ModToolMaterials.ROSEGOLD, 8F, -3.2F, settings),
             new Item.Properties()
                     .stacksTo(1)
+                    .fireResistant()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
@@ -227,6 +242,7 @@ public class ModItems {
             settings -> new TemporalGlassreaverItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
                     .stacksTo(1)
+                    .fireResistant()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
                     .component(DataComponents.LORE,
                             new ItemLore(List.of(
