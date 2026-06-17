@@ -57,8 +57,9 @@ public class PolarityShieldModel {
         return LayerDefinition.create(mesh, 64, 64);
     }
 
+    // UPDATED: Now accepts the scaling 'alpha' parameter from your entity renderer
     public void render(PoseStack ps, MultiBufferSource buffers, int packedLight,
-                       float ageInTicks, boolean isRed, boolean firstPerson) {
+                       float ageInTicks, boolean isRed, boolean firstPerson, float alpha) {
 
         Identifier activeTexture = isRed ? RED_TEXTURE : BLUE_TEXTURE;
 
@@ -67,30 +68,38 @@ public class PolarityShieldModel {
         // Minor baseline positioning offset adjust
         ps.translate(0.0f, 0.25f, 0.0f);
 
-        // --- GLOW PASSTHROUGH LAYER ---
-        // Generates an energy aura using the lighting render type layer
+        // --- 1. GLOW PASSTHROUGH LAYER ---
         if (!firstPerson) {
             int r = isRed ? 255 : 0;
             int g = isRed ? 30  : 160;
             int b = isRed ? 30  : 255;
+            // Dynamically scale down the default glow alpha (160) by our fade modifier
+            int dynamicAlpha = Math.round(160 * alpha);
 
             VertexConsumer energyVc = new ForcedColorConsumer(
                     buffers.getBuffer(RenderTypes.lightning()),
-                    r, g, b, 160
+                    r, g, b, dynamicAlpha
             );
             root.render(ps, energyVc, 15728880, OverlayTexture.NO_OVERLAY);
         }
 
-        // --- BASE TEXTURE RENDER LAYERS ---
+        // --- 2. BASE TEXTURE RENDER LAYERS ---
         if (!firstPerson) {
-            // Standard scannable third-person transparency profile
-            root.render(ps, buffers.getBuffer(RenderTypes.entityTranslucent(activeTexture)),
-                    packedLight, OverlayTexture.NO_OVERLAY);
+            // UPDATED: Wrapped the standard third-person render pipeline in your ForcedColorConsumer
+            // so the core texture map can smoothly dissolve to 0 alpha.
+            int baseAlpha = Math.round(255 * alpha);
+            VertexConsumer mainVc = new ForcedColorConsumer(
+                    buffers.getBuffer(RenderTypes.entityTranslucent(activeTexture)),
+                    255, 255, 255, baseAlpha
+            );
+            root.render(ps, mainVc, packedLight, OverlayTexture.NO_OVERLAY);
         } else {
-            // Soft translucent presentation view inside first-person perspective
+            // Dynamically scale down the first person baseline opacity (90) by our fade modifier
+            int firstPersonAlpha = Math.round(90 * alpha);
+
             VertexConsumer ghostVc = new ForcedColorConsumer(
                     buffers.getBuffer(RenderTypes.eyes(activeTexture)),
-                    255, 255, 255, 90
+                    255, 255, 255, firstPersonAlpha
             );
             root.render(ps, ghostVc, 15728880, OverlayTexture.NO_OVERLAY);
         }

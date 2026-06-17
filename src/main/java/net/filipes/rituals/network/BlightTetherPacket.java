@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
@@ -70,6 +71,9 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
         ServerPlayer player = ctx.player();
         ctx.server().execute(() -> {
             if (!(player.getMainHandItem().getItem() instanceof BlightspearItem)) return;
+            var held = player.getMainHandItem();
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 6) return;
 
             ServerLevel level = player.level();
             Entity targetEntity = level.getEntity(pkt.targetId());

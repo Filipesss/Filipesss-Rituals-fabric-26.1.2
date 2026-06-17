@@ -12,7 +12,9 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 
 public class PolarityShieldEntityRenderer
         extends EntityRenderer<PolarityShieldEntity, PolarityShieldEntityRenderer.ShieldRenderState> {
@@ -21,10 +23,12 @@ public class PolarityShieldEntityRenderer
 
     public static class ShieldRenderState extends EntityRenderState {
         public float ageInTicks;
-        public float ownerOffsetX, ownerOffsetY, ownerOffsetZ;
         public boolean isFirstPerson;
         public boolean isRed;
         public float yaw, pitch;
+        public double correctionDx, correctionDy, correctionDz;
+        public int actionState; // Add this
+        public int deathTicks;  // Add this
     }
 
     public PolarityShieldEntityRenderer(EntityRendererProvider.Context ctx) {
@@ -42,33 +46,35 @@ public class PolarityShieldEntityRenderer
         state.isRed = entity.isRed();
         state.yaw = entity.getViewYRot(partialTick);
         state.pitch = entity.getViewXRot(partialTick);
+        state.actionState = entity.getActionState();
+        state.deathTicks = entity.deathTicks;
 
         Minecraft mc = Minecraft.getInstance();
         state.isFirstPerson = entity.owner != null
                 && entity.owner == mc.player
                 && mc.options.getCameraType() == net.minecraft.client.CameraType.FIRST_PERSON;
 
-        if (entity.owner != null) {
-            LivingEntity owner = entity.owner;
+        // ONLY kill positioning corrections if we hit an enemy (State 2)
+        if (state.actionState == 2) {
+            state.correctionDx = 0;
+            state.correctionDy = 0;
+            state.correctionDz = 0;
+        } else if (entity.owner != null) {
+            // Keep tracking perfectly smoothly through active and miss-fading stages
+            Vec3 look = new Vec3(entity.owner.getLookAngle().x, 0, entity.owner.getLookAngle().z).normalize();
+            Vec3 right = new Vec3(-look.z, 0, look.x);
+            Vec3 dashDir = entity.isRed() ? right : right.scale(-1);
+            Vec3 offset = dashDir.scale(1.1).add(look.scale(0.4));
 
-            double ownerX = owner.xo + (owner.getX() - owner.xo) * partialTick;
-            double ownerY = owner.yo + (owner.getY() - owner.yo) * partialTick;
-            double ownerZ = owner.zo + (owner.getZ() - owner.zo) * partialTick;
+            double desiredX = Mth.lerp(partialTick, entity.owner.xo, entity.owner.getX()) + offset.x;
+            double desiredY = Mth.lerp(partialTick, entity.owner.yo, entity.owner.getY()) + 0.3;
+            double desiredZ = Mth.lerp(partialTick, entity.owner.zo, entity.owner.getZ()) + offset.z;
 
-            double entityX = entity.xo + (entity.getX() - entity.xo) * partialTick;
-            double entityY = entity.yo + (entity.getY() - entity.yo) * partialTick;
-            double entityZ = entity.zo + (entity.getZ() - entity.zo) * partialTick;
-
-            state.ownerOffsetX = (float)(ownerX - entityX);
-            state.ownerOffsetY = (float)(ownerY - entityY);
-            state.ownerOffsetZ = (float)(ownerZ - entityZ);
-        } else {
-            state.ownerOffsetX = 0;
-            state.ownerOffsetY = 0;
-            state.ownerOffsetZ = 0;
+            state.correctionDx = desiredX - Mth.lerp(partialTick, entity.xo, entity.getX());
+            state.correctionDy = desiredY - Mth.lerp(partialTick, entity.yo, entity.getY());
+            state.correctionDz = desiredZ - Mth.lerp(partialTick, entity.zo, entity.getZ());
         }
     }
-
     @Override
     public boolean shouldRender(PolarityShieldEntity entity, Frustum frustum, double x, double y, double z) {
         return true;
@@ -79,20 +85,42 @@ public class PolarityShieldEntityRenderer
         MultiBufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
 
         ps.pushPose();
-        // Translate tracking anchors directly back to the active entity location matrix
-        ps.translate(state.ownerOffsetX, state.ownerOffsetY, state.ownerOffsetZ);
-
-        // Orient model base rotation tracking according to player look values
+        ps.translate(state.correctionDx, state.correctionDy, state.correctionDz);
         ps.mulPose(Axis.YP.rotationDegrees(-state.yaw));
         ps.mulPose(Axis.XP.rotationDegrees(state.pitch));
-
-        // Note: Blockbench model assets are inverted by default along the Y/Z axis layers
         ps.mulPose(Axis.ZP.rotationDegrees(180.0F));
-        ps.translate(0.0D, -1.5D, 0.0D);
 
-        model.render(ps, buffers, 15728880, state.ageInTicks, state.isRed, state.isFirstPerson);
+        float scale = 1.0F;
+        float alpha = 1.0F;
+
+        if (state.actionState == 1) {
+            // MISS FADE: Progress maps over the 7-tick remaining dash window (ticking from 5 to 12)
+            float progress = (state.deathTicks + state.ageInTicks % 1.0F) / 7.0F;
+            progress = Mth.clamp(progress, 0.0F, 1.0F);
+            scale = 1.0F + (progress * 0.6F);
+            alpha = 1.0F - progress;
+        } else if (state.actionState == 2) {
+            // HIT EXPLOSION: Progress maps over standard 10-tick duration
+            float progress = (state.deathTicks + state.ageInTicks % 1.0F) / 10.0F;
+            progress = Mth.clamp(progress, 0.0F, 1.0F);
+            scale = 1.0F + (progress * 0.6F);
+            alpha = 1.0F - progress;
+        }
+
+        // Y-Position stability calculation
+        double centerOffset = 0.7D;
+        double dynamicY = -1.85D - ((scale - 1.0F) * centerOffset);
+
+        ps.translate(0.0D, dynamicY, 0.0D);
+        ps.scale(scale, scale, scale);
+
+        model.render(ps, buffers, 15728880, state.ageInTicks, state.isRed, state.isFirstPerson, alpha);
         ps.popPose();
     }
+
+
+
+
 
     @Override protected float getShadowRadius(ShieldRenderState s) { return 0f; }
     @Override protected float getShadowStrength(ShieldRenderState s) { return 0f; }

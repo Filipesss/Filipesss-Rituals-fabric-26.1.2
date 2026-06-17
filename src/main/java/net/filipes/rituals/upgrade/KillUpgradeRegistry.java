@@ -36,6 +36,12 @@ public class KillUpgradeRegistry {
         register(ModItems.DEPTHSTRIKE, 4, new KillUpgradeRecipe(5, 5));
         register(ModItems.DEPTHSTRIKE, 5, new KillUpgradeRecipe(6, 6));
 
+        register(ModItems.POLARITY_BOW, 1, new KillUpgradeRecipe(2, 1));
+        register(ModItems.POLARITY_BOW, 2, new KillUpgradeRecipe(3, 2));
+        register(ModItems.POLARITY_BOW, 3, new KillUpgradeRecipe(4, 3));
+        register(ModItems.POLARITY_BOW, 4, new KillUpgradeRecipe(5, 5));
+        register(ModItems.POLARITY_BOW, 5, new KillUpgradeRecipe(6, 6));
+
     }
 
     public static void register(Item item, int fromStage, KillUpgradeRecipe recipe) {

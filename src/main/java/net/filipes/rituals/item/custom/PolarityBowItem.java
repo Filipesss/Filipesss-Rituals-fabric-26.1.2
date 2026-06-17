@@ -1,16 +1,17 @@
 package net.filipes.rituals.item.custom;
 
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.PolarityArrowBlueEntity;
 import net.filipes.rituals.entity.custom.PolarityArrowRedEntity;
 import net.filipes.rituals.entity.custom.ReversePolarityArrowEntity;
 import net.filipes.rituals.network.ReversePolarityChargePacket;
 import net.filipes.rituals.util.RitualsTooltipStyle;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
@@ -20,7 +21,14 @@ import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.level.Level;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class PolarityBowItem extends Item implements RitualsTooltipStyle {
+
+    // Global server-side map to track active combo counts per player
+    private static final Map<UUID, Integer> PLAYER_COMBOS = new HashMap<>();
 
     public PolarityBowItem(Properties settings) {
         super(settings);
@@ -60,14 +68,19 @@ public class PolarityBowItem extends Item implements RitualsTooltipStyle {
 
         if (pull < 0.1f) return false;
 
-        // REPLACE the entire server-side block in releaseUsing():
-
         if (!world.isClientSide()) {
             boolean isCharged = ReversePolarityChargePacket.consumeCharge(player.getUUID());
+
+            // --- STAGE-GATED COMBO DAMAGE ---
+            int stage = ModDataComponents.getStage(stack);
+            int currentCombo = getCombo(player.getUUID());
+            double extraDamage = (stage >= 3 && currentCombo >= 3) ? (1.0 + (currentCombo - 3) * 0.5) : 0.0;
 
             AbstractArrow arrow;
             if (isCharged) {
                 arrow = new ReversePolarityArrowEntity(world, player, stack);
+                arrow.setBaseDamage(ReversePolarityArrowEntity.BASE_DAMAGE + extraDamage);
+
                 arrow.shootFromRotation(player, player.getXRot(), player.getYRot(),
                         0f, pull * 3.0f * ReversePolarityArrowEntity.SPEED_MULTIPLIER, 1.0f);
             } else {
@@ -75,6 +88,10 @@ public class PolarityBowItem extends Item implements RitualsTooltipStyle {
                 arrow = isRed
                         ? new PolarityArrowRedEntity(world, player, stack)
                         : new PolarityArrowBlueEntity(world, player, stack);
+
+                double initialBaseDmg = isRed ? PolarityArrowRedEntity.BASE_DAMAGE : PolarityArrowBlueEntity.BASE_DAMAGE;
+                arrow.setBaseDamage(initialBaseDmg + extraDamage);
+
                 float speedMult = isRed
                         ? PolarityArrowRedEntity.SPEED_MULTIPLIER
                         : PolarityArrowBlueEntity.SPEED_MULTIPLIER;
@@ -83,7 +100,7 @@ public class PolarityBowItem extends Item implements RitualsTooltipStyle {
             }
 
             arrow.setCritArrow(pull >= 1.0f);
-            world.addFreshEntity(arrow);  // single add (was duplicated before)
+            world.addFreshEntity(arrow);
 
             world.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS,
@@ -93,6 +110,32 @@ public class PolarityBowItem extends Item implements RitualsTooltipStyle {
         }
 
         return true;
+    }
+
+    public static int getCombo(UUID uuid) {
+        return PLAYER_COMBOS.getOrDefault(uuid, 0);
+    }
+
+    public static void incrementCombo(Player player) {
+        if (player.level().isClientSide()) return;
+        UUID uuid = player.getUUID();
+        int nextCombo = getCombo(uuid) + 1;
+        PLAYER_COMBOS.put(uuid, nextCombo);
+
+        float pitch = 0.8f + Math.min(nextCombo * 0.1f, 1.2f);
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.4f, pitch);
+    }
+
+    public static void resetCombo(Player player) {
+        if (player.level().isClientSide()) return;
+        UUID uuid = player.getUUID();
+        if (PLAYER_COMBOS.containsKey(uuid) && PLAYER_COMBOS.get(uuid) > 0) {
+            PLAYER_COMBOS.put(uuid, 0);
+
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.3f, 1.6f);
+        }
     }
 
     public static boolean isRedPolarity(ItemStack stack) {
@@ -105,8 +148,6 @@ public class PolarityBowItem extends Item implements RitualsTooltipStyle {
         progress = (progress * progress + progress * 2.0f) / 3.0f;
         return Math.min(progress, 1.0f);
     }
-
-    // --- tooltip interface ---
 
     @Override public int getNameColor()               { return 0; }
     @Override public int getTooltipBorderColorTop()   { return 0; }

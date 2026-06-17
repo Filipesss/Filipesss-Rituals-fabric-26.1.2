@@ -2,12 +2,16 @@ package net.filipes.rituals.entity.custom;
 
 import net.filipes.rituals.entity.ModEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -26,13 +30,16 @@ public class PolarityTornadoRedEntity extends Entity {
     private static final EntityDataAccessor<Float> DATA_VISUAL_SCALE =
             SynchedEntityData.defineId(PolarityTornadoRedEntity.class, EntityDataSerializers.FLOAT);
 
-    private static final double PULL_RADIUS = 6.0;
-    private static final double PULL_STRENGTH = 0.75;
-    private static final double MAX_PULL_PER_TICK = 0.4;
+    private static final double PULL_RADIUS       = 6.0;
+    private static final double PULL_STRENGTH     = 0.35;
+    private static final double MAX_PULL_PER_TICK = 0.1;
 
-    private int lifetime = -1;
-    private Vec3 travelVelocity = Vec3.ZERO;
-    private boolean landed = false;
+    private static final int START_DELAY_TICKS = 10;
+
+    private int          lifetime       = -1;
+    private Vec3         travelVelocity = Vec3.ZERO;
+    private boolean      landed         = false;
+    private SparkEntity  trailSpark     = null;
 
     public PolarityTornadoRedEntity(EntityType<? extends PolarityTornadoRedEntity> type, Level level) {
         super(type, level);
@@ -60,13 +67,9 @@ public class PolarityTornadoRedEntity extends Entity {
         builder.define(DATA_VISUAL_SCALE, 1.0f);
     }
 
-    public float getVisualScale() {
-        return this.entityData.get(DATA_VISUAL_SCALE);
-    }
+    public float getVisualScale() { return this.entityData.get(DATA_VISUAL_SCALE); }
+    public void  setVisualScale(float scale) { this.entityData.set(DATA_VISUAL_SCALE, scale); }
 
-    public void setVisualScale(float scale) {
-        this.entityData.set(DATA_VISUAL_SCALE, scale);
-    }
     public void launch(Vec3 velocity) {
         this.travelVelocity = velocity;
         this.landed = false;
@@ -77,21 +80,25 @@ public class PolarityTornadoRedEntity extends Entity {
         super.tick();
 
         if (lifetime > 0 && this.tickCount >= lifetime) {
+            if (trailSpark != null && trailSpark.isAlive()) trailSpark.discard();
+            if (!this.level().isClientSide()) spawnDeathExplosion();
             this.discard();
             return;
         }
 
         if (!this.level().isClientSide()) {
             if (!landed) applyTrajectory();
-            applyPull();
+            if (this.tickCount >= START_DELAY_TICKS) applyPull();
+            tickTrailSpark();
+            spawnEffects();
         }
     }
+
     private void applyTrajectory() {
         double nx = getX() + travelVelocity.x;
         double ny = getY() + travelVelocity.y;
         double nz = getZ() + travelVelocity.z;
 
-        // Check the block just below the projected position
         BlockPos groundCheck = BlockPos.containing(nx, ny - 0.4, nz);
         boolean wouldHitGround = !level().getBlockState(groundCheck).isAir()
                 && !level().getBlockState(groundCheck).getFluidState().isEmpty() == false
@@ -120,28 +127,134 @@ public class PolarityTornadoRedEntity extends Entity {
         );
 
         List<LivingEntity> nearby = this.level().getEntitiesOfClass(
-                LivingEntity.class,
-                searchBox,
-                e -> e.isAlive()
+                LivingEntity.class, searchBox, e -> e.isAlive()
         );
 
         for (LivingEntity target : nearby) {
             Vec3 toTornado = center.subtract(target.position());
-            double distSq  = toTornado.lengthSqr();
-
+            double distSq = toTornado.lengthSqr();
             if (distSq > PULL_RADIUS * PULL_RADIUS || distSq < 1e-4) continue;
 
-            double rawForce     = PULL_STRENGTH / distSq;
-            double clampedForce = Math.min(rawForce, MAX_PULL_PER_TICK);
-
+            double clampedForce = Math.min(PULL_STRENGTH / distSq, MAX_PULL_PER_TICK);
             Vec3 pullDelta = toTornado.normalize().scale(clampedForce);
 
             target.setDeltaMovement(target.getDeltaMovement().add(pullDelta));
             target.fallDistance = 0;
 
-            if (target instanceof ServerPlayer serverPlayer) {
-                serverPlayer.connection.send(new ClientboundSetEntityMotionPacket(target));
+            if (target instanceof ServerPlayer sp) {
+                sp.connection.send(new ClientboundSetEntityMotionPacket(target));
             }
+        }
+    }
+
+    private void tickTrailSpark() {
+        if (!(this.level() instanceof ServerLevel serverLevel)) return;
+
+        Vec3 pos = this.position();
+        double tx = pos.x, ty = pos.y + 0.5, tz = pos.z;
+
+        if (trailSpark == null || !trailSpark.isAlive()) {
+            trailSpark = new SparkEntity(ModEntities.SPARK, serverLevel, tx, ty, tz);
+            trailSpark.applyPreset(SparkPresets.POLARITY_RED_DOUBLE);
+            trailSpark.setNoGravity(true);
+            trailSpark.setDeltaMovement(Vec3.ZERO);
+            trailSpark.forcedVelocity = Vec3.ZERO;
+            serverLevel.addFreshEntity(trailSpark);
+        } else {
+            trailSpark.setPos(tx, ty, tz);
+            trailSpark.setDeltaMovement(Vec3.ZERO);
+            trailSpark.forcedVelocity = Vec3.ZERO;
+        }
+    }
+    private void spawnDeathExplosion() {
+        if (!(this.level() instanceof ServerLevel serverLevel)) return;
+
+        var  random = serverLevel.getRandom();
+        Vec3 center = this.position();
+        double cx = center.x, cy = center.y + 0.5, cz = center.z;
+
+        int sparkCount = 18;
+        for (int i = 0; i < sparkCount; i++) {
+            double yaw   = random.nextDouble() * Math.PI * 2.0;
+            double pitch = Math.asin(random.nextDouble() * 2.0 - 1.0);
+            double speed = 0.25 + random.nextDouble() * 0.55;
+
+            double cosPitch = Math.cos(pitch);
+            Vec3 vel = new Vec3(
+                    Math.cos(yaw) * cosPitch * speed,
+                    Math.sin(pitch) * speed,
+                    Math.sin(yaw) * cosPitch * speed
+            );
+
+            SparkEntity spark = new SparkEntity(ModEntities.SPARK, serverLevel, cx, cy, cz);
+            spark.applyPreset(SparkPresets.POLARITY_RED_SINGLE);
+            spark.setNoGravity(false);
+            spark.setDeltaMovement(vel);
+            spark.forcedVelocity = vel;
+            serverLevel.addFreshEntity(spark);
+        }
+
+        int ringCount = 10;
+        for (int i = 0; i < ringCount; i++) {
+            double angle = (Math.PI * 2.0 / ringCount) * i;
+            double speed = 0.45 + random.nextDouble() * 0.3;
+            Vec3 vel = new Vec3(Math.cos(angle) * speed, 0.08 + random.nextDouble() * 0.18,
+                    Math.sin(angle) * speed);
+
+            SparkEntity spark = new SparkEntity(ModEntities.SPARK, serverLevel, cx, cy, cz);
+            spark.applyPreset(SparkPresets.POLARITY_RED_DOUBLE);
+            spark.setNoGravity(false);
+            spark.setDeltaMovement(vel);
+            spark.forcedVelocity = vel;
+            serverLevel.addFreshEntity(spark);
+        }
+
+        serverLevel.sendParticles(new DustParticleOptions(0xFF1A1A, 2.8f),
+                cx, cy, cz, 22, 0.5, 0.5, 0.5, 0.55);
+        serverLevel.sendParticles(new DustParticleOptions(0xFF1A1A, 1.4f),
+                cx, cy, cz, 14, 0.3, 0.4, 0.3, 1.1);
+
+        serverLevel.sendParticles(ParticleTypes.END_ROD,
+                cx, cy, cz, 12, 0.3, 0.4, 0.3, 0.25);
+
+        serverLevel.playSound(null, cx, cy, cz,
+                SoundEvents.WIND_CHARGE_BURST, SoundSource.PLAYERS, 0.85f, 0.75f);
+        serverLevel.playSound(null, cx, cy, cz,
+                SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.6f, 0.8f);
+    }
+
+    private void spawnEffects() {
+        if (!(this.level() instanceof ServerLevel serverLevel)) return;
+
+        var    random = serverLevel.getRandom();
+        Vec3   base   = this.position();
+        double cx = base.x, cy = base.y, cz = base.z;
+
+        double spawnAngle  = random.nextDouble() * Math.PI * 2.0;
+        double spawnRadius = 0.15 + random.nextDouble() * 0.45;
+        double spawnY      = cy + 0.1 + random.nextDouble() * 0.8; // within 1-block model
+        double spawnX      = cx + Math.cos(spawnAngle) * spawnRadius;
+        double spawnZ      = cz + Math.sin(spawnAngle) * spawnRadius;
+
+        double speed  = 0.10 + random.nextDouble() * 0.35;
+        double velYaw = random.nextDouble() * Math.PI * 2.0;
+        double velY   = -0.05 + random.nextDouble() * 0.30;
+
+        Vec3 vel = new Vec3(Math.cos(velYaw) * speed, velY, Math.sin(velYaw) * speed);
+
+        SparkEntity spark = new SparkEntity(ModEntities.SPARK, serverLevel, spawnX, spawnY, spawnZ);
+        spark.applyPreset(SparkPresets.POLARITY_RED_SINGLE);
+        spark.setNoGravity(false);
+        spark.setDeltaMovement(vel);
+        spark.forcedVelocity = vel;
+        serverLevel.addFreshEntity(spark);
+
+        serverLevel.sendParticles(new DustParticleOptions(0xFF1A1A, 1.1f),
+                cx, cy + 0.5, cz, 1, 0.2, 0.35, 0.2, 0.22);
+
+        if (this.tickCount % 20 == 0) {
+            serverLevel.sendParticles(new DustParticleOptions(0xFF1A1A, 2.2f),
+                    cx, cy + 0.5, cz, 3, 0.4, 0.35, 0.4, 0.12);
         }
     }
 
@@ -149,7 +262,7 @@ public class PolarityTornadoRedEntity extends Entity {
     protected void readAdditionalSaveData(ValueInput input) {
         this.lifetime  = input.getIntOr("Lifetime", this.lifetime);
         this.tickCount = Math.max(0, input.getIntOr("Age", this.tickCount));
-        this.landed = input.getBooleanOr("Landed", false);
+        this.landed    = input.getBooleanOr("Landed", false);
         this.setVisualScale(input.getFloatOr("VisualScale", 1.0f));
     }
 
@@ -162,9 +275,9 @@ public class PolarityTornadoRedEntity extends Entity {
     }
 
     @Override public boolean hurtServer(ServerLevel level, DamageSource source, float amount) { return false; }
-    @Override public boolean isPickable()                         { return false; }
-    @Override public boolean canCollideWith(Entity entity)        { return false; }
-    @Override public boolean canBeCollidedWith(Entity entity)     { return false; }
-    @Override public boolean isPushable()                         { return false; }
-    @Override public PushReaction getPistonPushReaction()         { return PushReaction.IGNORE; }
+    @Override public boolean isPickable()                        { return false; }
+    @Override public boolean canCollideWith(Entity entity)       { return false; }
+    @Override public boolean canBeCollidedWith(Entity entity)    { return false; }
+    @Override public boolean isPushable()                        { return false; }
+    @Override public PushReaction getPistonPushReaction()        { return PushReaction.IGNORE; }
 }

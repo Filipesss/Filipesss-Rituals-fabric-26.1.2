@@ -410,6 +410,14 @@ public class Rituals implements ModInitializer {
 				VortexSlamPacket::handle
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
+				VortexBeamPacket.TYPE,
+				VortexBeamPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				VortexBeamPacket.TYPE,
+				VortexBeamPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
 				BlightWebPacket.TYPE,
 				BlightWebPacket.CODEC
 		);

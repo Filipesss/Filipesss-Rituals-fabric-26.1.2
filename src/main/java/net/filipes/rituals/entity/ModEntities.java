@@ -54,7 +54,7 @@ public class ModEntities {
                                     (EntityType<? extends PolarityTornadoBlueEntity>) type, level),
                             MobCategory.MISC
                     )
-                    .sized(0.6f, 1.8f)
+                    .sized(0.6f, 1f)
                     .clientTrackingRange(64)
                     .updateInterval(1)
                     .build(ResourceKey.create(
@@ -70,7 +70,7 @@ public class ModEntities {
                                     (EntityType<? extends PolarityTornadoRedEntity>) type, level),
                             MobCategory.MISC
                     )
-                    .sized(0.6f, 1.8f)
+                    .sized(0.6f, 1f)
                     .clientTrackingRange(64)
                     .updateInterval(1)
                     .build(ResourceKey.create(
@@ -582,6 +582,22 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "polarity_shield")
+                    ))
+    );
+    public static final EntityType<VortexBoomEntity> VORTEX_BOOM = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_boom"),
+            EntityType.Builder.<VortexBoomEntity>of(
+                            (type, level) -> new VortexBoomEntity(
+                                    (EntityType<? extends VortexBoomEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.1f, 0.1f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_boom")
                     ))
     );
 

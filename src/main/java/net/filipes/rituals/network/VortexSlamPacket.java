@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.ScreenShakeEntity;
 import net.filipes.rituals.entity.custom.SparkEntity;
@@ -53,6 +54,8 @@ public record VortexSlamPacket() implements CustomPacketPayload {
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof VortexEdgeItem)) return;
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 5) return;
 
             if (!player.onGround()) {
                 ACTIVE_SLAMS.put(player.getUUID(), new SlamState(player.getY()));

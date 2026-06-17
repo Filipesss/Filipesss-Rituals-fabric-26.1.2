@@ -3,10 +3,12 @@ package net.filipes.rituals.entity.custom;
 import net.filipes.rituals.entity.ModEntities;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
@@ -29,10 +31,14 @@ public class PolarityShieldEntity extends Entity {
 
     private static final EntityDataAccessor<Boolean> IS_RED =
             SynchedEntityData.defineId(PolarityShieldEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> ACTION_STATE =
+            SynchedEntityData.defineId(PolarityShieldEntity.class, EntityDataSerializers.INT);
 
     public LivingEntity owner;
     private int lifetime = 0;
-    private static final int MAX_LIFETIME = 12;
+    private static final int MAX_LIFETIME = 10;
+    public int deathTicks = 0;
+    public static final int MAX_DEATH_TICKS = 10;
 
     public PolarityShieldEntity(EntityType<? extends PolarityShieldEntity> type, Level level) {
         super(type, level);
@@ -48,6 +54,8 @@ public class PolarityShieldEntity extends Entity {
             this.setIsRed(isRed);
         }
     }
+    public int getActionState() { return entityData.get(ACTION_STATE); }
+    public void setActionState(int v) { entityData.set(ACTION_STATE, v); }
 
     @Override
     public void tick() {
@@ -58,16 +66,49 @@ public class PolarityShieldEntity extends Entity {
             if (e instanceof LivingEntity le) owner = le;
         }
 
-        lifetime++;
+        int animState = getActionState();
 
-        if (!level().isClientSide() && lifetime > MAX_LIFETIME) {
-            Vec3 look = new Vec3(owner != null ? owner.getLookAngle().x : 0, 0, owner != null ? owner.getLookAngle().z : 0).normalize();
-            Vec3 rightDir = new Vec3(-look.z, 0, look.x);
-            explodeExpirySparks(isRed(), isRed() ? rightDir : rightDir.scale(-1));
-            this.discard();
-            return;
+        // --- STATE 2: HIT EXPLOSION (Freeze and die) ---
+        if (animState == 2) {
+            deathTicks++;
+            if (!level().isClientSide() && deathTicks >= MAX_DEATH_TICKS) {
+                this.discard();
+            }
+            return; // Halt all movement and hit-checking immediately
         }
 
+        lifetime++;
+
+        // --- STATE 1: MISS FADE TRIGGER ---
+        // At tick 5 of the dash, start fading out dynamically while still moving!
+        if (lifetime >= 5 && animState == 0) {
+            setActionState(1);
+            if (!level().isClientSide()) {
+                level().playSound(null, getX(), getY(), getZ(),
+                        SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8f, isRed() ? 0.8f : 1.4f);
+            }
+        }
+
+        // Tick up death counter for the miss animation window
+        if (animState == 1) {
+            deathTicks++;
+            if (!level().isClientSide() && owner != null) {
+                // FIXED: Instead of a single burst, we spawn a stream of sparks every tick
+                // while the shield is actively moving and fading out!
+                Vec3 look = new Vec3(owner.getLookAngle().x, 0, owner.getLookAngle().z).normalize();
+                Vec3 rightDir = new Vec3(-look.z, 0, look.x);
+                Vec3 dashDir = isRed() ? rightDir : rightDir.scale(-1);
+
+                spawnExpiryTrailSparks(isRed(), dashDir);
+            }
+
+            if (!level().isClientSide() && lifetime >= 12) { // Total lifetime boundary
+                this.discard();
+                return;
+            }
+        }
+
+        // --- MOVEMENT TRACKING (Runs for Active AND Miss-Fading states!) ---
         if (owner != null) {
             xo = getX(); yo = getY(); zo = getZ();
 
@@ -76,17 +117,18 @@ public class PolarityShieldEntity extends Entity {
             boolean red = isRed();
             Vec3 dashDir = red ? rightDir : rightDir.scale(-1);
 
-            Vec3 leadingShieldOffset = dashDir.scale(1.6).add(look.scale(0.8));
-            this.setPos(owner.getX() + leadingShieldOffset.x, owner.getY() + 0.55, owner.getZ() + leadingShieldOffset.z);
+            Vec3 leadingShieldOffset = dashDir.scale(1.1).add(look.scale(0.4));
+            this.setPos(owner.getX() + leadingShieldOffset.x, owner.getY() + 0.3, owner.getZ() + leadingShieldOffset.z);
 
             float targetYaw = red ? owner.getYRot() + 90.0F : owner.getYRot() - 90.0F;
             this.setYRot(targetYaw);
             this.setXRot(owner.getXRot() * 0.5F);
 
-            if (!level().isClientSide()) {
+            // --- HIT REGISTERATION (Only allowed while fully active!) ---
+            if (animState == 0 && !level().isClientSide()) {
                 AABB hitZone = new AABB(
-                        getX() - 0.75, getY() - 0.2, getZ() - 0.75,
-                        getX() + 0.75, getY() + 1.8, getZ() + 0.75
+                        getX() - 0.85, getY() - 0.9, getZ() - 0.85,
+                        getX() + 0.85, getY() + 1.1, getZ() + 0.85
                 );
 
                 List<LivingEntity> targets = level().getEntitiesOfClass(LivingEntity.class, hitZone,
@@ -94,12 +136,14 @@ public class PolarityShieldEntity extends Entity {
 
                 if (!targets.isEmpty()) {
                     LivingEntity target = targets.get(0);
+                    setActionState(2); // Switch to explosion anchor state
+                    deathTicks = 0;   // Reset counter for precise explosion timing
                     explodeImpact(target, red, dashDir);
                     return;
                 }
             }
 
-            // Client particle trail
+            // Ambient client particles
             if (level().isClientSide() && tickCount % 2 == 0) {
                 int color = red ? 0xFF1A1A : 0x00B2FF;
                 level().addParticle(new DustParticleOptions(color, 1.0f),
@@ -117,67 +161,118 @@ public class PolarityShieldEntity extends Entity {
         ServerLevel serverLevel = (ServerLevel) level();
         Vec3 centerPos = this.position().add(0, 0.6, 0);
 
-        // Soft fizzle sound on expiry
         level().playSound(null, getX(), getY(), getZ(),
                 SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8f, red ? 0.8f : 1.4f);
 
-        for (int i = 0; i < 5; i++) {
+        // Minor cosmetic casual spark release on simple misses (increased to 6)
+        for (int i = 0; i < 6; i++) {
             double randomAngle = random.nextDouble() * 2.0 * Math.PI;
-            double speed = 0.15 + random.nextDouble() * 0.25;
+            double speed = 0.08 + random.nextDouble() * 0.2;
 
             SparkEntity spark = new SparkEntity(ModEntities.SPARK, serverLevel, centerPos.x, centerPos.y, centerPos.z);
-            spark.applyPreset(red ? SparkPresets.POLARITY_RED_DASH : SparkPresets.POLARITY_BLUE_DASH);
+            spark.applyPreset(red ? SparkPresets.POLARITY_RED_SHIELD : SparkPresets.POLARITY_BLUE_SHIELD);
 
             spark.forcedVelocity = new Vec3(
-                    Math.cos(randomAngle) * speed + driftDirection.x * 0.1,
-                    (random.nextDouble() - 0.5) * 0.2,
-                    Math.sin(randomAngle) * speed + driftDirection.z * 0.1
+                    Math.cos(randomAngle) * speed + driftDirection.x * 0.08,
+                    (random.nextDouble() - 0.4) * 0.15,
+                    Math.sin(randomAngle) * speed + driftDirection.z * 0.08
             );
+            serverLevel.addFreshEntity(spark);
+        }
+    }
+    private void spawnExpiryTrailSparks(boolean red, Vec3 dashDirection) {
+        ServerLevel serverLevel = (ServerLevel) level();
+
+        // Always spawn precisely at the shield's current updated animation position
+        Vec3 centerPos = this.position().add(0, 0.6, 0);
+
+        // Grab the player's current high-speed movement vector
+        Vec3 playerVelocity = owner != null ? owner.getDeltaMovement() : Vec3.ZERO;
+
+        // Spawns 2 sparks per tick. Over 7 remaining ticks, this creates 14 perfectly distributed trail sparks
+        for (int i = 0; i < 5; i++) {
+            double randomAngle = random.nextDouble() * 2.0 * Math.PI;
+            double speed = 0.05 + random.nextDouble() * 0.15;
+
+            SparkEntity spark = new SparkEntity(ModEntities.SPARK, serverLevel, centerPos.x, centerPos.y, centerPos.z);
+            spark.applyPreset(red ? SparkPresets.POLARITY_RED_SHIELD : SparkPresets.POLARITY_BLUE_SHIELD);
+
+            // MATHEMATICAL FIX: We add playerVelocity to the spark's forced velocity.
+            // This makes the sparks inherit your dash momentum so they run alongside the shield!
+            spark.forcedVelocity = new Vec3(
+                    Math.cos(randomAngle) * speed + (dashDirection.x * 0.05) + playerVelocity.x,
+                    ((random.nextDouble() - 0.4) * 0.1) + playerVelocity.y,
+                    Math.sin(randomAngle) * speed + (dashDirection.z * 0.05) + playerVelocity.z
+            );
+
             serverLevel.addFreshEntity(spark);
         }
     }
 
     private void explodeImpact(LivingEntity target, boolean red, Vec3 pushDirection) {
+        // Apply kinetic knockback to target
         Vec3 knockback = pushDirection.add(0.0, 0.35, 0.0).normalize().scale(1.3);
         target.setDeltaMovement(knockback);
         target.hurtMarked = true;
+        if (target instanceof ServerPlayer sp) {
+            sp.connection.send(new ClientboundSetEntityMotionPacket(target));
+        }
 
         if (owner != null) {
             owner.setDeltaMovement(owner.getDeltaMovement().scale(0.2));
             owner.hurtMarked = true;
         }
 
+        // Play impact audio profile
         level().playSound(null, getX(), getY(), getZ(),
                 SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.3f, red ? 0.75f : 1.35f);
         level().playSound(null, getX(), getY(), getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6f, 1.5f);
 
         ServerLevel serverLevel = (ServerLevel) level();
-        Vec3 impactPos = target.position().add(0, 1.0, 0);
+
+        // Target-relative impact epicenter (centered directly on their torso)
+        Vec3 impactPos = target.position().add(0, target.getBbHeight() * 0.5, 0);
+
+        // 1. Standard structural blast particle
         serverLevel.sendParticles(ParticleTypes.EXPLOSION, impactPos.x, impactPos.y, impactPos.z, 1, 0, 0, 0, 0);
 
-        for (int i = 0; i < 8; i++) {
-            double randomAngle = random.nextDouble() * 2.0 * Math.PI;
-            double explosionSpeed = 0.2 + random.nextDouble() * 0.3;
+        // 2. NEW: Dynamic color-matched dust clouds depending on the shield flavor
+        int visualColor = red ? 0xFF1A1A : 0x00B2FF;
+        DustParticleOptions explosionDust = new DustParticleOptions(visualColor, 1.4f);
+        // Spawns 12 dust particles drifting randomly outwards within a 0.4 block margin
+        serverLevel.sendParticles(explosionDust, impactPos.x, impactPos.y, impactPos.z, 12, 0.4, 0.4, 0.4, 0.1);
+
+        // 3. NEW: High-density chaotic 3D Spark burst (increased to 22 sparks)
+        for (int i = 0; i < 22; i++) {
+            // Spherical coordinate distribution math for complete 360° random direction coverage
+            double theta = random.nextDouble() * 2.0 * Math.PI;
+            double phi = Math.acos(2.0 * random.nextDouble() - 1.0);
+
+            // Highly randomized velocities for chaotic scattering depths
+            double speed = 0.15 + random.nextDouble() * 0.5;
+
+            double velocityX = Math.sin(phi) * Math.cos(theta) * speed;
+            double velocityY = Math.cos(phi) * speed + 0.15; // Added slight upward vector bias
+            double velocityZ = Math.sin(phi) * Math.sin(theta) * speed;
 
             SparkEntity detSpark = new SparkEntity(ModEntities.SPARK, serverLevel, impactPos.x, impactPos.y, impactPos.z);
-            detSpark.applyPreset(red ? SparkPresets.POLARITY_RED_DASH : SparkPresets.POLARITY_BLUE_DASH);
-            detSpark.forcedVelocity = new Vec3(
-                    Math.cos(randomAngle) * explosionSpeed,
-                    (random.nextDouble() - 0.2) * 0.25,
-                    Math.sin(randomAngle) * explosionSpeed
-            );
+            detSpark.applyPreset(red ? SparkPresets.POLARITY_RED_SHIELD : SparkPresets.POLARITY_BLUE_SHIELD);
+
+            detSpark.forcedVelocity = new Vec3(velocityX, velocityY, velocityZ);
+            detSpark.setNoGravity(false); // Let gravity pull down massive shrapnel arcs if wanted
+
             serverLevel.addFreshEntity(detSpark);
         }
-
-        this.discard();
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(OWNER_ID, -1);
         builder.define(IS_RED, false);
+        builder.define(ACTION_STATE, 0); // Add this line
     }
+
 
     public int getOwnerId() { return entityData.get(OWNER_ID); }
     public void setOwnerId(int v) { entityData.set(OWNER_ID, v); }

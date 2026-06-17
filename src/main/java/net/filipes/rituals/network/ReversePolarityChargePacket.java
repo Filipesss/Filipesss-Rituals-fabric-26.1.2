@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
@@ -35,7 +36,6 @@ public class ReversePolarityChargePacket implements CustomPacketPayload {
     public static final StreamCodec<RegistryFriendlyByteBuf, ReversePolarityChargePacket> CODEC =
             StreamCodec.of((buf, pkt) -> {}, buf -> new ReversePolarityChargePacket());
 
-    // UUID → expiry timestamp; expires after 30s if they never fire
     private static final Map<UUID, Long> CHARGED_UNTIL = new HashMap<>();
     private static final long CHARGE_WINDOW_MS = 30_000L;
 
@@ -47,7 +47,6 @@ public class ReversePolarityChargePacket implements CustomPacketPayload {
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
-    // Per-spark chaotic orbit parameters
     private record OrbitParams(double angleOffset, double speed, double radius,
                                double vertPhase, double vertFreq) {}
 
@@ -55,6 +54,9 @@ public class ReversePolarityChargePacket implements CustomPacketPayload {
         ServerPlayer player = ctx.player();
         ctx.server().execute(() -> {
             if (!(player.getMainHandItem().getItem() instanceof PolarityBowItem)) return;
+            var held = player.getMainHandItem();
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 2) return;
 
             CHARGED_UNTIL.put(player.getUUID(), System.currentTimeMillis() + CHARGE_WINDOW_MS);
 

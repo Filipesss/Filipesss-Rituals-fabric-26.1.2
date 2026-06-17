@@ -134,6 +134,22 @@ public class UpgradeRecipeRegistry {
                 new IngredientRequirement(Items.DIRT, 1)
         )));
 
+        register(ModItems.BLIGHTSPEAR, 1, new UpgradeRecipe(2, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.BLIGHTSPEAR, 2, new UpgradeRecipe(3, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.BLIGHTSPEAR, 3, new UpgradeRecipe(4, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.BLIGHTSPEAR, 4, new UpgradeRecipe(5, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+        register(ModItems.BLIGHTSPEAR, 5, new UpgradeRecipe(6, List.of(
+                new IngredientRequirement(Items.DIRT, 1)
+        )));
+
 
 
     }

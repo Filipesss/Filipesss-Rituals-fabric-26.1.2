@@ -520,6 +520,28 @@ public final class SparkPresets {
             .trailJitter(0.09f)
             .burstCount(0)
             .build();
+    public static final SparkPreset POLARITY_RED_DOUBLE = SparkPreset.builder()
+            .color(255, 43, 43)
+            .trailAmount(2)
+            .gravity(0.09)
+            .windowSize(7)
+            .trailSpacing(0.05f)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.09f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset POLARITY_BLUE_DOUBLE = SparkPreset.builder()
+            .color(66, 126, 245)
+            .trailAmount(2)
+            .gravity(0.09)
+            .windowSize(7)
+            .trailSpacing(0.05f)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.09f)
+            .burstCount(0)
+            .build();
     public static final SparkPreset POLARITY_RED_DASH = SparkPreset.builder()
             .color(255, 43, 43)
             .trailAmount(3)
@@ -555,6 +577,26 @@ public final class SparkPresets {
             .trailAlpha(95)
             .maxLifetime(200)
             .trailJitter(0.09f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset POLARITY_RED_SHIELD = SparkPreset.builder()
+            .color(255, 43, 43)
+            .trailAmount(1)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset POLARITY_BLUE_SHIELD = SparkPreset.builder()
+            .color(66, 126, 245)
+            .trailAmount(1)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
             .burstCount(0)
             .build();
 
@@ -615,6 +657,10 @@ public final class SparkPresets {
         register("polarity_reverse", POLARITY_REVERSE);
         register("polarity_blue_dash", POLARITY_BLUE_DASH);
         register("polarity_red_dash", POLARITY_RED_DASH);
+        register("polarity_red_double", POLARITY_RED_DOUBLE);
+        register("polarity_blue_double", POLARITY_BLUE_DOUBLE);
+        register("polarity_blue_shield", POLARITY_BLUE_SHIELD);
+        register("polarity_red_shield", POLARITY_RED_SHIELD);
 
     }
     public static Optional<String> nameOf(SparkPreset preset) {

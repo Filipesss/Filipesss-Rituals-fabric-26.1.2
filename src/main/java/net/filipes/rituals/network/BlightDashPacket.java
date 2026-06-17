@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.BlightedPuddleEntity;
 import net.filipes.rituals.entity.custom.SparkEntity;
@@ -49,6 +50,8 @@ public class BlightDashPacket implements CustomPacketPayload {
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof BlightspearItem)) return;
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 3) return;
 
             UUID uuid = player.getUUID();
             long now = System.currentTimeMillis();

@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.VortexEdgeItem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -33,6 +34,8 @@ public record VortexSwapPacket(int targetId) implements CustomPacketPayload {
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof VortexEdgeItem)) return;
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 2) return;
 
             ServerLevel level = player.level();
             Entity target = level.getEntity(pkt.targetId());

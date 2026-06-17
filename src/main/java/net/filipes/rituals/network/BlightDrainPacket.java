@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPreset;
@@ -50,6 +51,9 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
 
         server.execute(() -> {
             if (!(caster.getMainHandItem().getItem() instanceof BlightspearItem)) return;
+            var held = caster.getMainHandItem();
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 5) return;
 
             ServerLevel level = (ServerLevel) caster.level();
             Entity targetEntity = level.getEntity(pkt.targetId());

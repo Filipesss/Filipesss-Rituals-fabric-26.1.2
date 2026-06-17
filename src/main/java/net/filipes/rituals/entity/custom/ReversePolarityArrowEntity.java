@@ -1,6 +1,8 @@
 package net.filipes.rituals.entity.custom;
 
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.item.custom.PolarityBowItem;
 import net.filipes.rituals.network.ReverseControlsPacket;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.filipes.rituals.sound.ModSounds;
@@ -10,10 +12,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
@@ -26,6 +32,8 @@ public class ReversePolarityArrowEntity extends Arrow {
 
     public static final double BASE_DAMAGE      = 2.0;
     public static final float  SPEED_MULTIPLIER = 1.2f;
+
+    private boolean comboEnabled = false;
 
     public static final int TRAIL_LENGTH = 10;
     public final Vec3[] trailPositions = new Vec3[TRAIL_LENGTH];
@@ -44,6 +52,7 @@ public class ReversePolarityArrowEntity extends Arrow {
         this.setOwner(shooter);
         this.setPos(shooter.getX(), shooter.getEyeY() - 0.1, shooter.getZ());
         this.setBaseDamage(BASE_DAMAGE);
+        this.comboEnabled = ModDataComponents.getStage(weapon) >= 3;
     }
 
     @Override
@@ -59,16 +68,40 @@ public class ReversePolarityArrowEntity extends Arrow {
     protected void onHitEntity(EntityHitResult result) {
         super.onHitEntity(result);
         if (this.level().isClientSide()) return;
+
+        // Stage-gated combo progression
+        if (this.comboEnabled && this.getOwner() instanceof Player player && result.getEntity() instanceof LivingEntity) {
+            PolarityBowItem.incrementCombo(player);
+        }
+
         if (!(result.getEntity() instanceof LivingEntity target)) return;
 
-        // Send controls reversal to the hit player if applicable
         if (target instanceof ServerPlayer targetPlayer) {
             ServerPlayNetworking.send(targetPlayer, new ReverseControlsPacket(120));
         }
 
-        // Spawn chaotic orbit around the target for 6 seconds (120 ticks × 50ms)
         ServerLevel level = (ServerLevel) this.level();
         spawnChaoticOrbit(target, level, level.getServer(), 120);
+    }
+
+    @Override
+    protected void onHitBlock(BlockHitResult blockHitResult) {
+        super.onHitBlock(blockHitResult);
+        if (this.comboEnabled && !this.level().isClientSide() && this.getOwner() instanceof Player player) {
+            PolarityBowItem.resetCombo(player);
+        }
+    }
+
+    @Override
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putBoolean("ComboEnabled", this.comboEnabled);
+    }
+
+    @Override
+    protected void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        this.comboEnabled = input.getBooleanOr("ComboEnabled", false);
     }
 
     private static void spawnChaoticOrbit(LivingEntity target, ServerLevel level,

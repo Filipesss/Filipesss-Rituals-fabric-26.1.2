@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
@@ -16,11 +17,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -43,13 +41,20 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
     private static final Map<UUID, Long> SERVER_COOLDOWNS = new HashMap<>();
     public static final long COOLDOWN_MS = 6_000L;
 
+    private static final int UPGRADE_STAGE = 4;
+    private static final double PUSH_PULL_RADIUS = 6.0;
+    private static final double PUSH_STRENGTH = 0.10;
+    private static final double PULL_STRENGTH = 0.12;
+
     private static class SparkSpawnerState {
         final boolean toRed;
+        final boolean upgraded;
         final List<SparkEntity> liveSparks = new ArrayList<>();
         int ticksExisted = 0;
 
-        SparkSpawnerState(boolean toRed) {
+        SparkSpawnerState(boolean toRed, boolean upgraded) {
             this.toRed = toRed;
+            this.upgraded = upgraded;
         }
     }
 
@@ -64,6 +69,9 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof PolarityBowItem)) return;
 
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 1) return;
+
             UUID uuid = player.getUUID();
             long now  = System.currentTimeMillis();
             Long last = SERVER_COOLDOWNS.get(uuid);
@@ -76,11 +84,12 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
                     && current.flags().get(0);
 
             boolean nextIsRed = !isRed;
+            boolean upgraded = stage >= UPGRADE_STAGE;
 
             held.set(DataComponents.CUSTOM_MODEL_DATA,
                     new CustomModelData(List.of(), List.of(nextIsRed), List.of(), List.of()));
 
-            ACTIVE_SPARK_SPAWNERS.put(uuid, new SparkSpawnerState(nextIsRed));
+            ACTIVE_SPARK_SPAWNERS.put(uuid, new SparkSpawnerState(nextIsRed, upgraded));
 
             ServerLevel level = player.level();
             double px = player.getX();
@@ -99,6 +108,16 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
             level.sendParticles(ParticleTypes.END_ROD,
                     px, py, pz,
                     14, 0.3, 0.4, 0.3, 0.2);
+
+            if (upgraded) {
+                level.sendParticles(ParticleTypes.REVERSE_PORTAL,
+                        px, py, pz,
+                        30, 0.7, 0.9, 0.7, 0.5);
+
+                level.sendParticles(new DustParticleOptions(burstColor, 3.5f),
+                        px, py, pz,
+                        20, 0.6, 0.6, 0.6, 1.2);
+            }
 
             level.playSound(null, px, py, pz,
                     ModSounds.POLARITY_CHANGE, SoundSource.PLAYERS, 1.0f, nextIsRed ? 0.9f : 1.5f);
@@ -131,30 +150,31 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
             double cy = playerPos.y + 1.0;
             double cz = playerPos.z;
 
-            AABB magnetZone = player.getBoundingBox().inflate(6.0);
-            if (!state.toRed) {
-                List<ItemEntity> items = level.getEntitiesOfClass(ItemEntity.class, magnetZone);
-                for (ItemEntity item : items) {
-                    Vec3 pullDir = playerPos.add(0, 0.5, 0).subtract(item.position());
-                    if (pullDir.lengthSqr() > 0.2) {
-                        item.setDeltaMovement(item.getDeltaMovement().add(pullDir.normalize().scale(0.12)));
-                        item.hurtMarked = true;
-                    }
+            if (state.upgraded) {
+                Vec3 anchor = playerPos.add(0, 1.0, 0);
+                AABB pushPullZone = player.getBoundingBox().inflate(PUSH_PULL_RADIUS);
+
+                List<Entity> affected = level.getEntitiesOfClass(Entity.class, pushPullZone,
+                        e -> e != player && e.isAlive());
+
+                for (Entity e : affected) {
+                    Vec3 dir = state.toRed
+                            ? e.position().subtract(anchor)
+                            : anchor.subtract(e.position());
+
+                    if (dir.lengthSqr() < 0.05) continue;
+
+                    double strength = state.toRed ? PUSH_STRENGTH : PULL_STRENGTH;
+                    e.setDeltaMovement(e.getDeltaMovement().add(dir.normalize().scale(strength)));
+                    e.hurtMarked = true;
                 }
-                List<AbstractArrow> arrows = level.getEntitiesOfClass(AbstractArrow.class, magnetZone, a -> a.getOwner() != player);
-                for (AbstractArrow arrow : arrows) {
-                    Vec3 pullDir = playerPos.add(0, 1.0, 0).subtract(arrow.position());
-                    arrow.setDeltaMovement(arrow.getDeltaMovement().add(pullDir.normalize().scale(0.06)));
-                    arrow.hurtMarked = true;
-                }
-            } else {
-                List<Projectile> projectiles = level.getEntitiesOfClass(Projectile.class, magnetZone, p -> p.getOwner() != player);
-                for (Projectile proj : projectiles) {
-                    Vec3 pushDir = proj.position().subtract(playerPos.add(0, 1.0, 0));
-                    if (pushDir.lengthSqr() > 0.1) {
-                        proj.setDeltaMovement(proj.getDeltaMovement().add(pushDir.normalize().scale(0.10)));
-                        proj.hurtMarked = true;
-                    }
+
+                // Telegraph the push/pull radius
+                for (int i = 0; i < 6; i++) {
+                    double ringAngle = random.nextDouble() * Math.PI * 2.0;
+                    double rx = cx + Math.cos(ringAngle) * PUSH_PULL_RADIUS;
+                    double rz = cz + Math.sin(ringAngle) * PUSH_PULL_RADIUS;
+                    level.sendParticles(dustParticle, rx, cy - 0.8, rz, 0, 0, 0, 0, 0);
                 }
             }
 

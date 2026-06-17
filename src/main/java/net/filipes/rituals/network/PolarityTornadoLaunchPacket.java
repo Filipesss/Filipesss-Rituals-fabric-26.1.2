@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.PolarityTornadoBlueEntity;
 import net.filipes.rituals.entity.custom.PolarityTornadoRedEntity;
 import net.filipes.rituals.item.custom.PolarityBowItem;
@@ -32,7 +33,10 @@ public class PolarityTornadoLaunchPacket implements CustomPacketPayload {
     public static void handle(PolarityTornadoLaunchPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
         ctx.server().execute(() -> {
+            var held = player.getMainHandItem();
             if (!(player.getMainHandItem().getItem() instanceof PolarityBowItem)) return;
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 5) return;
 
             boolean isRed = PolarityBowItem.isRedPolarity(player.getMainHandItem());
             ServerLevel level = player.level();

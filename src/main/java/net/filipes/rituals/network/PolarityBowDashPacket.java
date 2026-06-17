@@ -1,6 +1,7 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.PolarityShieldEntity;
 import net.filipes.rituals.entity.custom.SparkEntity;
@@ -44,6 +45,8 @@ public class PolarityBowDashPacket implements CustomPacketPayload {
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof PolarityBowItem)) return;
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 6) return;
 
             UUID uuid = player.getUUID();
             long now = System.currentTimeMillis();

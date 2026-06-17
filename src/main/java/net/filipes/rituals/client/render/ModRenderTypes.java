@@ -4,8 +4,7 @@ import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DestFactor;
-import com.mojang.blaze3d.platform.SourceFactor;
+import com.mojang.blaze3d.platform.BlendFactor;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -26,10 +25,9 @@ public class ModRenderTypes {
                     .withFragmentShader("core/rendertype_eyes")
                     .withSampler("Sampler0")
                     .withColorTargetState(new ColorTargetState(
-                            new BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE,
-                                    SourceFactor.ONE,       DestFactor.ZERO)
+                            new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE, BlendFactor.ONE, BlendFactor.ZERO)
                     ))
-                    .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.Mode.QUADS)
+                    .withVertexFormat(DefaultVertexFormat.POSITION_TEX_COLOR, VertexFormat.DrawMode.QUADS)
                     .withDepthStencilState(DepthStencilState.DEFAULT)
                     .withCull(false)
                     .build()
