@@ -15,7 +15,6 @@ public class TemporalShieldModel {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(
             Identifier.fromNamespaceAndPath("rituals", "temporal_shield"), "main");
 
-    // Single static texture path (Animation logic removed)
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("rituals", "textures/entity/temporal_shield_0.png");
 
@@ -41,12 +40,10 @@ public class TemporalShieldModel {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition part = mesh.getRoot();
 
-        // Base pivot point of the shield core
         PartDefinition bone = part.addOrReplaceChild("bone",
                 CubeListBuilder.create(),
                 PartPose.offset(0.0F, 24.0F, 0.0F));
 
-        // Sub-geometry parts attached to the parent 'bone'
         bone.addOrReplaceChild("cube_r1",
                 CubeListBuilder.create()
                         .texOffs(70, 35).addBox(-0.2941F, -0.1704F, -2.0F, 4.0F, 0.0F, 5.0F, CubeDeformation.NONE)
@@ -87,34 +84,25 @@ public class TemporalShieldModel {
 
         ps.pushPose();
 
-        // Base scale modifier (controls overall size)
         float scale = currentRadius / 2.2f;
 
-        // Visual alignment tracking anchor coordinates
         float baselineCorrection = -0.6f;
         float shieldCenterY = 1.0f;
 
-        // Symmetrical Center-Scale execution (Keeps explosion expansion perfectly centered)
         ps.translate(0.0f, baselineCorrection + shieldCenterY, 0.0f);
         ps.scale(scale, scale, scale);
         ps.translate(0.0f, -shieldCenterY, 0.0f);
 
-        // --- SMOOTH RED FLASH TINTING ALGORITHM ---
-        // Dynamically scale down Green and Blue components depending on how recently damage was taken
         int r = 255;
         int g = (int) (255 * (1.0f - damageFlash));
         int b = (int) (255 * (1.0f - damageFlash));
 
-        // PACKING COLOR BITS INTO ENCODED ARGB FORMAT
         int dynamicColor = (160 << 24) | (r << 16) | (g << 8) | b;
         int ghostColor   = (90 << 24)  | (r << 16) | (g << 8) | b;
 
-        // --- MAIN TEXTURE PASS ---
         if (!firstPerson) {
-            // Third-person: Swapped mainColor for dynamicColor to enable damage flashing
             buffers.submitModelPart(bone, ps, RenderTypes.entityTranslucent(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, dynamicColor, null);
         } else {
-            // First person HUD perspective: Swapped ghostColor for dynamically shifting variation
             buffers.submitModelPart(bone, ps, RenderTypes.eyes(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, ghostColor, null);
         }
 

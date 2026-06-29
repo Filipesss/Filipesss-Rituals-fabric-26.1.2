@@ -67,10 +67,8 @@ public class PolarityShieldModel {
             int b = isRed ? 30  : 255;
             int dynamicAlpha = Math.round(160 * alpha);
 
-            // Pack the custom lightning colors into an ARGB int
             int energyColor = (dynamicAlpha << 24) | (r << 16) | (g << 8) | b;
 
-            // Submit the model part directly using RenderType.lightning()
             buffers.submitModelPart(
                     root, ps, RenderTypes.lightning(),
                     15728880, OverlayTexture.NO_OVERLAY,

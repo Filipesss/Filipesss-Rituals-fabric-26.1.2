@@ -57,7 +57,6 @@ public class VortexBeamPacket implements CustomPacketPayload {
             Vec3        dir    = player.getLookAngle();
             Vec3        end    = origin.add(dir.scale(MAX_RANGE));
 
-            // Piercing — damage every entity whose hitbox intersects the ray
             AABB searchBox = new AABB(origin, end).inflate(1.0);
             List<LivingEntity> candidates = level.getEntitiesOfClass(
                     LivingEntity.class, searchBox,
@@ -68,12 +67,10 @@ public class VortexBeamPacket implements CustomPacketPayload {
                 Optional<Vec3> hit = candidate.getBoundingBox().inflate(0.3).clip(origin, end);
                 if (hit.isPresent()) {
                     candidate.hurtServer(level, level.damageSources().playerAttack(player), DAMAGE);
-                    // Knock targets back along the beam direction
                     candidate.push(dir.x * 1.5, dir.y * 0.4, dir.z * 1.5);
                 }
             }
 
-            // Spawn the visual entity at the player's eye
             VortexBoomEntity boom = new VortexBoomEntity(
                     ModEntities.VORTEX_BOOM, level,
                     origin.x, origin.y, origin.z
@@ -82,7 +79,6 @@ public class VortexBeamPacket implements CustomPacketPayload {
             boom.setBeamLength(MAX_RANGE);
             level.addFreshEntity(boom);
 
-            // Warden sonic boom sound, slightly higher pitched
             level.playSound(null, origin.x, origin.y, origin.z,
                     SoundEvents.WARDEN_SONIC_BOOM,
                     SoundSource.PLAYERS,

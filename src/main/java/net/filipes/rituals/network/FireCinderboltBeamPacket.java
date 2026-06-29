@@ -30,9 +30,9 @@ public class FireCinderboltBeamPacket implements CustomPacketPayload {
     private static final Map<UUID, Long> SERVER_COOLDOWNS = new HashMap<>();
     public  static final long COOLDOWN_MS = 20_000L;
 
-    private static final int   BEAM_DURATION = 60;   // ticks the beam lasts
-    private static final float BEAM_DAMAGE   = 3.5f; // per-tick flat damage
-    private static final float BEAM_HP_PCT   = 1.5f; // percent of max HP bonus per tick
+    private static final int   BEAM_DURATION = 60;
+    private static final float BEAM_DAMAGE   = 3.5f;
+    private static final float BEAM_HP_PCT   = 1.5f;
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 

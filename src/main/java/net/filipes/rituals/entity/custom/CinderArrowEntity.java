@@ -90,7 +90,6 @@ public class CinderArrowEntity extends Arrow {
                 );
                 target.igniteForSeconds(4);
 
-                // Pierce sound
                 level().playSound(null, hit.getX(), hit.getY(), hit.getZ(),
                         SoundEvents.FIRE_AMBIENT, SoundSource.PLAYERS, 1.0f, 0.6f);
             }
@@ -144,8 +143,8 @@ public class CinderArrowEntity extends Arrow {
                     int upCount = 5;
                     for (int i = 0; i < upCount; i++) {
                         double angle  = (2.0 * Math.PI / upCount) * i;
-                        double spread = Math.random() * 0.15; // small random lateral nudge
-                        double rise   = Math.random() * 0.4 + 0.8; // 0.8–1.2 upward
+                        double spread = Math.random() * 0.15;
+                        double rise   = Math.random() * 0.4 + 0.8;
                         SparkEntity spark = new SparkEntity(ModEntities.SPARK, sv,
                                 pos.x, pos.y + 0.5, pos.z);
                         spark.applyPreset(SparkPresets.CINDERBOLT_EXPLOSION);
@@ -161,7 +160,6 @@ public class CinderArrowEntity extends Arrow {
         }
     }
 
-    // Pierce arrows must not be stopped by hitting entities
     @Override
     protected boolean canHitEntity(Entity target) {
         if (getArrowType() == TYPE_PIERCE && pierceHits.contains(target.getUUID())) return false;

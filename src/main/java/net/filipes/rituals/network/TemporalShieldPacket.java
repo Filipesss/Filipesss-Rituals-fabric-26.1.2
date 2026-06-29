@@ -28,7 +28,7 @@ public class TemporalShieldPacket implements CustomPacketPayload {
             StreamCodec.of((buf, pkt) -> {}, buf -> new TemporalShieldPacket());
 
     private static final Map<UUID, Long> SERVER_COOLDOWNS = new HashMap<>();
-    public static final long COOLDOWN_MS = 25_000L; // 25 second cooldown
+    public static final long COOLDOWN_MS = 25_000L;
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
@@ -53,14 +53,12 @@ public class TemporalShieldPacket implements CustomPacketPayload {
             Vec3 lookDir = player.getLookAngle();
             Vec3 spawnPos = player.position().add(lookDir.scale(2.0)).add(0, 1.2, 0);
 
-            // Spawn the stationary shield barrier
             TemporalShieldEntity shield = new TemporalShieldEntity(ModEntities.TEMPORAL_SHIELD, level, player);
             shield.setPos(spawnPos.x, spawnPos.y, spawnPos.z);
             shield.setYRot(player.getYRot());
             shield.setXRot(player.getXRot());
             level.addFreshEntity(shield);
 
-            // Play defensive deployment sound cues
             level.playSound(null, spawnPos.x, spawnPos.y, spawnPos.z,
                     SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 0.5f);
             level.playSound(null, spawnPos.x, spawnPos.y, spawnPos.z,

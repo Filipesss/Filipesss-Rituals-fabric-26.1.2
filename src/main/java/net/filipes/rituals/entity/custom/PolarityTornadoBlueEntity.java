@@ -173,7 +173,6 @@ public class PolarityTornadoBlueEntity extends Entity {
         Vec3 center = this.position();
         double cx = center.x, cy = center.y + 0.5, cz = center.z;
 
-        // Outward burst sparks — uniform sphere distribution
         int sparkCount = 18;
         for (int i = 0; i < sparkCount; i++) {
             double yaw   = random.nextDouble() * Math.PI * 2.0;
@@ -195,7 +194,6 @@ public class PolarityTornadoBlueEntity extends Entity {
             serverLevel.addFreshEntity(spark);
         }
 
-        // Ring of bigger sparks along the ground plane
         int ringCount = 10;
         for (int i = 0; i < ringCount; i++) {
             double angle = (Math.PI * 2.0 / ringCount) * i;
@@ -211,13 +209,11 @@ public class PolarityTornadoBlueEntity extends Entity {
             serverLevel.addFreshEntity(spark);
         }
 
-        // Dust burst
         serverLevel.sendParticles(new DustParticleOptions(0x00B2FF, 2.8f),
                 cx, cy, cz, 22, 0.5, 0.5, 0.5, 0.55);
         serverLevel.sendParticles(new DustParticleOptions(0x00B2FF, 1.4f),
                 cx, cy, cz, 14, 0.3, 0.4, 0.3, 1.1);
 
-        // End rods for sparkle
         serverLevel.sendParticles(ParticleTypes.END_ROD,
                 cx, cy, cz, 12, 0.3, 0.4, 0.3, 0.25);
 
@@ -236,7 +232,7 @@ public class PolarityTornadoBlueEntity extends Entity {
 
         double spawnAngle  = random.nextDouble() * Math.PI * 2.0;
         double spawnRadius = 0.15 + random.nextDouble() * 0.45;
-        double spawnY      = cy + 0.1 + random.nextDouble() * 0.8; // within 1-block model
+        double spawnY      = cy + 0.1 + random.nextDouble() * 0.8;
         double spawnX      = cx + Math.cos(spawnAngle) * spawnRadius;
         double spawnZ      = cz + Math.sin(spawnAngle) * spawnRadius;
 

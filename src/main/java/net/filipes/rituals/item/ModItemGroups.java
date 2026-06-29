@@ -54,6 +54,7 @@ public class ModItemGroups {
                         output.accept(ModItems.DEPTHSTRIKE);
                         output.accept(ModItems.PHARATHORN);
                         output.accept(ModItems.TEMPORAL_GLASSREAVER);
+                        output.accept(ModItems.SHADESHATTER);
 
                     })
                     .build());

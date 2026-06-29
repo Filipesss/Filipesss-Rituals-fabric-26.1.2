@@ -25,8 +25,8 @@ public class PolarityShieldEntityRenderer
         public boolean isRed;
         public float yaw, pitch;
         public double correctionDx, correctionDy, correctionDz;
-        public int actionState; // Add this
-        public int deathTicks;  // Add this
+        public int actionState;
+        public int deathTicks;
     }
 
     public PolarityShieldEntityRenderer(EntityRendererProvider.Context ctx) {
@@ -52,13 +52,11 @@ public class PolarityShieldEntityRenderer
                 && entity.owner == mc.player
                 && mc.options.getCameraType() == net.minecraft.client.CameraType.FIRST_PERSON;
 
-        // ONLY kill positioning corrections if we hit an enemy (State 2)
         if (state.actionState == 2) {
             state.correctionDx = 0;
             state.correctionDy = 0;
             state.correctionDz = 0;
         } else if (entity.owner != null) {
-            // Keep tracking perfectly smoothly through active and miss-fading stages
             Vec3 look = new Vec3(entity.owner.getLookAngle().x, 0, entity.owner.getLookAngle().z).normalize();
             Vec3 right = new Vec3(-look.z, 0, look.x);
             Vec3 dashDir = entity.isRed() ? right : right.scale(-1);

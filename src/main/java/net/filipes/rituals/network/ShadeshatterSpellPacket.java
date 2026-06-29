@@ -24,7 +24,6 @@ public class ShadeshatterSpellPacket implements CustomPacketPayload {
     private static final Map<UUID, Long> SERVER_COOLDOWNS = new HashMap<>();
     public  static final long            COOLDOWN_MS      = 4_000L;
 
-    /** 3 × 14 = 42 ticks after right-click before the orb actually fires. */
     private static final int SPAWN_DELAY = 42;
 
     @Override

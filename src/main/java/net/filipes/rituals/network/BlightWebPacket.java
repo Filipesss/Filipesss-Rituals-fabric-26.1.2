@@ -125,12 +125,10 @@ public record BlightWebPacket(int targetId) implements CustomPacketPayload {
 
         Vec3 targetPos = target.position();
 
-        // Calculate horizontal circular plane coordinates
         double angle = currentTick * speed;
         double sx = targetPos.x + Math.cos(angle) * radius;
         double sz = targetPos.z + Math.sin(angle) * radius;
 
-        // Calculate smooth climbing vertical altitude (from feet up to 1.4 blocks over time)
         double heightProgress = ((double) currentTick / maxTicks) * 1.4;
         double sy = targetPos.y + 0.1 + heightProgress;
 

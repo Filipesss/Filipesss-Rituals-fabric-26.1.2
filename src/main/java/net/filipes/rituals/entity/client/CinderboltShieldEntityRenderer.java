@@ -77,7 +77,6 @@ public class CinderboltShieldEntityRenderer
         ps.pushPose();
         ps.translate(state.ownerOffsetX, state.ownerOffsetY, state.ownerOffsetZ);
 
-        // Pass the collector downstream instead of local buffer flushes
         model.render(ps, snc, 15728880, state.ageInTicks, state.isFirstPerson, state.currentRadius);
 
         ps.popPose();

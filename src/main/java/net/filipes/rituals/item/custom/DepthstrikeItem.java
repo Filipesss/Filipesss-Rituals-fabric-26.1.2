@@ -42,8 +42,6 @@ public class DepthstrikeItem extends TridentItem implements RitualsTooltipStyle 
             );
         }
 
-        // Stage 1: only apply lvl 1 (don't stack above what's already there)
-        // Stage 2+: full stacking
         if (stage >= 2) {
             ConductivityHelper.applyOrStack(target);
         } else {

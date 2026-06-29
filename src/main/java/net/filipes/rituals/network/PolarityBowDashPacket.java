@@ -68,7 +68,6 @@ public class PolarityBowDashPacket implements CustomPacketPayload {
             Vec3 start = player.position();
             Vec3 estimatedEnd = start.add(dashDir.scale(DASH_DISTANCE));
 
-            // --- VISUAL FX: INITIAL SNAP DUST LINE ---
             int visualColor = isRed ? 0xFF1A1A : 0x00B2FF;
             DustParticleOptions dustParticle = new DustParticleOptions(visualColor, 1.2f);
             for (int i = 0; i <= 6; i++) {
@@ -76,7 +75,6 @@ public class PolarityBowDashPacket implements CustomPacketPayload {
                 level.sendParticles(dustParticle, particlePos.x, particlePos.y + 0.6, particlePos.z, 1, 0, 0.05, 0, 0);
             }
 
-            // --- VISUAL FX: MAIN TRAIL SPARKS ---
             for (int i = 0; i < 2; i++) {
                 double speed = 1.4 + (i * 0.2);
                 SparkEntity trailSpark = new SparkEntity(ModEntities.SPARK, level, start.x, start.y + 0.9, start.z);
@@ -87,15 +85,12 @@ public class PolarityBowDashPacket implements CustomPacketPayload {
                 level.addFreshEntity(trailSpark);
             }
 
-            // --- SPAWN THE 3D SHIELD ENTITY ---
             PolarityShieldEntity shield = new PolarityShieldEntity(ModEntities.POLARITY_SHIELD, level, player, isRed);
             level.addFreshEntity(shield);
 
-            // Play baseline dash sound trigger
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     ModSounds.GENERIC_DASH, SoundSource.PLAYERS, 0.7f, isRed ? 1.0f : 1.4f);
 
-            // Apply forward kinetic push velocity
             player.setDeltaMovement(dashDir.scale(1.4));
             player.hurtMarked = true;
         });

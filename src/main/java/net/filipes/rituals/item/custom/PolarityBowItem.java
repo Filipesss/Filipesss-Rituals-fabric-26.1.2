@@ -27,7 +27,6 @@ import java.util.UUID;
 
 public class PolarityBowItem extends Item implements RitualsTooltipStyle {
 
-    // Global server-side map to track active combo counts per player
     private static final Map<UUID, Integer> PLAYER_COMBOS = new HashMap<>();
 
     public PolarityBowItem(Properties settings) {

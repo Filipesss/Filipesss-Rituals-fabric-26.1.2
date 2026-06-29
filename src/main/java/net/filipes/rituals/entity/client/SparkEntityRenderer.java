@@ -32,10 +32,10 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
                     .withVertexShader("core/rendertype_lightning")
                     .withFragmentShader("core/rendertype_lightning")
                     .withColorTargetState(new ColorTargetState(
-                            // FIX: Replaced DestFactor.ZERO with BlendFactor.ZERO
+
                             new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE, BlendFactor.ONE, BlendFactor.ZERO)
                     ))
-                    // FIX: Updated to match modern pipeline layout rules
+
                     .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
                     .withPrimitiveTopology(PrimitiveTopology.QUADS)
                     .withDepthStencilState(DepthStencilState.DEFAULT)

@@ -50,8 +50,6 @@ public class VortexBoomEntity extends Entity {
         return tickCount % FRAME_COUNT;
     }
 
-    // Store the player's raw yaw/pitch — reconstructed in renderer
-    // using the same formula as Entity#calculateViewVector
     public void setBeamDirection(float yaw, float pitch) {
         entityData.set(DATA_BEAM_YAW, yaw);
         entityData.set(DATA_BEAM_PITCH, pitch);

@@ -232,7 +232,7 @@ public class PolarityTornadoRedEntity extends Entity {
 
         double spawnAngle  = random.nextDouble() * Math.PI * 2.0;
         double spawnRadius = 0.15 + random.nextDouble() * 0.45;
-        double spawnY      = cy + 0.1 + random.nextDouble() * 0.8; // within 1-block model
+        double spawnY      = cy + 0.1 + random.nextDouble() * 0.8;
         double spawnX      = cx + Math.cos(spawnAngle) * spawnRadius;
         double spawnZ      = cz + Math.sin(spawnAngle) * spawnRadius;
 

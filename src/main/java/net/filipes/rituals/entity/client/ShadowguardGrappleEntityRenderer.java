@@ -60,7 +60,7 @@ public class ShadowguardGrappleEntityRenderer
 
         Minecraft.getInstance().getItemModelResolver().updateForTopItem(
                 state.itemRenderState, state.stack,
-                ItemDisplayContext.FIXED,  // world-space fixed, no hand orientation
+                ItemDisplayContext.FIXED,
                 null, null, entity.getId());
     }
 
@@ -74,7 +74,6 @@ public class ShadowguardGrappleEntityRenderer
     public void submit(ShadowguardGrappleRenderState state, PoseStack poseStack,
                        SubmitNodeCollector collector, CameraRenderState camera) {
 
-        // FIX: Hand over the collector directly to process custom geometry snapshots per-segment
         renderChain(state, poseStack, collector);
 
         poseStack.pushPose();
@@ -139,9 +138,8 @@ public class ShadowguardGrappleEntityRenderer
             float cos45 = 0.7071f, sin45 = 0.7071f;
             float ax = hw * cos45, ay = hw * sin45;
 
-            // FIX: Use submitCustomGeometry inside the loop to snapshot the calculated segment transformations
             collector.submitCustomGeometry(poseStack, RenderTypes.entityCutout(CHAIN_TEXTURE), (pose, vc) -> {
-                // Plane A
+
                 vc.addVertex(pose, -ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
                 vc.addVertex(pose,  ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
                 vc.addVertex(pose,  ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
@@ -152,7 +150,7 @@ public class ShadowguardGrappleEntityRenderer
                 vc.addVertex(pose,  ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
                 vc.addVertex(pose, -ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
 
-                // Plane B
+
                 vc.addVertex(pose,  ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
                 vc.addVertex(pose, -ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
                 vc.addVertex(pose, -ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);

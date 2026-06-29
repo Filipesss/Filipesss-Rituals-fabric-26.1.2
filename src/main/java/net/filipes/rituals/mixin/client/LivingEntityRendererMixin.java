@@ -25,7 +25,6 @@ public class LivingEntityRendererMixin {
 
         Minecraft mc = Minecraft.getInstance();
 
-        // Check if our CUSTOM modded invisibility is active
         boolean shadowguard = (entity == mc.player && ShadowguardHudOverlay.isActive()) ||
                 ShadowguardItem.isInvisibleFromShadowguard(entity.getUUID());
 

@@ -21,7 +21,7 @@ public class LightningSparkEntityRenderer
 
     public static class TrailRenderState extends EntityRenderState {
         float relX, relY, relZ;
-        float offX, offY, offZ; // add this
+        float offX, offY, offZ;
         int   frame;
         float cameraYaw;
         boolean flipped;

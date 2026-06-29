@@ -25,12 +25,10 @@ public abstract class PrimedTntTemporalFreezeMixin {
         if (storedFuse == -1) return;
 
         if (!self.isAlive()) {
-            // exploded this tick — clean up counter and let it go
             TemporalFreezeRegistry.clearTntCounter(self.getId());
             return;
         }
 
-        // Restore the fuse 2 out of every 3 ticks → countdown at 1/3 speed
         if (!TemporalFreezeRegistry.shouldTntDecrement(self.getId())) {
             self.setFuse(storedFuse);
         }

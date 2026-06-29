@@ -58,7 +58,6 @@ public class BlightDashPacket implements CustomPacketPayload {
 
             DashState state = PLAYER_STATES.computeIfAbsent(uuid, k -> new DashState());
 
-            // 1. Check window timeout
             if (state.count == 1) {
                 long elapsed = now - state.lastDashTime;
                 if (elapsed > WINDOW_MS) {
@@ -68,11 +67,9 @@ public class BlightDashPacket implements CustomPacketPayload {
                 }
             }
 
-            // Global Cooldown check
             Long lastGlobal = SERVER_COOLDOWNS.get(uuid);
             if (lastGlobal != null && now - lastGlobal < COOLDOWN_MS) return;
 
-            // 2. Determine dash direction
             Vec3 look = new Vec3(player.getLookAngle().x, 0, player.getLookAngle().z).normalize();
             Vec3 dashDir;
 
@@ -90,7 +87,6 @@ public class BlightDashPacket implements CustomPacketPayload {
             Vec3 end = start.add(dashDir.scale(DASH_DISTANCE));
             ServerLevel level = player.level();
 
-            // 3. Trajectory Sweep
             AABB baseBox = player.getBoundingBox();
             Vec3 actualEnd = start;
             double stepSize = 0.25;
@@ -107,34 +103,27 @@ public class BlightDashPacket implements CustomPacketPayload {
 
             double actualDist = start.distanceTo(actualEnd);
 
-            // --- VISUAL FX: MAIN TRAIL SPARKS ---
-            // Spawns 2 slightly offset high-speed triple sparks tracing the exact player movement vector
             for (int i = 0; i < 2; i++) {
                 double speed = 1.6 + (i * 0.15);
                 SparkEntity trailSpark = new SparkEntity(ModEntities.SPARK, level, start.x, start.y + 0.8, start.z);
                 trailSpark.applyPreset(SparkPresets.BLIGHT_TRIPLE);
                 trailSpark.forcedVelocity = dashDir.scale(speed);
                 trailSpark.setNoGravity(true);
-                // Calculate precise lifetime so sparks disappear exactly when hitting the destination wall/end point
                 trailSpark.maxLifetime = (int) Math.ceil(actualDist / speed) + 1;
                 level.addFreshEntity(trailSpark);
             }
 
-            // 4. Interpolate and drop 5 Puddles + Puddle Activation Sparks
             int puddleCount = 4;
             for (int i = 0; i <= puddleCount; i++) {
                 double pct = (double) i / puddleCount;
                 Vec3 puddlePos = start.lerp(actualEnd, pct);
 
-                // Spawn the puddle entity
                 BlightedPuddleEntity puddle = new BlightedPuddleEntity(ModEntities.BLIGHTED_PUDDLE, level); 
                 puddle = new BlightedPuddleEntity(ModEntities.BLIGHTED_PUDDLE, level);
                 puddle.setPos(puddlePos.x, puddlePos.y, puddlePos.z);
                 puddle.setOwnerUUID(uuid);
                 level.addFreshEntity(puddle);
 
-                // --- VISUAL FX: PUDDLE POP SPARKS ---
-                // Spawns a single upward popping blight spark at each puddle checkpoint to emphasize initialization
                 SparkEntity puddleSpark = new SparkEntity(ModEntities.SPARK, level, puddlePos.x, puddlePos.y + 0.1, puddlePos.z);
                 puddleSpark.applyPreset(SparkPresets.BLIGHT_SINGLE);
                 puddleSpark.forcedVelocity = new Vec3(
@@ -145,8 +134,6 @@ public class BlightDashPacket implements CustomPacketPayload {
                 level.addFreshEntity(puddleSpark);
             }
 
-            // --- VISUAL FX: DESTINATION IMPACT BURST ---
-            // Spawns a clean circular release of single blight sparks at the end point to cap off the dash sequence
             for (int i = 0; i < 6; i++) {
                 double angle = level.getRandom().nextDouble() * 2.0 * Math.PI;
                 double horizSpd = 0.15 + level.getRandom().nextDouble() * 0.2;
@@ -162,13 +149,11 @@ public class BlightDashPacket implements CustomPacketPayload {
                 level.addFreshEntity(burstSpark);
             }
 
-            // Audio indicators
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 0.5f);
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.GOAT_HORN_SOUND_VARIANTS.get(3).value(), SoundSource.PLAYERS, 0.4f, 1.8f);
 
-            // 5. Apply physical velocity push
             player.setDeltaMovement(dashDir.scale(1.6));
             player.hurtMarked = true;
         });

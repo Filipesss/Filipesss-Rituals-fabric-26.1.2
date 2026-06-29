@@ -169,7 +169,6 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
                     e.hurtMarked = true;
                 }
 
-                // Telegraph the push/pull radius
                 for (int i = 0; i < 6; i++) {
                     double ringAngle = random.nextDouble() * Math.PI * 2.0;
                     double rx = cx + Math.cos(ringAngle) * PUSH_PULL_RADIUS;
@@ -186,7 +185,6 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
                     cx, cy, cz,
                     1, 0.2, 0.3, 0.2, 0.05);
 
-            // Existing curving spark kinematics
             state.liveSparks.removeIf(spark -> !spark.isAlive());
             for (SparkEntity spark : state.liveSparks) {
                 Vec3 toSpark = spark.position().subtract(playerPos.add(0, 1.0, 0));
@@ -203,7 +201,6 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
                 spark.forcedVelocity = curvedVel;
             }
 
-            // Chaotic Spark Spawn loop
             int sparksThisTick = 1 + random.nextInt(2);
             for (int i = 0; i < sparksThisTick; i++) {
                 double yaw = random.nextDouble() * Math.PI * 2.0;

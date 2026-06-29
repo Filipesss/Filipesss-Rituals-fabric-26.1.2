@@ -53,7 +53,6 @@ public class ShadeshatterWormholePacket implements CustomPacketPayload {
             if (last != null && now - last < COOLDOWN_MS) return;
             SERVER_COOLDOWNS.put(uuid, now);
 
-            // Validate the target is within the 24-block reach
             Vec3 center = Vec3.atBottomCenterOf(pkt.targetPos.above());
             if (player.distanceToSqr(center) > 24 * 24) return;
 

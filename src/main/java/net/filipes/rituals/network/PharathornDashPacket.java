@@ -91,8 +91,8 @@ public class PharathornDashPacket implements CustomPacketPayload {
             Random rand = new Random();
             for (int i = 0; i < 8; i++) {
                 double angle     = rand.nextDouble() * 2.0 * Math.PI;
-                double horizSpd  = 0.25 + rand.nextDouble() * 0.25;   // 0.25 – 0.70
-                double vertSpd   = 0.10 + rand.nextDouble() * 0.55;   // 0.10 – 0.65
+                double horizSpd  = 0.25 + rand.nextDouble() * 0.25;
+                double vertSpd   = 0.10 + rand.nextDouble() * 0.55;
 
                 SparkEntity spark = new SparkEntity(ModEntities.SPARK, level,
                         actualEnd.x, actualEnd.y + 0.5, actualEnd.z);

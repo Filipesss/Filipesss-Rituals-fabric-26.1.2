@@ -18,12 +18,10 @@ public class ShadeshatterSpellHandler {
 
     private static final List<PendingSpawn> PENDING = new ArrayList<>();
 
-    /** Called from ShadeshatterSpellPacket after validation passes. */
     public static void schedule(UUID playerUuid, int fireAtTick) {
         PENDING.add(new PendingSpawn(playerUuid, fireAtTick));
     }
 
-    /** Registered to ServerTickEvents.END_SERVER_TICK in Rituals.java. */
     public static void tick(MinecraftServer server) {
         if (PENDING.isEmpty()) return;
 
@@ -49,7 +47,6 @@ public class ShadeshatterSpellHandler {
         }
     }
 
-    /** Call on player disconnect to discard stale entries. */
     public static void onPlayerDisconnect(UUID uuid) {
         PENDING.removeIf(s -> s.playerUuid().equals(uuid));
     }

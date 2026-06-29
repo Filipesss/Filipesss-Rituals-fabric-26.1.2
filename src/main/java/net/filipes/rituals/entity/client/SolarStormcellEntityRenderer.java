@@ -41,7 +41,6 @@ public class SolarStormcellEntityRenderer
     public void submit(SolarStormcellRenderState state, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
         ps.pushPose();
-        // Pass the collector downstream directly to the model
         model.render(ps, snc, 15728880, state.ageInTicks);
         ps.popPose();
     }

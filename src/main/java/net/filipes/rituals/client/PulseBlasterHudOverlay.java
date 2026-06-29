@@ -65,11 +65,10 @@ public class PulseBlasterHudOverlay {
         else if (off.getItem() instanceof PulseBlasterItem) blaster = off;
         if (blaster == null) { liveAmmo = -1; return; }
 
-        int stage   = ModDataComponents.getStage(blaster);  // ← read stage
-        int maxAmmo = PulseBlasterItem.getMaxAmmo(stage);    // 8 or 12
+        int stage   = ModDataComponents.getStage(blaster);
+        int maxAmmo = PulseBlasterItem.getMaxAmmo(stage);
         int ammo    = (liveAmmo >= 0) ? liveAmmo : PulseBlasterItem.getAmmo(blaster);
 
-        // Recompute bar width dynamically
         int barW = maxAmmo * SEG_W + (maxAmmo - 1) * SEG_GAP;
 
         int screenW    = client.getWindow().getGuiScaledWidth();

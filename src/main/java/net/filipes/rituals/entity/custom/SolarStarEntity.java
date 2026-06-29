@@ -33,7 +33,7 @@ public class SolarStarEntity extends Entity {
     private float riseStartY;
 
     private UUID ownerUUID;
-    public Entity ownerEntity; // resolved client-side
+    public Entity ownerEntity;
 
     public SolarStarEntity(EntityType<? extends SolarStarEntity> type, Level level) {
         super(type, level);

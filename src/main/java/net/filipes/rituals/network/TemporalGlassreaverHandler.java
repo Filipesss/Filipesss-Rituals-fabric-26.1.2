@@ -95,7 +95,7 @@ public class TemporalGlassreaverHandler {
                 player.level().playSound(null,
                         player.getX(), player.getY(), player.getZ(),
                         SoundEvents.ENCHANTMENT_TABLE_USE,
-                        SoundSource.PLAYERS, 1.0f, 1.0f); // Volume: 1.0, Pitch: 1.0
+                        SoundSource.PLAYERS, 1.0f, 1.0f);
             } else {
                 critCounts.put(id, count);
             }

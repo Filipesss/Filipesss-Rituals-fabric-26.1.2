@@ -158,7 +158,7 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
 
         for (LivingEntity candidate : level().getEntitiesOfClass(LivingEntity.class, searchBox)) {
             if (candidate == owner) continue;
-            if (ConductivityHelper.getLevel(candidate) == 0) continue;   // no effect
+            if (ConductivityHelper.getLevel(candidate) == 0) continue;
             double dist = candidate.position().distanceToSqr(position());
             if (dist < bestDist) {
                 bestDist = dist;
@@ -217,7 +217,6 @@ public class DepthstrikeChargedBallEntity extends ThrowableProjectile {
                     Math.sin(angle) * 0.7);
             level.addFreshEntity(spark);
         }
-        // Upward
         for (int i = 0; i < 6; i++) {
             SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, explodeX, explodeY, explodeZ);
             spark.applyPreset(SparkPresets.DEPTHSTRIKE_CHARGED_BALL_IMPACT);

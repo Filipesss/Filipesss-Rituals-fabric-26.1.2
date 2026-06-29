@@ -36,10 +36,8 @@ public class ShadeshatterWormholeHandler {
     private static final double TORNADO_MAX_HEIGHT  = 1.8;
     private static final double TORNADO_ORBIT_SPEED = 0.35;
 
-    // Inward sparks are discarded when they reach this distance from the center
     private static final double INWARD_DISCARD_DIST_SQ = 0.5 * 0.5;
 
-    // ── entry ─────────────────────────────────────────────────────────────────
 
     private static class WormholeEntry {
         final ServerPlayer      player;
@@ -57,7 +55,6 @@ public class ShadeshatterWormholeHandler {
 
     private static final Map<UUID, WormholeEntry> ACTIVE = new HashMap<>();
 
-    // ── lifecycle ─────────────────────────────────────────────────────────────
 
     public static void register() {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -97,8 +94,6 @@ public class ShadeshatterWormholeHandler {
         return ACTIVE.containsKey(uuid);
     }
 
-    // ── tick ─────────────────────────────────────────────────────────────────
-
     public static void tick(MinecraftServer server) {
         ACTIVE.entrySet().removeIf(entry -> {
             WormholeEntry w = entry.getValue();
@@ -113,18 +108,15 @@ public class ShadeshatterWormholeHandler {
             long gameTime = level.getGameTime();
             long ticksAlive = WORMHOLE_TICKS - (w.expiryTick - gameTime);
 
-            // ── ambient particles ─────────────────────────────────────────────
             level.sendParticles(ParticleTypes.PORTAL,
                     w.center.x, w.center.y, w.center.z, 8, 0.3, 0.3, 0.3, 0.1);
             level.sendParticles(ParticleTypes.REVERSE_PORTAL,
                     w.center.x, w.center.y + 0.5, w.center.z, 2, 0.4, 0.4, 0.4, 0.04);
 
-            // ── spawn inward sparks every 2 ticks ─────────────────────────────
             if (ticksAlive % 2 == 0) {
                 spawnInwardSparks(level, w);
             }
 
-            // ── discard inward sparks that reached the center ─────────────────
             w.inwardSparks.removeIf(s -> {
                 if (!s.isAlive()) return true;
                 if (s.position().distanceToSqr(w.center) < INWARD_DISCARD_DIST_SQ) {
@@ -134,7 +126,6 @@ public class ShadeshatterWormholeHandler {
                 return false;
             });
 
-            // ── pull nearby enemies ───────────────────────────────────────────
             AABB box = AABB.ofSize(w.center, PULL_RADIUS * 2, PULL_RADIUS * 2, PULL_RADIUS * 2);
             List<LivingEntity> nearby = level.getEntitiesOfClass(LivingEntity.class, box,
                     e -> !e.getUUID().equals(player.getUUID()));
@@ -147,11 +138,9 @@ public class ShadeshatterWormholeHandler {
                 }
             }
 
-            // ── teleport + outburst on expiry ─────────────────────────────────
             if (gameTime >= w.expiryTick) {
                 discardAllSparks(w);
 
-                // Burst all pulled enemies outward
                 for (LivingEntity entity : nearby) {
                     Vec3 outDir = entity.position().subtract(w.center);
                     Vec3 burst = outDir.lengthSqr() > 0.01
@@ -161,7 +150,6 @@ public class ShadeshatterWormholeHandler {
                     entity.setDeltaMovement(burst);
                 }
 
-                // Visual outburst at the wormhole center
                 spawnOutburstSparks(level, w.center, 16);
                 level.sendParticles(ParticleTypes.PORTAL,
                         w.center.x, w.center.y, w.center.z, 40, 0.1, 0.1, 0.1, 0.5);
@@ -178,7 +166,6 @@ public class ShadeshatterWormholeHandler {
         });
     }
 
-    // ── tornado orbit ─────────────────────────────────────────────────────────
 
     private static void runTornadoTicker(Vec3 center, SparkEntity spark,
                                          double startAngle, int tick, MinecraftServer server) {
@@ -203,7 +190,6 @@ public class ShadeshatterWormholeHandler {
         );
     }
 
-    // ── inward sparks ─────────────────────────────────────────────────────────
 
     private static void spawnInwardSparks(ServerLevel level, WormholeEntry w) {
         for (int i = 0; i < 2; i++) {
@@ -224,7 +210,6 @@ public class ShadeshatterWormholeHandler {
         }
     }
 
-    // ── outburst sparks ───────────────────────────────────────────────────────
 
     private static void spawnOutburstSparks(ServerLevel level, Vec3 center, int count) {
         for (int i = 0; i < count; i++) {
@@ -244,7 +229,6 @@ public class ShadeshatterWormholeHandler {
         }
     }
 
-    // ── helpers ───────────────────────────────────────────────────────────────
 
     private static void discardAllSparks(WormholeEntry e) {
         e.orbitSparks.forEach(s  -> { if (s.isAlive())  s.discard(); });

@@ -56,8 +56,8 @@ public class PulseBlasterBeamEntity extends Projectile {
                 this.getBoundingBox().expandTowards(velocity).inflate(1.0),
                 entity -> !entity.isSpectator()
                         && entity != this.getOwner()
-                        && !(entity instanceof PulseBlasterBeamEntity)  // ← add
-                        && !(entity instanceof SparkEntity)              // ← add
+                        && !(entity instanceof PulseBlasterBeamEntity)
+                        && !(entity instanceof SparkEntity)
                         && !(entity instanceof BurstSparkEntity)
         );
 

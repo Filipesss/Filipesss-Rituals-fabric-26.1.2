@@ -29,7 +29,7 @@ public class TemporalSlowZoneGroundEntityRenderer
     private static final int[] ANGLES = {30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330, 360};
     private static final int   LOOPS  = 4;
     private static final List<RenderType> FRAMES = buildFrames();
-    private static final int   TICKS_PER_FRAME = 2; // 49 frames * 2 ticks ≈ your 100-tick zone duration
+    private static final int   TICKS_PER_FRAME = 2;
 
     private static List<RenderType> buildFrames() {
         List<RenderType> frames = new ArrayList<>();

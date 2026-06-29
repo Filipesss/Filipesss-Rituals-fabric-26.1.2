@@ -44,7 +44,6 @@ public class TemporalMuteMarkEntity extends Entity implements Scalable {
     private String appliedGlowTeamName = null;
     private String targetScoreboardName = null;
 
-    // STAGE 5+ UPGRADE PROPERTIES
     private boolean lockMovement = false;
     private Vec3 lockPosition = null;
 
@@ -62,7 +61,6 @@ public class TemporalMuteMarkEntity extends Entity implements Scalable {
     public void setTargetUUID(UUID targetUUID) { this.targetUUID = targetUUID; }
     public void setOwnerUUID(UUID ownerUUID)   { this.ownerUUID = ownerUUID; }
 
-    /** Activates the absolute space-time anchor upgrade */
     public void setMovementLocked(boolean lockMovement) { this.lockMovement = lockMovement; }
 
     public static float computeFrameAccumulator(int tick) {
@@ -93,22 +91,18 @@ public class TemporalMuteMarkEntity extends Entity implements Scalable {
                 applyMuteGlow(target, serverLevel);
             }
 
-            // STAGE 5+ MOVEMENT LOCK LOGIC
             if (lockMovement && target instanceof ServerPlayer targetPlayer) {
-                // Initialize anchor origin on the very first frame
                 if (this.lockPosition == null) {
                     this.lockPosition = targetPlayer.position();
                 }
 
-                // Hard-realign player location and strip client velocity values
                 targetPlayer.teleportTo(lockPosition.x, lockPosition.y, lockPosition.z);
                 targetPlayer.setDeltaMovement(Vec3.ZERO);
-                targetPlayer.hurtMarked = true; // Forces velocity update packet synchronization
+                targetPlayer.hurtMarked = true;
 
-                // Anchor the visual sprite matrix to the frozen position
                 setPos(lockPosition.x, lockPosition.y + targetPlayer.getBbHeight() * 0.5, lockPosition.z);
             } else {
-                // Default stage behaviour: Dynamically follow the moving target player
+
                 double x = target.getX();
                 double y = target.getY() + target.getBbHeight() * 0.5;
                 double z = target.getZ();

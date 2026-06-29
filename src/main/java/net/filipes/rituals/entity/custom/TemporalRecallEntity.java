@@ -59,7 +59,7 @@ public class TemporalRecallEntity extends Entity {
 
         if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
 
-            // 1. Initial Arrival Visuals
+
             if (!initializedSpawnVisuals) {
                 spawnArrivalVisuals(serverLevel);
                 for (int i = 0; i < NUM_ORBIT_SPARKS; i++) {

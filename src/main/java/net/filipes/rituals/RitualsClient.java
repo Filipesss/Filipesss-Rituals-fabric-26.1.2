@@ -313,7 +313,6 @@ public class RitualsClient implements ClientModInitializer {
                 float frameValue;
 
                 if (shadeshatterMimicFrame >= 0) {
-                    // Mimic animation: frames 19–32
                     frameValue = shadeshatterMimicFrame + 19f;
                     shadeshatterMimicTicker++;
                     if (shadeshatterMimicTicker >= MIMIC_TICKS_PER_FRAME) {
@@ -325,7 +324,6 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     }
                 } else if (shadeshatterSpellFrame >= 0) {
-                    // Spell animation: frames 5–18
                     frameValue = shadeshatterSpellFrame + 5f;
                     shadeshatterSpellTicker++;
                     if (shadeshatterSpellTicker >= TICKS_PER_FRAME) {
@@ -336,7 +334,6 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     }
                 } else if (shadeshatterWormholeFrame >= 0) {
-                    // Wormhole animation: frames 33–46 (shadeshatter_tp_0 to shadeshatter_tp_13)
                     frameValue = shadeshatterWormholeFrame + 33f;
                     shadeshatterWormholeTicker++;
                     if (shadeshatterWormholeTicker >= WORMHOLE_TICKS_PER_FRAME) {
@@ -344,7 +341,6 @@ public class RitualsClient implements ClientModInitializer {
                         shadeshatterWormholeFrame++;
                         if (shadeshatterWormholeFrame >= 14) {
                             shadeshatterWormholeFrame = -1;
-                            // Animation done — send packet with the position captured on key press.
                             if (shadeshatterWormholeTarget != null) {
                                 ClientPlayNetworking.send(new ShadeshatterWormholePacket(shadeshatterWormholeTarget));
                                 shadeshatterWormholeTarget = null;
@@ -352,7 +348,6 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     }
                 } else {
-                    // Idle animation: frames 1–4
                     frameValue = shadeshatterFrame;
                 }
 

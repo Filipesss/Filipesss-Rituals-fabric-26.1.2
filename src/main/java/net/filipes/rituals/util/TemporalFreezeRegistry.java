@@ -30,10 +30,7 @@ public final class TemporalFreezeRegistry {
     public static void storePreVelocity(int id, Vec3 v) { PRE_SLOW_VELOCITY.put(id, v); }
     public static Vec3 takePreVelocity(int id)           { return PRE_SLOW_VELOCITY.remove(id); }
 
-    /**
-     * slowFactor is passed explicitly so arrows (1/8) and entities (1/3) share the same math.
-     * output = v0 + (v1 - v0*sf) * sf  →  constant forces (gravity) scale by sf, not sf².
-     */
+
     public static Vec3 computeNextTrueVelocity(Vec3 v0, Vec3 v1, double slowFactor) {
         Vec3 delta = v1.subtract(v0.scale(slowFactor));
         return v0.add(delta.scale(slowFactor));
@@ -45,7 +42,6 @@ public final class TemporalFreezeRegistry {
         return v != null ? v : -1;
     }
 
-    /** Returns true only every 3rd call — fuse ticks down once per 3 game ticks. */
     public static boolean shouldTntDecrement(int id) {
         int count = TNT_TICK_COUNTER.merge(id, 1, Integer::sum);
         if (count >= 3) { TNT_TICK_COUNTER.put(id, 0); return true; }

@@ -105,7 +105,6 @@ public class LifestealMarkEntity extends Entity implements Scalable {
             team.setNameTagVisibility(net.minecraft.world.scores.Team.Visibility.NEVER);
         }
 
-        // If the target is already on a different glow team, move it cleanly.
         PlayerTeam currentTeam = scoreboard.getPlayersTeam(targetName);
         if (currentTeam != null && currentTeam != team) {
             scoreboard.removePlayerFromTeam(targetName, currentTeam);
@@ -132,17 +131,14 @@ public class LifestealMarkEntity extends Entity implements Scalable {
         if (targetName != null && appliedGlowTeamName != null) {
             PlayerTeam currentTeam = scoreboard.getPlayersTeam(targetName);
 
-            // Only remove if the target is still on the same team this mark applied.
             if (currentTeam != null && appliedGlowTeamName.equals(currentTeam.getName())) {
                 scoreboard.removePlayerFromTeam(targetName, currentTeam);
             }
 
-            // Only clear the glow flag if there is no other team still owning it.
             if (target != null && scoreboard.getPlayersTeam(targetName) == null) {
                 target.setGlowingTag(false);
             }
         } else if (target != null) {
-            // Fallback: if we don't know the team anymore, don't crash; just clear glow safely.
             target.setGlowingTag(false);
         }
 

@@ -157,17 +157,14 @@ public class PharathornMarkEntity extends Entity implements Scalable {
         if (targetName != null && appliedGlowTeamName != null) {
             PlayerTeam currentTeam = scoreboard.getPlayersTeam(targetName);
 
-            // Only remove if the target is still on the same team this mark applied.
             if (currentTeam != null && appliedGlowTeamName.equals(currentTeam.getName())) {
                 scoreboard.removePlayerFromTeam(targetName, currentTeam);
             }
 
-            // Only clear the glow flag if there is no other team still owning it.
             if (target != null && scoreboard.getPlayersTeam(targetName) == null) {
                 target.setGlowingTag(false);
             }
         } else if (target != null) {
-            // Fallback: if we don't know the team anymore, don't crash; just clear glow safely.
             target.setGlowingTag(false);
         }
 

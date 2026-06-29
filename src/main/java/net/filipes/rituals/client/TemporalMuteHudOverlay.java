@@ -61,7 +61,7 @@ public class TemporalMuteHudOverlay {
         int height = mc.getWindow().getGuiScaledHeight();
 
         int a     = (int)(alpha * 90) & 0xFF;
-        int color = (a << 24) | 0x8A0000; // Deeper red vignette
+        int color = (a << 24) | 0x8A0000;
 
         guiGraphics.blit(
                 RenderPipelines.GUI_TEXTURED,
@@ -78,7 +78,7 @@ public class TemporalMuteHudOverlay {
         int textWidth = mc.font.width(label);
 
         int textAlpha = (int) (alpha * 255) & 0xFF;
-        int textColor = (textAlpha << 24) | 0xFF3333; // Light crimson text for high visibility
+        int textColor = (textAlpha << 24) | 0xFF3333;
 
         guiGraphics.text(
                 mc.font,

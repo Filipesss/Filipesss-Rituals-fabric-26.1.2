@@ -72,20 +72,17 @@ public class ShadeshatterMorphPacket implements CustomPacketPayload {
 
             int shadeshatterStage = ModDataComponents.getStage(stack);
 
-            // ── Weapon selection ──────────────────────────────────────────────
             Item chosen = MORPH_TARGETS.get(player.getRandom().nextInt(MORPH_TARGETS.size()));
             ItemStack morphed = new ItemStack(chosen);
 
-            // ── Stage gating ──────────────────────────────────────────────────
             if (shadeshatterStage >= 5) {
                 ModDataComponents.setStageMax(morphed);
             } else if (shadeshatterStage >= 3) {
-                ModDataComponents.setStage(morphed, 1 + player.getRandom().nextInt(4)); // 1–4
+                ModDataComponents.setStage(morphed, 1 + player.getRandom().nextInt(4));
             } else {
                 ModDataComponents.setStage(morphed, 1);
             }
 
-            // ── Powerup (stage 6+) ────────────────────────────────────────────
             ShadeshatterPowerup powerup = null;
             if (shadeshatterStage >= 6) {
                 ShadeshatterPowerup[] powerups = ShadeshatterPowerup.values();
@@ -95,14 +92,12 @@ public class ShadeshatterMorphPacket implements CustomPacketPayload {
                 );
             }
 
-            // ── Morph ID tag (prevents duplication) ──────────────────────────
             UUID morphId = UUID.randomUUID();
             CompoundTag morphTag = new CompoundTag();
             morphTag.putLong("MorphIdM", morphId.getMostSignificantBits());
             morphTag.putLong("MorphIdL", morphId.getLeastSignificantBits());
             morphed.set(DataComponents.CUSTOM_DATA, CustomData.of(morphTag));
 
-            // ── Swap and begin morph ──────────────────────────────────────────
             int slot = player.getInventory().getSelectedSlot();
             ItemStack original = stack.copy();
 

@@ -79,7 +79,6 @@ public class LunarFragmentModel {
 
         int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
 
-        // Separately submit the specific model parts tracking animation parameters
         buffers.submitModelPart(
                 bone, ps, RenderTypes.entityTranslucent(texture),
                 packedLight, OverlayTexture.NO_OVERLAY,

@@ -39,16 +39,13 @@ public class WarpedHudOverlay {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.gui.hud.isHidden()) return;
 
-        // Calculate frame delta time for smooth frame-rate independent fading
         long now = System.currentTimeMillis();
         long delta = now - lastTime;
         lastTime = now;
 
-        // Check if the player has the slow-zone attribute modifier (synced automatically by the server)
         var speedAttr = mc.player.getAttribute(Attributes.MOVEMENT_SPEED);
         boolean isWarped = speedAttr != null && speedAttr.getModifier(MOVEMENT_MODIFIER_ID) != null;
 
-        // Smoothly adjust alpha state
         if (isWarped) {
             alpha += (float) delta / FADE_MS;
             if (alpha > 1.0f) alpha = 1.0f;
@@ -62,7 +59,6 @@ public class WarpedHudOverlay {
         int width = mc.getWindow().getGuiScaledWidth();
         int height = mc.getWindow().getGuiScaledHeight();
 
-        // Deep blue vignette tint
         int a = (int) (alpha * 85) & 0xFF;
         int color = (a << 24) | 0x0A369B;
 
@@ -80,7 +76,6 @@ public class WarpedHudOverlay {
         String label = "[WARPED]";
         int textWidth = mc.font.width(label);
 
-        // Electric/bright blue text for readability against the dark vignette
         int textAlpha = (int) (alpha * 255) & 0xFF;
         int textColor = (textAlpha << 24) | 0x00A2FF;
 

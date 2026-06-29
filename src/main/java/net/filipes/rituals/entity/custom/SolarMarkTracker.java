@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public class SolarMarkTracker {
 
-    private static final int MARK_DURATION_TICKS = 120; // 6 seconds
+    private static final int MARK_DURATION_TICKS = 120;
 
     private static final Map<UUID, Long> MARKS = new HashMap<>();
 

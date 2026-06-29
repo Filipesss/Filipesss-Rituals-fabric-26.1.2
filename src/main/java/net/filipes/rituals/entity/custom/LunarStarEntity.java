@@ -23,19 +23,18 @@ public class LunarStarEntity extends Entity {
     private static final EntityDataAccessor<Float> FLARE =
             SynchedEntityData.defineId(LunarStarEntity.class, EntityDataSerializers.FLOAT);
 
-    // Rising spark constants
     private static final int   RISING_TICKS        = 20;
     private static final float RISING_ORBIT_RADIUS = 0.6f;
-    private static final float RISING_ORBIT_SPEED  = 0.22f;  // radians per tick
-    private static final float RISING_SPEED        = 0.06f;  // blocks per tick upward
+    private static final float RISING_ORBIT_SPEED  = 0.22f;
+    private static final float RISING_SPEED        = 0.06f;
 
-    // Rising spark references — live on the entity, moved in tick() just like CinderboltShieldEntity
+
     private SparkEntity risingSpark1;
     private SparkEntity risingSpark2;
     private float riseStartY;
 
     private UUID ownerUUID;
-    public Entity ownerEntity; // resolved client-side
+    public Entity ownerEntity;
 
     public LunarStarEntity(EntityType<? extends LunarStarEntity> type, Level level) {
         super(type, level);
@@ -53,17 +52,14 @@ public class LunarStarEntity extends Entity {
     public void tick() {
         super.tick();
 
-        // Decay flare on both sides
         float flare = entityData.get(FLARE);
         if (flare > 0f) entityData.set(FLARE, Math.max(0f, flare - 0.12f));
 
-        // Client: resolve owner for renderer
         if (level().isClientSide()) {
             ownerEntity = level().getEntity(getOwnerEntityId());
             return;
         }
 
-        // Server only below
         if (!(level() instanceof ServerLevel sl)) return;
         if (ownerUUID == null) { discard(); return; }
 
@@ -73,7 +69,6 @@ public class LunarStarEntity extends Entity {
         xo = getX(); yo = getY(); zo = getZ();
         setPos(owner.getX(), owner.getY() + 0.02, owner.getZ());
 
-        // Spawn rising sparks on tick 1 (first tick after entity is live in the world)
         if (tickCount == 1) {
             riseStartY = (float) owner.getY();
 
@@ -81,7 +76,6 @@ public class LunarStarEntity extends Entity {
             risingSpark2 = spawnRisingSpark(sl, owner, (float) Math.PI);
         }
 
-        // Reposition rising sparks every tick, exactly like CinderboltShieldEntity does
         if (tickCount <= RISING_TICKS) {
             float angle1 = tickCount * RISING_ORBIT_SPEED;
             float angle2 = angle1 + (float) Math.PI;
@@ -90,7 +84,6 @@ public class LunarStarEntity extends Entity {
             repositionRisingSpark(risingSpark1, owner, angle1, rise);
             repositionRisingSpark(risingSpark2, owner, angle2, rise);
         } else {
-            // Time's up — discard sparks if still alive
             if (risingSpark1 != null && risingSpark1.isAlive()) { risingSpark1.discard(); risingSpark1 = null; }
             if (risingSpark2 != null && risingSpark2.isAlive()) { risingSpark2.discard(); risingSpark2 = null; }
         }
@@ -108,7 +101,7 @@ public class LunarStarEntity extends Entity {
         spark.setNoGravity(true);
         spark.setDeltaMovement(Vec3.ZERO);
         spark.forcedVelocity = Vec3.ZERO;
-        spark.maxLifetime = RISING_TICKS + 5; // small buffer so tracker discards it, not the preset
+        spark.maxLifetime = RISING_TICKS + 5;
         level.addFreshEntity(spark);
         return spark;
     }

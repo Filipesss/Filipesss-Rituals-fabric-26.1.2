@@ -51,7 +51,6 @@ public record VortexSwapPacket(int targetId) implements CustomPacketPayload {
             player.setDeltaMovement(Vec3.ZERO);
             target.setDeltaMovement(Vec3.ZERO);
 
-            // Sounds at both positions — chorus for the swap, amethyst for the impact
             level.playSound(null, playerPos.x, playerPos.y, playerPos.z,
                     SoundEvents.CHORUS_FRUIT_TELEPORT, SoundSource.PLAYERS, 1.0f, 0.8f);
             level.playSound(null, playerPos.x, playerPos.y, playerPos.z,
@@ -62,10 +61,8 @@ public record VortexSwapPacket(int targetId) implements CustomPacketPayload {
             level.playSound(null, targetPos.x, targetPos.y, targetPos.z,
                     SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8f, 1.2f);
 
-            // Burst at player's OLD position
             spawnSwapBurst(level, playerPos);
 
-            // Burst at target's OLD position
             spawnSwapBurst(level, targetPos);
         });
     }
@@ -105,7 +102,6 @@ public record VortexSwapPacket(int targetId) implements CustomPacketPayload {
             level.addFreshEntity(spark);
         }
 
-        // Vanilla particles — portal swirl at ground, end rod flash upward
         level.sendParticles(net.minecraft.core.particles.ParticleTypes.PORTAL,
                 x, y, z, 20, 0.3, 0.5, 0.3, 0.5);
         level.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,

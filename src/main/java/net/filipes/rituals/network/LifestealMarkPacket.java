@@ -58,7 +58,6 @@ public class LifestealMarkPacket implements CustomPacketPayload {
             Long last = SERVER_COOLDOWNS.get(uuid);
             if (last != null && now - last < COOLDOWN_MS) return;
 
-            // Raycast for entity
             Vec3 start = player.getEyePosition();
             Vec3 end   = start.add(player.getLookAngle().scale(RAY_LENGTH));
 
@@ -79,24 +78,20 @@ public class LifestealMarkPacket implements CustomPacketPayload {
             mark.setEntityScale(1.0f);
             level.addFreshEntity(mark);
 
-
-
-            // Direction from target toward the player (for homing sparks)
             Vec3 toPlayer = player.position()
                     .add(0, player.getBbHeight() * 0.5, 0)
                     .subtract(spawnX, spawnY, spawnZ)
                     .normalize();
 
-            // LIFESTEAL_BIG sparks
             for (int i = 0; i < 8; i++) {
                 Vec3 velocity;
                 if (i < 3) {
                     velocity = toPlayer
-                            .add(randomSpread(0.35)) // was 0.15
+                            .add(randomSpread(0.35))
                             .normalize()
-                            .scale(0.5 + Math.random() * 0.4); // was 0.25
+                            .scale(0.5 + Math.random() * 0.4);
                 } else {
-                    velocity = randomSphere(0.4 + Math.random() * 0.5); // was 0.2+0.3
+                    velocity = randomSphere(0.4 + Math.random() * 0.5);
                 }
                 SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, spawnX, spawnY, spawnZ);
                 spark.applyPreset(SparkPresets.LIFESTEAL_BIG);
@@ -105,7 +100,6 @@ public class LifestealMarkPacket implements CustomPacketPayload {
                 level.addFreshEntity(spark);
             }
 
-// LIFESTEAL_SHADOWGUARD sparks
             for (int i = 0; i < 6; i++) {
                 Vec3 velocity;
                 if (i < 3) {
@@ -131,7 +125,6 @@ public class LifestealMarkPacket implements CustomPacketPayload {
         });
     }
 
-    /** Random velocity vector uniformly distributed on a sphere with the given speed. */
     private static Vec3 randomSphere(double speed) {
         double theta = Math.random() * Math.PI * 2.0;
         double phi   = Math.acos(2.0 * Math.random() - 1.0);
@@ -141,7 +134,6 @@ public class LifestealMarkPacket implements CustomPacketPayload {
                 Math.sin(phi) * Math.sin(theta) * speed);
     }
 
-    /** Small random offset to scatter the player-aimed sparks a bit. */
     private static Vec3 randomSpread(double amount) {
         return new Vec3(
                 (Math.random() - 0.5) * amount,

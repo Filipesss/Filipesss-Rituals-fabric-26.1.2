@@ -32,10 +32,8 @@ public class LightningStrikeEntityRenderer
                     .withVertexShader("core/rendertype_lightning")
                     .withFragmentShader("core/rendertype_lightning")
                     .withColorTargetState(new ColorTargetState(
-                            // FIX: Migrated SourceFactor/DestFactor constants to BlendFactor equivalents
                             new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE, BlendFactor.ONE, BlendFactor.ZERO)
                     ))
-                    // FIX: Updated layout system to match modern mappings
                     .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
                     .withPrimitiveTopology(PrimitiveTopology.QUADS)
                     .withDepthStencilState(DepthStencilState.DEFAULT)

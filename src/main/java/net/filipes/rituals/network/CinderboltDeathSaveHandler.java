@@ -16,8 +16,8 @@ import java.util.UUID;
 
 public class CinderboltDeathSaveHandler {
 
-    public static final long  COOLDOWN_MS       = 1_200_000L; // 1200s
-    public static final long  IMMUNITY_DURATION_MS = 5_000L;  // 5s
+    public static final long  COOLDOWN_MS       = 1_200_000L;
+    public static final long  IMMUNITY_DURATION_MS = 5_000L;
 
     private static final Map<UUID, Long> lastSave       = new HashMap<>();
     private static final Map<UUID, Long> immunityExpiry = new HashMap<>();
@@ -95,7 +95,7 @@ public class CinderboltDeathSaveHandler {
                     processing.remove(uuid);
                 }
 
-                return false; // cancel the killing blow
+                return false;
             }
 
             return true;

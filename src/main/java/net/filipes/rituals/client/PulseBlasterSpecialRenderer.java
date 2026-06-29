@@ -39,7 +39,6 @@ public class PulseBlasterSpecialRenderer implements SpecialModelRenderer<Unit> {
         matrices.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
         matrices.mulPose(Axis.XP.rotationDegrees(-90f));
 
-        // Use the model's updated submit-ready render method instead of an immediate buffer flush
         model.render(matrices, submitNodeCollector, light, overlay,
                 PulseBlasterCylinderState.getAngle(), PulseBlasterCylinderState.isGlowing());
 

@@ -20,8 +20,8 @@ import java.util.UUID;
 
 public class BlightedPuddleEntity extends Entity {
 
-    public static final int   LIFETIME   = 200; // 10 seconds
-    public static final int   FADE_TICKS = 20;  // 1 second fade in/out
+    public static final int   LIFETIME   = 200;
+    public static final int   FADE_TICKS = 20;
     private static final float CONTACT_RADIUS = 1.3f;
 
     private UUID ownerUUID;

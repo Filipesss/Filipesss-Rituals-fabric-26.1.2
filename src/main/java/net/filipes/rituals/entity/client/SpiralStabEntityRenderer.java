@@ -75,10 +75,10 @@ public class SpiralStabEntityRenderer extends EntityRenderer<SpiralStabEntity, S
             long seed = 31L * e.getId() + i * 1009L;
             java.util.Random rand = new java.util.Random(seed);
 
-            s.randomScale[i] = 0.7f + rand.nextFloat() * 0.7f; // 0.7x–1.4x
+            s.randomScale[i] = 0.7f + rand.nextFloat() * 0.7f;
 
             s.randomYaw[i] =
-                    (rand.nextFloat() - 0.5f) * 70f * Mth.DEG_TO_RAD; // -35° to +35°
+                    (rand.nextFloat() - 0.5f) * 70f * Mth.DEG_TO_RAD;
 
             s.randomLift[i] =
                     (rand.nextFloat() - 0.5f) * 0.8f;

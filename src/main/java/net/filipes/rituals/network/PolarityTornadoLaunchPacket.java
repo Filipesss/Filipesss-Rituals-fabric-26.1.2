@@ -23,7 +23,6 @@ public class PolarityTornadoLaunchPacket implements CustomPacketPayload {
     public static final StreamCodec<RegistryFriendlyByteBuf, PolarityTornadoLaunchPacket> CODEC =
             StreamCodec.of((buf, pkt) -> {}, buf -> new PolarityTornadoLaunchPacket());
 
-    // 8 seconds = 160 ticks
     private static final int LIFETIME_TICKS = 160;
     private static final float LAUNCH_SPEED  = 0.7f;
 
@@ -41,7 +40,6 @@ public class PolarityTornadoLaunchPacket implements CustomPacketPayload {
             boolean isRed = PolarityBowItem.isRedPolarity(player.getMainHandItem());
             ServerLevel level = player.level();
 
-            // Spawn slightly in front of the player at chest height
             Vec3 look  = player.getLookAngle();
             Vec3 spawn = player.position()
                     .add(0, 0.8, 0)

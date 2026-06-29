@@ -23,7 +23,6 @@ public class RosegoldLeggingsItem extends Item implements RitualsTooltipStyle {
         if (slot != EquipmentSlot.LEGS) return;
         if (!(entity instanceof LivingEntity living)) return;
 
-        // Speed III = amplifier 2
         living.addEffect(new MobEffectInstance(MobEffects.SPEED, 40, 2, true, false, true));
     }
 

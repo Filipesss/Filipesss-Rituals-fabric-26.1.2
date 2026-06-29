@@ -37,7 +37,6 @@ public class BlightedPuddleEntityRenderer
     public static class PuddleRenderState extends EntityRenderState {
         float alpha;
         float scale;
-        // all per-layer data derived from entity-ID seed — consistent across frames
         int[]   frame       = new int[LAYER_COUNT];
         float[] radius      = new float[LAYER_COUNT];
         float[] rotation    = new float[LAYER_COUNT];
@@ -61,7 +60,6 @@ public class BlightedPuddleEntityRenderer
 
         float tick = e.tickCount + pt;
 
-        // Fade in / steady / fade out
         float fade;
         if (tick < BlightedPuddleEntity.FADE_TICKS) {
             fade = tick / BlightedPuddleEntity.FADE_TICKS;
@@ -75,29 +73,23 @@ public class BlightedPuddleEntityRenderer
         s.alpha = Math.max(0f, Math.min(1f, fade * pulse));
         s.scale = Math.min(1f, tick / BlightedPuddleEntity.FADE_TICKS);
 
-        // Seed with entity ID — same puddle always gets the same layer layout,
-        // but different puddles look distinct. The rng call ORDER below must never change.
         Random rng = new Random(e.getId());
 
         for (int i = 0; i < LAYER_COUNT; i++) {
-            // Random starting frame offset lets each layer begin mid-cycle
             int frameOffset  = rng.nextInt(FRAME_COUNT);
             s.frame[i]       = (e.tickCount / TICKS_PER_FRAME + frameOffset) % FRAME_COUNT;
 
             s.radius[i] = BASE_RADIUS * (0.4f + rng.nextFloat() * 1.4f);
 
-            // Each layer rotates at its own random speed and direction
             float rotSpeed   = 0.7f + rng.nextFloat() * 1.5f;
             float rotDir     = rng.nextBoolean() ? 1f : -1f;
             float rotOffset  = rng.nextFloat() * 360f;
             s.rotation[i]    = tick * rotSpeed * rotDir + rotOffset;
 
-            // Per-layer opacity variation
             s.alphaFactor[i] = 0.55f + rng.nextFloat() * 0.45f;
             s.offsetX[i] = (rng.nextFloat() - 0.5f) * 0.8f;
             s.offsetZ[i] = (rng.nextFloat() - 0.5f) * 0.8f;
 
-            // Colour stays in the sickly green family but varies layer to layer
             s.r[i] = 45  + rng.nextInt(60);   // 45  – 104
             s.g[i] = 95  + rng.nextInt(70);   // 95  – 164
             s.b[i] = 15  + rng.nextInt(35);   // 15  – 49
@@ -114,10 +106,10 @@ public class BlightedPuddleEntityRenderer
         if (s.alpha <= 0f) return;
 
         ps.pushPose();
-        ps.translate(0, 0.01f, 0); // lift off ground to avoid z-fighting with terrain
+        ps.translate(0, 0.01f, 0);
 
         for (int i = 0; i < LAYER_COUNT; i++) {
-            float layerY = i * 0.003f; // tiny offset so layers don't z-fight each other
+            float layerY = i * 0.003f;
             float radius = s.radius[i] * s.scale;
             int   alpha  = (int)(s.alpha * 200 * s.alphaFactor[i]);
 

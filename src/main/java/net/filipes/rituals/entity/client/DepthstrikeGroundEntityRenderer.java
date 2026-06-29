@@ -77,7 +77,6 @@ public class DepthstrikeGroundEntityRenderer
         poseStack.mulPose(Axis.YP.rotationDegrees(-state.yRot));
         poseStack.scale(state.visualScale, state.visualScale, state.visualScale);
 
-        // Pass collector safely through the transformation stack
         model.render(poseStack, collector, 15728880, animTick);
 
         poseStack.popPose();

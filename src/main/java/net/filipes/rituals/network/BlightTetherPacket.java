@@ -44,7 +44,7 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
 
         public final SparkEntity hookSpark;
         public final SparkEntity orbitSpark;
-        public final SparkEntity radiusSpark; // Tracks the outer boundary line
+        public final SparkEntity radiusSpark;
         public double hookPhase = 0.0;
 
         public TetherInstance(UUID targetUuid, Vec3 rootPos, ResourceKey<Level> dimension,
@@ -84,20 +84,17 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
                 long durationTicks = 100; // 5 seconds
                 long expiry = start + durationTicks;
 
-                // --- INITIAL PUNCH: INSTANT IMPACT KNOCKBACK ---
                 Vec3 rawKnockbackDir = target.position().subtract(player.position());
                 Vec3 flatDir = new Vec3(rawKnockbackDir.x, 0, rawKnockbackDir.z).normalize();
                 if (rawKnockbackDir.lengthSqr() < 0.01) {
                     flatDir = new Vec3(0, 0, 1);
                 }
 
-                // Add a forceful horizontal push combined with a slight upward pop
                 target.setDeltaMovement(target.getDeltaMovement().add(flatDir.scale(0.55).add(0, 0.28, 0)));
                 if (target instanceof ServerPlayer sp) {
-                    sp.hurtMarked = true; // Sync velocity directly to the target client tracker
+                    sp.hurtMarked = true;
                 }
 
-                // --- VISUAL FX: INITIALIZE SPARKS ---
                 SparkEntity hook = new SparkEntity(ModEntities.SPARK, level, rootPosition.x, rootPosition.y + 0.2, rootPosition.z);
                 hook.applyPreset(SparkPresets.BLIGHT_TETHER_HOOK);
                 hook.setNoGravity(true);
@@ -110,7 +107,6 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
                 orbit.maxLifetime = 120;
                 level.addFreshEntity(orbit);
 
-                // Perimeter Guard Spark: Starts exactly on the outer edge
                 SparkEntity radiusSpark = new SparkEntity(ModEntities.SPARK, level, rootPosition.x + TETHER_RADIUS, rootPosition.y + 0.15, rootPosition.z);
                 radiusSpark.applyPreset(SparkPresets.BLIGHT_TETHER_BORDER);
                 radiusSpark.setNoGravity(true);

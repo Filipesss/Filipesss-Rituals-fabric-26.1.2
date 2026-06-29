@@ -29,7 +29,7 @@ public class TemporalRecallTracker {
 
     private static final int CLONE_WINDOW_TICKS  = 120;
     private static final int RECALL_TICKS        = 80;
-    private static final int SOUND_INTERVAL      = 20; // 1 s per step
+    private static final int SOUND_INTERVAL      = 20;
 
     private static final Map<UUID, RecallData> DATA = new HashMap<>();
 

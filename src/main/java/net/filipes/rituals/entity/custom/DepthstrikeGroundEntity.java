@@ -71,7 +71,6 @@ public class DepthstrikeGroundEntity extends Entity {
                     1.0f, 0.8f + this.getRandom().nextFloat() * 0.4f);
         }
 
-        // Damage + sparks at peak
         if (effectiveTick == DAMAGE_TICK && !hasDamaged) {
             hasDamaged = true;
             if (!level().isClientSide()) {

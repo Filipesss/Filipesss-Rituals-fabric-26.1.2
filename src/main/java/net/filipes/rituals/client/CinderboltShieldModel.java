@@ -119,18 +119,16 @@ public class CinderboltShieldModel {
         ps.pushPose();
         ps.translate(0.0f, 0.6f, 0.0f);
 
-        float scale = currentRadius / 1.25f; // 0 at center, 1 at full orbit
+        float scale = currentRadius / 1.25f;
         ps.scale(scale, scale, scale);
 
-        // --- PASS 1: Lightning (Only plates/trims, tips and central bone are omitted) ---
         if (!firstPerson) {
-            int energyColor = (140 << 24) | (255 << 16) | (120 << 8) | 20; // ARGB format
+            int energyColor = (140 << 24) | (255 << 16) | (120 << 8) | 20;
 
             for (ModelPart activeBone : new ModelPart[]{bone2, bone3, bone4}) {
                 ps.pushPose();
-                activeBone.translateAndRotate(ps); // Apply the active bone's position/rotation matrix
+                activeBone.translateAndRotate(ps);
 
-                // Submit only the plate/trim sub-elements to the render graph
                 buffers.submitModelPart(activeBone.getChild("main_plate"), ps, RenderTypes.lightning(), 15728880, OverlayTexture.NO_OVERLAY, null, energyColor, null);
                 buffers.submitModelPart(activeBone.getChild("trim_bottom"), ps, RenderTypes.lightning(), 15728880, OverlayTexture.NO_OVERLAY, null, energyColor, null);
                 buffers.submitModelPart(activeBone.getChild("trim_top"), ps, RenderTypes.lightning(), 15728880, OverlayTexture.NO_OVERLAY, null, energyColor, null);
@@ -140,7 +138,6 @@ public class CinderboltShieldModel {
             }
         }
 
-        // --- PASS 2: Solid Textures (Bones 2, 3, and 4 are rendered completely including their tips) ---
         if (!firstPerson) {
             int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
 

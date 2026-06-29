@@ -56,7 +56,6 @@ public class CinderboltItem extends CrossbowItem implements RitualsTooltipStyle 
                                 @Nullable LivingEntity target) {
         if (level.isClientSide()) return;
 
-        // During burst shots called from use(), charged may be empty — that's fine
         ChargedProjectiles charged = stack.get(DataComponents.CHARGED_PROJECTILES);
         boolean fromBurst = (charged == null || charged.isEmpty());
         if (!fromBurst) {

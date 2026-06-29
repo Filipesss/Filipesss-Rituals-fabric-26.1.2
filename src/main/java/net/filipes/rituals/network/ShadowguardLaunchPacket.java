@@ -62,7 +62,6 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
             player.connection.send(new ClientboundSetEntityMotionPacket(
                     player.getId(), player.getDeltaMovement()));
 
-            // Knockback nearby living entities away from the player
             AABB box = new AABB(
                     player.getX() - KNOCKBACK_RADIUS, player.getY() - 2, player.getZ() - KNOCKBACK_RADIUS,
                     player.getX() + KNOCKBACK_RADIUS, player.getY() + 4, player.getZ() + KNOCKBACK_RADIUS);
@@ -77,7 +76,7 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
                 double falloff = 1.0 - (dist / KNOCKBACK_RADIUS);
                 Vec3 impulse = diff.normalize()
                         .scale(KNOCKBACK_STRENGTH * falloff)
-                        .add(0, 0.8 * falloff, 0); // upward component increased
+                        .add(0, 0.8 * falloff, 0);
 
                 nearby.setDeltaMovement(nearby.getDeltaMovement().add(impulse));
 
@@ -86,17 +85,15 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
                             nearbyPlayer.getId(), nearbyPlayer.getDeltaMovement()));
                 }
             }
-            // Screen shake — felt by everyone nearby
             ScreenShakeEntity shake = new ScreenShakeEntity(level,
                     new Vec3(player.getX(), player.getY(), player.getZ()),
                     20f, 0.55f, 16);
             level.addFreshEntity(shake);
 
-// Mace smash shockwave particles — ground ring expanding outward
             int SMASH_POINTS = 12;
             for (int i = 0; i < SMASH_POINTS; i++) {
                 double angle = (Math.PI * 2.0 / SMASH_POINTS) * i;
-                double r = 0.3; // start close, velocity carries them outward
+                double r = 0.3;
 
                 SparkEntity smash = new SparkEntity(ModEntities.SPARK, level,
                         player.getX() + Math.cos(angle) * r,
@@ -105,12 +102,11 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
                 smash.applyPreset(SparkPresets.SHADOWGUARD_KNOCK_UP);
                 smash.forcedVelocity = new Vec3(
                         Math.cos(angle) * 0.85,
-                        0.08 + level.getRandom().nextDouble() * 0.1, // barely lifts off ground
+                        0.08 + level.getRandom().nextDouble() * 0.1,
                         Math.sin(angle) * 0.85);
                 level.addFreshEntity(smash);
             }
 
-// Inner burst — tight cluster shooting upward like debris
             for (int i = 0; i < 6; i++) {
                 double angle = (Math.PI * 2.0 / 6) * i;
                 SparkEntity debris = new SparkEntity(ModEntities.SPARK, level,
@@ -123,7 +119,6 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
                 level.addFreshEntity(debris);
             }
 
-// Mace smash vanilla particles — the ground impact cloud
             level.sendParticles(
                     net.minecraft.core.particles.ParticleTypes.EXPLOSION,
                     player.getX(), player.getY() + 0.1, player.getZ(),
@@ -133,7 +128,6 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
                     player.getX(), player.getY() + 0.1, player.getZ(),
                     6, 0.5, 0.1, 0.5, 0.02);
 
-// Sound — deep smash thud
             level.playSound(null,
                     player.getX(), player.getY(), player.getZ(),
                     net.minecraft.sounds.SoundEvents.MACE_SMASH_GROUND,
@@ -145,7 +139,6 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
                     net.minecraft.sounds.SoundSource.PLAYERS,
                     0.6f, 1.6f);
 
-// Octagonal spark burst around the player
             int POINTS = 8;
             for (int i = 0; i < POINTS; i++) {
                 double angle = (Math.PI * 2.0 / POINTS) * i;
@@ -163,7 +156,6 @@ public class ShadowguardLaunchPacket implements CustomPacketPayload {
                 level.addFreshEntity(spark);
             }
 
-// A few upward sparks from the player's position
             for (int i = 0; i < 4; i++) {
                 SparkEntity spark = new SparkEntity(ModEntities.SPARK, level,
                         player.getX() + (level.getRandom().nextDouble() - 0.5) * 0.4,

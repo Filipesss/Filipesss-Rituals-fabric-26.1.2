@@ -18,7 +18,7 @@ public class LunarFragmentEntityRenderer
     private static final float ORBIT_RADIUS = 1.1f;
     private static final float ORBIT_SPEED  = 0.04f;
     private static final float ORBIT_HEIGHT = 1.1f;
-    private static final int   INTRO_TICKS  = 15; // must match LunarFragmentEntity.INTRO_TICKS
+    private static final int   INTRO_TICKS  = 15;
 
     private final LunarFragmentModel model;
 

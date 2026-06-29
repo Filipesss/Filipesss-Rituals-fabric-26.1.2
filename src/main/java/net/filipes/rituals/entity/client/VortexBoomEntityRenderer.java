@@ -71,8 +71,6 @@ public class VortexBoomEntityRenderer
         final float half = VortexBoomEntity.QUAD_SIZE * 0.5f;
         final RenderType rt = RENDER_TYPES[s.frame];
 
-        // Reconstruct direction vector from stored yaw/pitch,
-        // mirroring Entity#calculateViewVector exactly.
         float pitchRad = s.beamPitch * (float)(Math.PI / 180.0f);
         float yawRad   = -s.beamYaw  * (float)(Math.PI / 180.0f);
         float cosYaw   = Mth.cos(yawRad);

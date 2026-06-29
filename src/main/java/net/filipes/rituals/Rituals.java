@@ -776,7 +776,6 @@ public class Rituals implements ModInitializer {
 							if (player != null) {
 								var attribute = player.getAttribute(Attributes.MAX_HEALTH);
 								if (attribute != null) {
-									// Pass the identifier instead of the UUID
 									attribute.removeModifier(BlightDrainPacket.MODIFIER_ID);
 								}
 							}
@@ -787,7 +786,6 @@ public class Rituals implements ModInitializer {
 					BlightTetherPacket.ACTIVE_TETHERS.removeIf(tether -> {
 						ServerLevel level = server.getLevel(tether.dimension);
 
-						// 1. Terminate visual systems cleanly if lifetime runs dry or level unloads
 						if (currentTime >= tether.expiryTick || level == null) {
 							if (tether.hookSpark != null && tether.hookSpark.isAlive()) tether.hookSpark.discard();
 							if (tether.orbitSpark != null && tether.orbitSpark.isAlive()) tether.orbitSpark.discard();
@@ -801,18 +799,14 @@ public class Rituals implements ModInitializer {
 							Vec3 root = tether.rootPos;
 							double distance = currentPos.distanceTo(root);
 
-							// Calculate tension ratio (0.0 at center, 1.0 at maximum boundary edge)
 							double tension = Math.min(1.0, distance / BlightTetherPacket.TETHER_RADIUS);
 
-							// 2. Escape Constraint Enforcement & Rubberbanding
 							if (distance > BlightTetherPacket.TETHER_RADIUS) {
 								Vec3 directionFromRoot = currentPos.subtract(root).normalize();
 								Vec3 boundarySnapPos = root.add(directionFromRoot.scale(BlightTetherPacket.TETHER_RADIUS));
 
-								// Hard snap to boundary line
 								living.setPos(boundarySnapPos.x, currentPos.y, boundarySnapPos.z);
 
-								// Apply elastic pull velocity vector back inside
 								Vec3 elasticPull = root.subtract(currentPos).normalize().scale(0.35);
 								living.setDeltaMovement(elasticPull.x, living.getDeltaMovement().y, elasticPull.z);
 
@@ -820,7 +814,6 @@ public class Rituals implements ModInitializer {
 									player.hurtMarked = true;
 								}
 
-								// FIX: Throttled crash bursts (Every 6 ticks) to prevent crazy entity flooding when grinding against the border
 								if (currentTime % 6 == 0) {
 									Vec3 crashOrigin = boundarySnapPos.add(0, living.getBbHeight() * 0.5, 0);
 									for (int i = 0; i < 5; i++) {
@@ -849,25 +842,19 @@ public class Rituals implements ModInitializer {
 								}
 							}
 
-							// --- VISUAL FX: LIVE TICK SYNCHRONIZATION ---
-
-							// Update Hook Spark (Middle Bouncing Spark)
 							if (tether.hookSpark != null && tether.hookSpark.isAlive()) {
 								Vec3 targetTorso = living.position().add(0, living.getBbHeight() * 0.4, 0);
 								Vec3 anchorCenter = root.add(0, 0.1, 0);
 
-								// Pure mathematical frequency blending to speed up motion seamlessly without extra fields
-								double slowPhase = (currentTime % 20) / 20.0 * Math.PI; // Base speed (slower)
-								double fastPhase = (currentTime % 7) / 7.0 * Math.PI;   // Aggressive speed (faster)
+								double slowPhase = (currentTime % 20) / 20.0 * Math.PI;
+								double fastPhase = (currentTime % 7) / 7.0 * Math.PI;
 
 								double pingPongSlow = Math.abs(Math.sin(slowPhase));
 								double pingPongFast = Math.abs(Math.sin(fastPhase));
 
-								// Blend frequencies together based on tension distance
 								double blendedPingPong = pingPongSlow + (pingPongFast - pingPongSlow) * tension;
 								Vec3 currentHookPos = anchorCenter.lerp(targetTorso, blendedPingPong);
 
-								// Physical wire strain jitter
 								if (tension > 0.5) {
 									double shakeStrength = (tension - 0.5) * 0.28;
 									currentHookPos = currentHookPos.add(
@@ -882,7 +869,6 @@ public class Rituals implements ModInitializer {
 								tether.hookSpark.forcedVelocity = Vec3.ZERO;
 							}
 
-							// Update Orbit Spark
 							if (tether.orbitSpark != null && tether.orbitSpark.isAlive()) {
 								double speed = 0.22;
 								double radius = 0.65;
@@ -897,7 +883,6 @@ public class Rituals implements ModInitializer {
 								tether.orbitSpark.forcedVelocity = Vec3.ZERO;
 							}
 
-							// Update Boundary Track Spark
 							if (tether.radiusSpark != null && tether.radiusSpark.isAlive()) {
 								long elapsedTicks = currentTime - tether.startTick;
 								long totalLifetime = tether.expiryTick - tether.startTick;
@@ -914,8 +899,6 @@ public class Rituals implements ModInitializer {
 								tether.radiusSpark.forcedVelocity = Vec3.ZERO;
 							}
 
-							// --- FIX: HIGH-DENSITY CAGE BOUNDARY LIGHTS ---
-							// Increased particle iterations to 24 per tick to explicitly paint a visible green ring layout
 							for (int i = 0; i < 24; i++) {
 								double randomAngle = level.getRandom().nextDouble() * 2.0 * Math.PI;
 								double px = root.x + Math.cos(randomAngle) * BlightTetherPacket.TETHER_RADIUS;
@@ -923,7 +906,6 @@ public class Rituals implements ModInitializer {
 								level.sendParticles(ParticleTypes.HAPPY_VILLAGER, px, root.y + 0.12, pz, 1, 0.01, 0.01, 0.01, 0.0);
 							}
 
-							// Emerald center aura
 							if (currentTime % 3 == 0) {
 								level.sendParticles(ParticleTypes.HAPPY_VILLAGER, root.x, root.y + 0.15, root.z, 5, 0.12, 0.02, 0.12, 0.01);
 							}

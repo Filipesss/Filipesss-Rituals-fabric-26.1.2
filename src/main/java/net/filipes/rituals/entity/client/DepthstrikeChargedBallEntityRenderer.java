@@ -49,7 +49,6 @@ public class DepthstrikeChargedBallEntityRenderer
                        SubmitNodeCollector collector, CameraRenderState camera) {
         poseStack.pushPose();
 
-        // Use engine scheduler directly
         model.render(poseStack, collector, 15728880, state.ageInTicks);
 
         poseStack.popPose();

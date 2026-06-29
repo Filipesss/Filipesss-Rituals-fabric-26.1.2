@@ -16,8 +16,6 @@ public class ShadeshatterPowerupTracker {
     private static final Set<UUID>                       RESET_AVAILABLE = new HashSet<>();
     private static final Set<UUID>                       GUARD          = new HashSet<>();
 
-    // ── Powerup lifecycle ─────────────────────────────────────────────────────
-
     public static void applyPowerup(ServerPlayer player, ShadeshatterPowerup powerup) {
         ACTIVE.put(player.getUUID(), powerup);
         powerup.apply(player);
@@ -36,23 +34,16 @@ public class ShadeshatterPowerupTracker {
         return ACTIVE.get(uuid);
     }
 
-    // ── First-strike ──────────────────────────────────────────────────────────
-
     public static void resetFirstStrike(UUID uuid)      { FIRST_STRIKE.add(uuid); }
     public static void clearFirstStrike(UUID uuid)      { FIRST_STRIKE.remove(uuid); }
     public static boolean consumeFirstStrike(UUID uuid) { return FIRST_STRIKE.remove(uuid); }
-
-    // ── Rapid-reset ───────────────────────────────────────────────────────────
 
     public static void setResetAvailable(UUID uuid, boolean available) {
         if (available) RESET_AVAILABLE.add(uuid);
         else           RESET_AVAILABLE.remove(uuid);
     }
 
-    /** Returns true and consumes the flag so it can only trigger once per morph. */
     public static boolean consumeReset(UUID uuid) { return RESET_AVAILABLE.remove(uuid); }
-
-    // ── Recursion guard ───────────────────────────────────────────────────────
 
     public static boolean isGuarded(UUID uuid) { return GUARD.contains(uuid); }
     public static void guard(UUID uuid)        { GUARD.add(uuid); }

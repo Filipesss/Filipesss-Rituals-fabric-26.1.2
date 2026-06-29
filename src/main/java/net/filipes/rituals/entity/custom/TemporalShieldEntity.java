@@ -283,7 +283,7 @@ public class TemporalShieldEntity extends Entity {
         DamageSource explosionSource = level().damageSources().explosion(this, this.owner);
         for (LivingEntity victim : targets) {
             victim.hurtServer((ServerLevel) level(), explosionSource, 8.0f);
-            Vec3 push = victim.position().subtract(this.position()).normalize().scale(1.4); // Aggressive outward fling
+            Vec3 push = victim.position().subtract(this.position()).normalize().scale(1.4);
             victim.setDeltaMovement(push.x, 0.5, push.z);
             victim.hurtMarked = true;
         }

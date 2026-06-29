@@ -29,7 +29,7 @@ public class ShadeshatterMorphHandler {
             ItemStack original,
             UUID morphId,
             long expiryTick,
-            @Nullable ShadeshatterPowerup powerup   // null when stage < 6
+            @Nullable ShadeshatterPowerup powerup
     ) {}
 
     private static final Map<UUID, MorphEntry> ACTIVE = new HashMap<>();
@@ -38,8 +38,6 @@ public class ShadeshatterMorphHandler {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
                 onPlayerDisconnect(handler.player));
     }
-
-    // ── Public API ────────────────────────────────────────────────────────────
 
     public static void beginMorph(ServerPlayer player, int slot, ItemStack original,
                                   UUID morphId, long durationTicks,
@@ -70,7 +68,6 @@ public class ShadeshatterMorphHandler {
                 old.expiryTick(), old.powerup()));
     }
 
-    // ── Tick ─────────────────────────────────────────────────────────────────
 
     public static void tick(MinecraftServer server) {
         ACTIVE.entrySet().removeIf(entry -> {
@@ -88,20 +85,14 @@ public class ShadeshatterMorphHandler {
         });
     }
 
-    // ── Disconnect ────────────────────────────────────────────────────────────
-
     private static void onPlayerDisconnect(ServerPlayer player) {
         MorphEntry m = ACTIVE.remove(player.getUUID());
         if (m == null) return;
         restoreMorph(player, m, player.level());
     }
 
-    // ── Shared restoration logic ──────────────────────────────────────────────
-
     private static void restoreMorph(ServerPlayer player, MorphEntry m, ServerLevel level) {
 
-        // Always clean up powerup first so attributes/effects are removed before
-        // the item is restored (avoids brief stat anomalies on the same tick).
         if (m.powerup() != null) {
             ShadeshatterPowerupTracker.removePowerup(player);
         }
@@ -109,7 +100,6 @@ public class ShadeshatterMorphHandler {
             ShadeshatterMorphPacket.applyRecharge(player.getUUID());
         }
 
-        // 1. Player's own inventory — including armor slots 36-39.
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             if (hasMorphId(player.getInventory().getItem(i), m.morphId())) {
                 if (i >= 36 && i <= 39) {
@@ -123,7 +113,6 @@ public class ShadeshatterMorphHandler {
             }
         }
 
-        // 2. Currently open container menu (chest, barrel, crafting table…)
         if (player.containerMenu != player.inventoryMenu) {
             for (Slot slot : player.containerMenu.slots) {
                 if (hasMorphId(slot.getItem(), m.morphId())) {
@@ -134,7 +123,6 @@ public class ShadeshatterMorphHandler {
             }
         }
 
-        // 3. Nearby block entity containers (closed chests the player put it in)
         BlockPos playerPos = player.blockPosition();
         for (BlockPos bp : BlockPos.betweenClosed(
                 playerPos.offset(-16, -4, -16),
@@ -151,7 +139,6 @@ public class ShadeshatterMorphHandler {
             }
         }
 
-        // 4. ThrownDepthstrike entity in flight
         var thrownDepthstrikes = level.getEntities(
                 ModEntities.THROWN_DEPTHSTRIKE,
                 player.getBoundingBox().inflate(128),
@@ -164,7 +151,6 @@ public class ShadeshatterMorphHandler {
             return;
         }
 
-        // 5. Dropped ItemEntity (item was thrown on the ground)
         List<ItemEntity> found = level.getEntitiesOfClass(
                 ItemEntity.class,
                 player.getBoundingBox().inflate(64),
@@ -175,12 +161,9 @@ public class ShadeshatterMorphHandler {
             return;
         }
 
-        // 6. Fallback: restore to original slot.
         player.getInventory().setItem(m.slot(), m.original().copy());
         player.inventoryMenu.broadcastChanges();
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     public static boolean hasMorphId(ItemStack stack, UUID morphId) {
         if (stack.isEmpty()) return false;

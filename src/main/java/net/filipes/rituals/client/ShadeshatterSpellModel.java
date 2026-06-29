@@ -18,13 +18,10 @@ public class ShadeshatterSpellModel {
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("rituals", "textures/entity/shadeshatter_spell.png");
 
-    // 6 seconds × 20 ticks/s = 120 ticks total
     private static final float DURATION = 120f;
 
-    // Keyframe times in ticks (0 s, 2 s, 4 s, 6 s)
     private static final float[] KF = { 0f, 40f, 80f, 120f };
 
-    // main bone: spins Y at -180°/s, Z tilts +2.5°/s
     private static final float[][] MAIN_KF = {
             {   0.0f,     0.0f,   0.0f },
             {   0.0f,  -360.0f,   5.0f },
@@ -32,7 +29,6 @@ public class ShadeshatterSpellModel {
             {   0.0f, -1080.0f,  15.0f },
     };
 
-    // ring bone: spins Y at -360°/s (2× main), Z tilts -8.75°/s
     private static final float[][] RING_KF = {
             {   0.0f,     0.0f,   0.0f },
             {   0.0f,  -720.0f, -17.5f },
@@ -54,20 +50,16 @@ public class ShadeshatterSpellModel {
         MeshDefinition mesh     = new MeshDefinition();
         PartDefinition partRoot = mesh.getRoot();
 
-        // Central cube (8×8×8)
         partRoot.addOrReplaceChild("main",
                 CubeListBuilder.create()
                         .texOffs(0, 14)
                         .addBox(-4.0F, -4.0F, -4.0F, 8.0F, 8.0F, 8.0F, new CubeDeformation(0.0F)),
                 PartPose.offset(0.0F, 23.0F, 0.0F));
 
-        // Ring group (flat quad child, pre-rotated slightly in model space)
         PartDefinition ringPart = partRoot.addOrReplaceChild("ring",
                 CubeListBuilder.create(),
                 PartPose.offset(0.0F, 23.0F, 0.0F));
 
-        // cube_r1: flat 14×0×14 disc, slight static tilt baked from Blockbench
-        // ModelTransform.of angles (Yarn radians) are identical in Mojang's offsetAndRotation
         ringPart.addOrReplaceChild("cube_r1",
                 CubeListBuilder.create()
                         .texOffs(0, 0)
@@ -81,7 +73,6 @@ public class ShadeshatterSpellModel {
     public void render(PoseStack poseStack, SubmitNodeCollector buffers,
                        int packedLight, float ageInTicks) {
 
-        // Clamp to animation duration so the entity never snaps back
         float t = Math.min(ageInTicks, DURATION);
 
         float[] m = sampleKeyframes(t, MAIN_KF);
@@ -91,8 +82,6 @@ public class ShadeshatterSpellModel {
         ring.xRot = toRad(r[0]); ring.yRot = toRad(r[1]); ring.zRot = toRad(r[2]);
 
         poseStack.pushPose();
-        // Pivot is at Y=23 model units; offset brings the visual centre to the entity origin.
-        // Tweak this if the orb appears above/below where you expect.
         poseStack.translate(0.0, -1.15, 0.0);
 
         int color = (255 << 24) | (255 << 16) | (255 << 8) | 255;

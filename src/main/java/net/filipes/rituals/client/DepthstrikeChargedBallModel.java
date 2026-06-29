@@ -18,7 +18,7 @@ public class DepthstrikeChargedBallModel {
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("rituals", "textures/entity/depthstrike_charged_ball.png");
 
-    private static final float PERIOD = 45f; // 2.25s × 20 ticks
+    private static final float PERIOD = 45f;
 
     private static final float[] KF = { 0f, 5f, 10f, 15f, 20f, 25f, 30f, 35f, 40f, 45f };
 
@@ -118,10 +118,8 @@ public class DepthstrikeChargedBallModel {
         poseStack.pushPose();
         poseStack.translate(0.0, -0.7, 0.0);
 
-        // Pack standard white color with full opacity (ARGB)
         int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
 
-        // Submit the entire root directly to the modern render graph
         buffers.submitModelPart(
                 root, poseStack, RenderTypes.entityTranslucent(TEXTURE),
                 packedLight, OverlayTexture.NO_OVERLAY,

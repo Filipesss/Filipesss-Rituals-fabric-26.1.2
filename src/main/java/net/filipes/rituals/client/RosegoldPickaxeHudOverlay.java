@@ -66,7 +66,6 @@ public class RosegoldPickaxeHudOverlay {
         long elapsed = System.currentTimeMillis() - lastShownTime;
         if (elapsed > DISPLAY_DURATION_MS) return;
 
-        // Fade out over the last FADE_DURATION_MS
         long timeLeft = DISPLAY_DURATION_MS - elapsed;
         float alpha = timeLeft < FADE_DURATION_MS ? (float) timeLeft / FADE_DURATION_MS : 1.0f;
         int a = (int) (alpha * 255) & 0xFF;
