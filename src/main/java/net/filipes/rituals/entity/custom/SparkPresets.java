@@ -600,6 +600,140 @@ public final class SparkPresets {
             .burstCount(0)
             .build();
 
+    public static final SparkPreset TEMPORAL_SLOW_ZONE_SINGLE = SparkPreset.builder()
+            .color(52, 117, 186)
+            .trailAmount(1)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailAlpha(45)
+            .maxLifetime(5)
+            .trailRotation(0.6f)
+            .trailJitter(0.2f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset TEMPORAL_BLUE = SparkPreset.builder()
+            .color(105, 129, 209)
+            .trailAmount(1)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailAlpha(65)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset TEMPORAL_RED = SparkPreset.builder()
+            .color(255, 66, 82)
+            .trailAmount(1)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailAlpha(65)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset TEMPORAL_GREEN = SparkPreset.builder()
+            .color(87, 247, 146)
+            .trailAmount(1)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailAlpha(65)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset TEMPORAL_PURPLE = SparkPreset.builder()
+            .color(153, 105, 209)
+            .trailAmount(1)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailAlpha(65)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset TEMPORAL_MARK_START = SparkPreset.builder()
+            .color(255, 28,28)
+            .trailAlpha(110)
+            .trailAmount(2)
+            .trailSpacing(0.03f)
+            .trailRotation(0.6f)
+            .gravity(0.06)
+            .trailJitter(0.1f)
+            .windowSize(6)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset TEMPORAL_MARK_END = SparkPreset.builder()
+            .color(255, 28, 28)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.01f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset TEMPORAL_RECALL_ORBIT = SparkPreset.builder()
+            .color(98, 87, 255)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0)
+            .trailJitter(0f)
+            .windowSize(7)
+            .burstCount(10)
+            .build();
+    public static final SparkPreset TEMPORAL_RECALL_RISE = SparkPreset.builder()
+            .color(98, 87, 255)
+            .trailAlpha(90)
+            .trailRotation(0.1f)
+            .gravity(0.06)
+            .trailJitter(0.01f)
+            .windowSize(7)
+            .burstCount(4)
+            .build();
+    public static final SparkPreset TEMPORAL_RECALL_BURST = SparkPreset.builder()
+            .color(98, 87, 255)
+            .trailAlpha(90)
+            .trailRotation(0.3f)
+            .gravity(0.12)
+            .trailJitter(0.01f)
+            .windowSize(5)
+            .trailAmount(2)
+            .trailSpacing(0.05f)
+            .burstCount(10)
+            .build();
+    public static final  SparkPreset SHADESHATTER_SPELL_IMPACT = SparkPreset.builder()
+            .color(133, 255, 212)
+            .trailAmount(1)
+            .gravity(0.06)
+            .windowSize(4)
+            .trailAlpha(95)
+            .trailJitter(0.05f)
+            .burstCount(3)
+            .trailRotation(0.05f)
+            .build();
+    public static final SparkPreset SHADESHATTER_WORMHOLE_SIDE = SparkPreset.builder()
+            .color(218, 71, 255)
+            .trailAmount(1)
+            .gravity(0)
+            .windowSize(5)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
+            .burstCount(0)
+            .build();
+    public static final SparkPreset SHADESHATTER_WORMHOLE_ORBIT = SparkPreset.builder()
+            .color(218, 71, 255)
+            .trailAmount(3)
+            .gravity(0.07)
+            .windowSize(5)
+            .trailSpacing(0.04f)
+            .trailRotation(0.3f)
+            .trailGapChance(0.05f)
+            .trailAlpha(95)
+            .maxLifetime(200)
+            .trailJitter(0.02f)
+            .burstCount(0)
+            .build();
+
 
 
 
@@ -661,6 +795,19 @@ public final class SparkPresets {
         register("polarity_blue_double", POLARITY_BLUE_DOUBLE);
         register("polarity_blue_shield", POLARITY_BLUE_SHIELD);
         register("polarity_red_shield", POLARITY_RED_SHIELD);
+        register("temporal_slow_zone_single", TEMPORAL_SLOW_ZONE_SINGLE);
+        register("temporal_red", TEMPORAL_RED);
+        register("temporal_blue", TEMPORAL_BLUE);
+        register("temporal_green", TEMPORAL_GREEN);
+        register("temporal_purple", TEMPORAL_PURPLE);
+        register("temporal_mark_start", TEMPORAL_MARK_START);
+        register("temporal_mark_end", TEMPORAL_MARK_END);
+        register("temporal_recall_orbit", TEMPORAL_RECALL_ORBIT);
+        register("temporal_recall_burst", TEMPORAL_RECALL_BURST);
+        register("temporal_recall_rise", TEMPORAL_RECALL_RISE);
+        register("shadeshatter_spell_impact", SHADESHATTER_SPELL_IMPACT);
+        register("shadeshatter_wormhole_side", SHADESHATTER_WORMHOLE_SIDE);
+        register("shadeshatter_wormhole_orbit", SHADESHATTER_WORMHOLE_ORBIT);
 
     }
     public static Optional<String> nameOf(SparkPreset preset) {

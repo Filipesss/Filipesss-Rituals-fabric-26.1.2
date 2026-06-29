@@ -4,8 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.filipes.rituals.client.DepthstrikeGroundModel;
 import net.filipes.rituals.entity.custom.DepthstrikeGroundEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -60,7 +58,6 @@ public class DepthstrikeGroundEntityRenderer
         if (state.ageInTicks < state.delayTicks) return;
 
         float animTick = state.ageInTicks - state.delayTicks;
-
         final float BURIED_DEPTH = 1.5f;
 
         float yOffset;
@@ -75,14 +72,14 @@ public class DepthstrikeGroundEntityRenderer
             yOffset = -BURIED_DEPTH * (t * t);
         }
 
-        MultiBufferSource bufferSource = Minecraft.getInstance()
-                .renderBuffers().bufferSource();
-
         poseStack.pushPose();
         poseStack.translate(0.0, yOffset, 0.0);
         poseStack.mulPose(Axis.YP.rotationDegrees(-state.yRot));
         poseStack.scale(state.visualScale, state.visualScale, state.visualScale);
-        model.render(poseStack, bufferSource, 15728880, animTick);
+
+        // Pass collector safely through the transformation stack
+        model.render(poseStack, collector, 15728880, animTick);
+
         poseStack.popPose();
     }
 

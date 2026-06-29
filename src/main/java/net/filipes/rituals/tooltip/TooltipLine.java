@@ -1,9 +1,8 @@
 package net.filipes.rituals.tooltip;
 
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextColor;
+import net.minecraft.network.chat.*;
+import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,23 @@ public class TooltipLine {
         return result;
     }
 
+    public enum TooltipFont {
+        DEFAULT(null),
+        MINECRAFT_FIVE(Identifier.fromNamespaceAndPath("rituals", "minecraftfive"));
+
+        @Nullable
+        private final Identifier id;
+
+        TooltipFont(@Nullable Identifier id) {
+            this.id = id;
+        }
+
+        @Nullable
+        public FontDescription.Resource getDescription() {
+            return id != null ? new FontDescription.Resource(id) : null;
+        }
+    }
+
     private record Segment(
             String text,
             boolean translatable,
@@ -42,26 +58,35 @@ public class TooltipLine {
             boolean italic,
             boolean underline,
             boolean strikethrough,
-            boolean obfuscated
+            boolean obfuscated,
+            TooltipFont font
     ) {
         MutableComponent toComponent() {
             MutableComponent c = translatable
                     ? Component.translatable(text)
                     : Component.literal(text);
-            return c.withStyle(Style.EMPTY
+
+            Style style = Style.EMPTY
                     .withColor(TextColor.fromRgb(color))
                     .withBold(bold)
                     .withItalic(italic)
                     .withUnderlined(underline)
                     .withStrikethrough(strikethrough)
-                    .withObfuscated(obfuscated));
+                    .withObfuscated(obfuscated);
+
+            if (font != TooltipFont.DEFAULT && font.getDescription() != null) {
+                style = style.withFont(font.getDescription());
+            }
+
+            return c.withStyle(style);
         }
 
-        Segment withBold()          { return new Segment(text, translatable, color, true,  italic,  underline, strikethrough, obfuscated); }
-        Segment withItalic()        { return new Segment(text, translatable, color, bold,  true,    underline, strikethrough, obfuscated); }
-        Segment withUnderline()     { return new Segment(text, translatable, color, bold,  italic,  true,      strikethrough, obfuscated); }
-        Segment withStrikethrough() { return new Segment(text, translatable, color, bold,  italic,  underline, true,          obfuscated); }
-        Segment withObfuscated()    { return new Segment(text, translatable, color, bold,  italic,  underline, strikethrough, true);       }
+        Segment withBold()          { return new Segment(text, translatable, color, true,  italic,  underline, strikethrough, obfuscated, font); }
+        Segment withItalic()        { return new Segment(text, translatable, color, bold,  true,    underline, strikethrough, obfuscated, font); }
+        Segment withUnderline()     { return new Segment(text, translatable, color, bold,  italic,  true,      strikethrough, obfuscated, font); }
+        Segment withStrikethrough() { return new Segment(text, translatable, color, bold,  italic,  underline, true,          obfuscated, font); }
+        Segment withObfuscated()    { return new Segment(text, translatable, color, bold,  italic,  underline, strikethrough, true,       font); }
+        Segment withFont(TooltipFont newFont) { return new Segment(text, translatable, color, bold,  italic,  underline, strikethrough, obfuscated, newFont); }
     }
 
     public static class Builder {
@@ -69,12 +94,12 @@ public class TooltipLine {
         private final List<Segment> segments = new ArrayList<>();
 
         public Builder literal(String text, int hexColor) {
-            segments.add(new Segment(text, false, hexColor, false, false, false, false, false));
+            segments.add(new Segment(text, false, hexColor, false, false, false, false, false, TooltipFont.DEFAULT));
             return this;
         }
 
         public Builder translated(String key, int hexColor) {
-            segments.add(new Segment(key, true, hexColor, false, false, false, false, false));
+            segments.add(new Segment(key, true, hexColor, false, false, false, false, false, TooltipFont.DEFAULT));
             return this;
         }
 
@@ -83,6 +108,9 @@ public class TooltipLine {
         public Builder underline()     { replaceLast(last().withUnderline());     return this; }
         public Builder strikethrough() { replaceLast(last().withStrikethrough()); return this; }
         public Builder obfuscated()    { replaceLast(last().withObfuscated());    return this; }
+
+        public Builder font(TooltipFont font) { replaceLast(last().withFont(font)); return this; }
+        public Builder minecraftFive()        { replaceLast(last().withFont(TooltipFont.MINECRAFT_FIVE)); return this; }
 
         public TooltipLine build() {
             return new TooltipLine(new ArrayList<>(segments));

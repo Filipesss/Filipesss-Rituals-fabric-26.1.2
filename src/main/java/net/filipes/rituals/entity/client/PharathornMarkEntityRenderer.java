@@ -51,8 +51,8 @@ public class PharathornMarkEntityRenderer
         s.relY       = (float)(eY - s.y);
         s.relZ       = (float)(eZ - s.z);
         s.frame      = e.getCurrentFrame();
-        s.cameraYaw  = net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera().yRot();
-        s.cameraPitch= net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera().xRot();
+        s.cameraYaw  = net.minecraft.client.Minecraft.getInstance().gameRenderer.mainCamera().yRot();
+        s.cameraPitch= net.minecraft.client.Minecraft.getInstance().gameRenderer.mainCamera().xRot();
         s.scale      = e.getEntityScale();
     }
 

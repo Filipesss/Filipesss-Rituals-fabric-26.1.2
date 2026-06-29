@@ -19,7 +19,9 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.TeamColor;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class LunarMarkEntity extends Entity implements Scalable {
@@ -154,7 +156,7 @@ public class LunarMarkEntity extends Entity implements Scalable {
         PlayerTeam team = scoreboard.getPlayerTeam(GLOW_TEAM);
         if (team == null) {
             team = scoreboard.addPlayerTeam(GLOW_TEAM);
-            team.setColor(ChatFormatting.AQUA);
+            team.setColor(Optional.of(TeamColor.AQUA));
             team.setNameTagVisibility(net.minecraft.world.scores.Team.Visibility.NEVER);
         }
 

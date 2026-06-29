@@ -42,7 +42,7 @@ public class RosegoldPickaxeHudOverlay {
 
     private static void render(GuiGraphicsExtractor guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.options.hideGui) return;
+        if (mc.player == null || mc.gui.hud.isHidden()) return;
 
         ItemStack stack = mc.player.getMainHandItem();
         boolean holdingPickaxe = stack.getItem() instanceof RosegoldPickaxeItem;

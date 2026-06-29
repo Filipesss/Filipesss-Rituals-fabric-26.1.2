@@ -249,6 +249,17 @@ public class ModItems {
                                     Component.translatable("tooltip.rituals.lightning_rapier")
                                             .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
                             ))));
+    public static final Item SHADESHATTER = registerItem("shadeshatter",
+            settings -> new ShadeshatterItem(ModToolMaterials.ROSEGOLD, 4.0F, -2.6F, settings),
+            new Item.Properties()
+                    .stacksTo(1)
+                    .fireResistant()
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+                    .component(DataComponents.LORE,
+                            new ItemLore(List.of(
+                                    Component.translatable("tooltip.rituals.shadeshatter")
+                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0xBB55FF)).withItalic(false))
+                            ))));
 
 
 

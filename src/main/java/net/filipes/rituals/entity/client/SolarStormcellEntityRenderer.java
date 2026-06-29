@@ -3,8 +3,6 @@ package net.filipes.rituals.entity.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.filipes.rituals.client.SolarStormcellModel;
 import net.filipes.rituals.entity.custom.SolarStormcellEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -42,9 +40,9 @@ public class SolarStormcellEntityRenderer
     @Override
     public void submit(SolarStormcellRenderState state, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
-        MultiBufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         ps.pushPose();
-        model.render(ps, buffers, 15728880, state.ageInTicks);
+        // Pass the collector downstream directly to the model
+        model.render(ps, snc, 15728880, state.ageInTicks);
         ps.popPose();
     }
 

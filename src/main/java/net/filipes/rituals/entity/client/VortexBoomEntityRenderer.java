@@ -57,7 +57,7 @@ public class VortexBoomEntityRenderer
         s.beamPitch = e.getBeamPitch();
         s.beamLength = e.getBeamLength();
         s.frame     = e.getCurrentFrame();
-        s.cameraYaw = Minecraft.getInstance().gameRenderer.getMainCamera().yRot();
+        s.cameraYaw = Minecraft.getInstance().gameRenderer.mainCamera().yRot();
     }
 
     @Override public boolean affectedByCulling(VortexBoomEntity e) { return false; }

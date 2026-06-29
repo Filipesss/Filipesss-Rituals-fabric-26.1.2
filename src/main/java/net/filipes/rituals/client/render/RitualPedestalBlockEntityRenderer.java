@@ -2,9 +2,7 @@ package net.filipes.rituals.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.filipes.rituals.blocks.entity.RitualPedestalBlockEntity;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -75,9 +73,6 @@ public class RitualPedestalBlockEntityRenderer
                        CameraRenderState camera) {
         if (state.lines.isEmpty()) return;
 
-        MultiBufferSource.BufferSource bufferSource =
-                Minecraft.getInstance().renderBuffers().bufferSource();
-
         poseStack.pushPose();
         poseStack.translate(0.5, 2.0, 0.5);
         poseStack.mulPose(camera.orientation);
@@ -86,20 +81,23 @@ public class RitualPedestalBlockEntityRenderer
         float y = 0f;
         for (FormattedCharSequence line : state.lines) {
             float x = -font.width(line) / 2f;
-            font.drawInBatch(
-                    line, x, y,
-                    0xFFFFFF,
-                    false,
-                    poseStack.last().pose(),
-                    bufferSource,
+
+            // Defers text rendering securely to the engine queue without interrupting the batched passes
+            collector.submitText(
+                    poseStack,
+                    x,
+                    y,
+                    line,
+                    false, // shadow
                     Font.DisplayMode.SEE_THROUGH,
-                    0,
-                    0xF000F0
+                    0xF000F0, // max light coordinates
+                    0xFFFFFFFF, // white text color (ARGB)
+                    0, // background color
+                    0  // outline color
             );
             y += font.lineHeight + 1;
         }
 
-        bufferSource.endBatch();
         poseStack.popPose();
     }
 }

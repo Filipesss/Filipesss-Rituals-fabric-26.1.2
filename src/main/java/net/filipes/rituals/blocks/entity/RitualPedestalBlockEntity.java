@@ -20,6 +20,7 @@ import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -87,7 +88,7 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
             if (existing == null || existing.isRemoved()) displayEntityUuid = null;
         }
         if (displayEntityUuid == null) {
-            Display.TextDisplay display = new Display.TextDisplay(EntityType.TEXT_DISPLAY, serverLevel);
+            Display.TextDisplay display = new Display.TextDisplay(EntityTypes.TEXT_DISPLAY, serverLevel);
             display.setPos(
                     worldPosition.getX() + 0.5,
                     worldPosition.getY() + 1.8,
@@ -116,7 +117,7 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
                 if (rewardDisplayUuid == null) {
                     ItemStack preview = type.createReward(serverLevel.registryAccess());
                     Display.ItemDisplay itemDisplay = new Display.ItemDisplay(
-                            EntityType.ITEM_DISPLAY, serverLevel);
+                            EntityTypes.ITEM_DISPLAY, serverLevel);
                     itemDisplay.setPos(
                             worldPosition.getX() + 0.5,
                             worldPosition.getY() + 1.5,

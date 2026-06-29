@@ -1,6 +1,20 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "rituals:item/temporal_glassreaver"
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "crit",
+        "model": {
+          "type": "minecraft:model",
+          "model": "rituals:item/temporal_glassreaver_crit"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "rituals:item/temporal_glassreaver"
+    }
   }
 }

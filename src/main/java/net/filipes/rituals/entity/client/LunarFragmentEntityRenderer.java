@@ -4,8 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.filipes.rituals.client.LunarFragmentModel;
 import net.filipes.rituals.entity.custom.LunarFragmentEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -75,26 +73,18 @@ public class LunarFragmentEntityRenderer
     @Override
     public void submit(LunarFragmentRenderState state, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
-
-        MultiBufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-
         if (state.launched) {
-
             ps.pushPose();
             ps.mulPose(Axis.YP.rotationDegrees(state.ageInTicks * 18f));
-            model.render(ps, buffers, 15728880, state.ageInTicks);
+            model.render(ps, snc, 15728880, state.ageInTicks);
             ps.popPose();
-
         } else {
-
-            float t          = state.ageInTicks;
+            float t = state.ageInTicks;
             float slotOffset = state.slot * (float)(Math.PI * 2.0 / 4);
 
-            float angle = t * ORBIT_SPEED + slotOffset
-                    + (float)Math.sin(t * 0.031f + slotOffset) * 0.35f;
-            float r     = ORBIT_RADIUS
-                    + (float)Math.sin(t * 0.027f + slotOffset * 1.3f) * 0.25f;
-            float bob   = (float)Math.sin(t * 0.07f + slotOffset * 0.9f) * 0.35f;
+            float angle = t * ORBIT_SPEED + slotOffset + (float)Math.sin(t * 0.031f + slotOffset) * 0.35f;
+            float r = ORBIT_RADIUS + (float)Math.sin(t * 0.027f + slotOffset * 1.3f) * 0.25f;
+            float bob = (float)Math.sin(t * 0.07f + slotOffset * 0.9f) * 0.35f;
 
             float offsetX = (float)Math.cos(angle) * r;
             float offsetY = ORBIT_HEIGHT + bob;
@@ -102,19 +92,16 @@ public class LunarFragmentEntityRenderer
 
             if (t < INTRO_TICKS) {
                 float introP = t / (float) INTRO_TICKS;
-                float eased  = 1.0f - (float) Math.pow(1.0f - introP, 3.0f);
+                float eased = 1.0f - (float) Math.pow(1.0f - introP, 3.0f);
                 offsetX *= eased;
                 offsetY *= eased;
                 offsetZ *= eased;
             }
 
             ps.pushPose();
-            ps.translate(state.ownerOffsetX + offsetX,
-                    state.ownerOffsetY + offsetY,
-                    state.ownerOffsetZ + offsetZ);
-
+            ps.translate(state.ownerOffsetX + offsetX, state.ownerOffsetY + offsetY, state.ownerOffsetZ + offsetZ);
             ps.mulPose(Axis.YP.rotationDegrees(t * 3f));
-            model.render(ps, buffers, 15728880, t);
+            model.render(ps, snc, 15728880, t);
             ps.popPose();
         }
     }

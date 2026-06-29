@@ -6,7 +6,6 @@ import com.mojang.math.Axis;
 import net.filipes.rituals.entity.custom.ShadowguardGrappleEntity;
 import net.filipes.rituals.item.ModItems;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -49,14 +48,12 @@ public class ShadowguardGrappleEntityRenderer
         state.entityPos  = entity.position();
         state.yRot = entity.getYRot();
 
-        // Force shadowguard_v4 model via CustomModelData stage=6
         ItemStack stack = new ItemStack(ModItems.SHADOWGUARD);
         stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(
                 List.of(6f), List.of(), List.of(), List.of()));
         state.stack = stack;
 
         Entity owner = entity.getOwner();
-        // Attach chain lower — use waist height instead of eye height
         state.ownerPos = (owner != null)
                 ? owner.position().add(0, owner.getBbHeight() * 0.5, 0)
                 : entity.position();
@@ -77,16 +74,11 @@ public class ShadowguardGrappleEntityRenderer
     public void submit(ShadowguardGrappleRenderState state, PoseStack poseStack,
                        SubmitNodeCollector collector, CameraRenderState camera) {
 
-        MultiBufferSource bufferSource = Minecraft.getInstance()
-                .renderBuffers().bufferSource();
-
-        renderChain(state, poseStack, bufferSource);
+        // FIX: Hand over the collector directly to process custom geometry snapshots per-segment
+        renderChain(state, poseStack, collector);
 
         poseStack.pushPose();
-
-// Cancel out the entity's own yaw so spin is always world-upright
         poseStack.mulPose(Axis.YP.rotationDegrees(-state.yRot));
-
         poseStack.mulPose(Axis.YP.rotationDegrees(90f));
         poseStack.mulPose(Axis.ZP.rotationDegrees(90f));
         poseStack.mulPose(Axis.ZP.rotationDegrees(state.hooked ? 0f : state.ageInTicks * 54f));
@@ -96,18 +88,14 @@ public class ShadowguardGrappleEntityRenderer
                 state.lightCoords, OverlayTexture.NO_OVERLAY, 0);
 
         poseStack.popPose();
-
     }
-
 
     private void renderChain(ShadowguardGrappleRenderState state,
                              PoseStack poseStack,
-                             MultiBufferSource bufferSource) {
+                             SubmitNodeCollector collector) {
         Vec3 fromEntity = state.ownerPos.subtract(state.entityPos);
         double length = fromEntity.length();
         if (length < 0.1) return;
-
-        VertexConsumer vc = bufferSource.getBuffer(RenderTypes.entityCutout(CHAIN_TEXTURE));
 
         int segments = Math.max(6, (int)(length * 1.2));
         float hw = 0.12f;
@@ -148,35 +136,35 @@ public class ShadowguardGrappleEntityRenderer
             poseStack.mulPose(mat);
 
             float segLen = (float)new Vec3(x1-x0, y1-y0, z1-z0).length() * 0.55f;
-            PoseStack.Pose pose = poseStack.last();
             float cos45 = 0.7071f, sin45 = 0.7071f;
             float ax = hw * cos45, ay = hw * sin45;
 
-            // Plane A
-            vc.addVertex(pose, -ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
-            vc.addVertex(pose,  ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
-            vc.addVertex(pose,  ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
-            vc.addVertex(pose, -ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+            // FIX: Use submitCustomGeometry inside the loop to snapshot the calculated segment transformations
+            collector.submitCustomGeometry(poseStack, RenderTypes.entityCutout(CHAIN_TEXTURE), (pose, vc) -> {
+                // Plane A
+                vc.addVertex(pose, -ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+                vc.addVertex(pose,  ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+                vc.addVertex(pose,  ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+                vc.addVertex(pose, -ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
 
-            vc.addVertex(pose, -ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
-            vc.addVertex(pose,  ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
-            vc.addVertex(pose,  ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
-            vc.addVertex(pose, -ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose, -ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose,  ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose,  ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose, -ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
 
-            // Plane B
-            vc.addVertex(pose,  ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
-            vc.addVertex(pose, -ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
-            vc.addVertex(pose, -ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
-            vc.addVertex(pose,  ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+                // Plane B
+                vc.addVertex(pose,  ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+                vc.addVertex(pose, -ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+                vc.addVertex(pose, -ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
+                vc.addVertex(pose,  ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,1,0);
 
-            vc.addVertex(pose,  ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
-            vc.addVertex(pose, -ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
-            vc.addVertex(pose, -ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
-            vc.addVertex(pose,  ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose,  ax,  ay,  segLen).setColor(255,255,255,255).setUv(0,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose, -ax, -ay,  segLen).setColor(255,255,255,255).setUv(1,1).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose, -ax, -ay, -segLen).setColor(255,255,255,255).setUv(1,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+                vc.addVertex(pose,  ax,  ay, -segLen).setColor(255,255,255,255).setUv(0,0).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,0,-1,0);
+            });
 
             poseStack.popPose();
         }
     }
-
-
 }

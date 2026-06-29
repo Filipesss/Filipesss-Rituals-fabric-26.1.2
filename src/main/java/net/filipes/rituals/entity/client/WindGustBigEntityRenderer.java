@@ -50,7 +50,7 @@ public class WindGustBigEntityRenderer
         s.relZ = (float)(eZ - s.z);
         s.frame      = e.getCurrentFrame();
         s.cameraYaw  = e.level().getLevelData() != null
-                ? net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera().yRot()
+                ? net.minecraft.client.Minecraft.getInstance().gameRenderer.mainCamera().yRot()
                 : 0f;
         s.scale = e.getEntityScale();
     }

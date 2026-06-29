@@ -1,14 +1,12 @@
 package net.filipes.rituals.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.SubmitNodeCollection;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
@@ -21,10 +19,6 @@ public class CinderboltShieldModel {
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("rituals", "textures/entity/cinderbolt_shield.png");
 
-    private static final Identifier WHITE_TEXTURE =
-            Identifier.fromNamespaceAndPath("rituals", "textures/entity/white.png");
-
-
     private static final float SPIN_DEG_PER_TICK = -6.0f;
 
     private final ModelPart root;
@@ -32,9 +26,6 @@ public class CinderboltShieldModel {
     private final ModelPart bone2;
     private final ModelPart bone3;
     private final ModelPart bone4;
-    private final ModelPart tipLeft2, tipLeft3, tipLeft4;
-    private final ModelPart tipRight2, tipRight3, tipRight4;
-
 
     public CinderboltShieldModel(ModelPart root) {
         this.root  = root;
@@ -42,12 +33,6 @@ public class CinderboltShieldModel {
         this.bone2 = root.getChild("bone2");
         this.bone3 = root.getChild("bone3");
         this.bone4 = root.getChild("bone4");
-        this.tipLeft2  = bone2.getChild("tip_left");
-        this.tipLeft3  = bone3.getChild("tip_left");
-        this.tipLeft4  = bone4.getChild("tip_left");
-        this.tipRight2 = bone2.getChild("tip_right");
-        this.tipRight3 = bone3.getChild("tip_right");
-        this.tipRight4 = bone4.getChild("tip_right");
     }
 
     public static LayerDefinition createBodyLayer() {
@@ -124,7 +109,7 @@ public class CinderboltShieldModel {
                         0.0F, 0.0F, 0.1745F));
     }
 
-    public void render(PoseStack ps, MultiBufferSource buffers,
+    public void render(PoseStack ps, SubmitNodeCollector buffers,
                        int packedLight, float ageInTicks, boolean firstPerson, float currentRadius) {
 
         bone2.yRot = toRad(SPIN_DEG_PER_TICK * ageInTicks);
@@ -136,51 +121,41 @@ public class CinderboltShieldModel {
 
         float scale = currentRadius / 1.25f; // 0 at center, 1 at full orbit
         ps.scale(scale, scale, scale);
-        bone.visible = false;
-        tipLeft2.visible = false; tipLeft3.visible = false; tipLeft4.visible = false;
-        tipRight2.visible = false; tipRight3.visible = false; tipRight4.visible = false;
 
+        // --- PASS 1: Lightning (Only plates/trims, tips and central bone are omitted) ---
         if (!firstPerson) {
-            VertexConsumer fillVc = new ForcedColorConsumer(
-                    buffers.getBuffer(RenderTypes.lightning()),
-                    255, 120, 20, 140);
-            root.render(ps, fillVc, 15728880, OverlayTexture.NO_OVERLAY);
+            int energyColor = (140 << 24) | (255 << 16) | (120 << 8) | 20; // ARGB format
+
+            for (ModelPart activeBone : new ModelPart[]{bone2, bone3, bone4}) {
+                ps.pushPose();
+                activeBone.translateAndRotate(ps); // Apply the active bone's position/rotation matrix
+
+                // Submit only the plate/trim sub-elements to the render graph
+                buffers.submitModelPart(activeBone.getChild("main_plate"), ps, RenderTypes.lightning(), 15728880, OverlayTexture.NO_OVERLAY, null, energyColor, null);
+                buffers.submitModelPart(activeBone.getChild("trim_bottom"), ps, RenderTypes.lightning(), 15728880, OverlayTexture.NO_OVERLAY, null, energyColor, null);
+                buffers.submitModelPart(activeBone.getChild("trim_top"), ps, RenderTypes.lightning(), 15728880, OverlayTexture.NO_OVERLAY, null, energyColor, null);
+                buffers.submitModelPart(activeBone.getChild("back_plate"), ps, RenderTypes.lightning(), 15728880, OverlayTexture.NO_OVERLAY, null, energyColor, null);
+
+                ps.popPose();
+            }
         }
 
-        tipLeft2.visible = true; tipLeft3.visible = true; tipLeft4.visible = true;
-        tipRight2.visible = true; tipRight3.visible = true; tipRight4.visible = true;
-
+        // --- PASS 2: Solid Textures (Bones 2, 3, and 4 are rendered completely including their tips) ---
         if (!firstPerson) {
-            root.render(ps, buffers.getBuffer(RenderTypes.entityTranslucent(TEXTURE)),
-                    15728880, OverlayTexture.NO_OVERLAY);
+            int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
+
+            buffers.submitModelPart(bone2, ps, RenderTypes.entityTranslucent(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, mainColor, null);
+            buffers.submitModelPart(bone3, ps, RenderTypes.entityTranslucent(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, mainColor, null);
+            buffers.submitModelPart(bone4, ps, RenderTypes.entityTranslucent(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, mainColor, null);
         } else {
-            // Almost fully transparent, no glow, just a ghost hint
-            VertexConsumer ghostVc = new ForcedColorConsumer(
-                    buffers.getBuffer(RenderTypes.eyes(TEXTURE)),
-                    255, 255, 255, 100);
-            root.render(ps, ghostVc, 15728880, OverlayTexture.NO_OVERLAY);
+            int ghostColor = (100 << 24) | (255 << 16) | (255 << 8) | 255;
+
+            buffers.submitModelPart(bone2, ps, RenderTypes.eyes(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, ghostColor, null);
+            buffers.submitModelPart(bone3, ps, RenderTypes.eyes(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, ghostColor, null);
+            buffers.submitModelPart(bone4, ps, RenderTypes.eyes(TEXTURE), 15728880, OverlayTexture.NO_OVERLAY, null, ghostColor, null);
         }
 
-        bone.visible = true;
         ps.popPose();
-    }
-    private static final class ForcedColorConsumer implements VertexConsumer {
-        private final VertexConsumer inner;
-        private final int r, g, b, a;
-
-        ForcedColorConsumer(VertexConsumer inner, int r, int g, int b, int a) {
-            this.inner = inner;
-            this.r = r; this.g = g; this.b = b; this.a = a;
-        }
-
-        @Override public VertexConsumer addVertex(float x, float y, float z)  { inner.addVertex(x, y, z); return this; }
-        @Override public VertexConsumer setColor(int r, int g, int b, int a)   { inner.setColor(this.r, this.g, this.b, this.a); return this; }
-        @Override public VertexConsumer setColor(int argb)                     { inner.setColor(this.a << 24 | this.r << 16 | this.g << 8 | this.b); return this; }
-        @Override public VertexConsumer setUv(float u, float v)                { inner.setUv(u, v); return this; }
-        @Override public VertexConsumer setUv1(int u, int v)                   { inner.setUv1(u, v); return this; }
-        @Override public VertexConsumer setUv2(int u, int v)                   { inner.setUv2(u, v); return this; }
-        @Override public VertexConsumer setNormal(float x, float y, float z)   { inner.setNormal(x, y, z); return this; }
-        @Override public VertexConsumer setLineWidth(float width)              { inner.setLineWidth(width); return this; }
     }
 
     private static float toRad(float deg) {

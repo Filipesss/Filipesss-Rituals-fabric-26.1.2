@@ -13,7 +13,16 @@
     "EnchantmentHelperMixin",
     "ItemEntityDespawnMixin",
     "EntityInvulnerabilityMixin",
-    "ItemStackGlintMixin"
+    "ItemStackGlintMixin",
+    "PlayerAttackMixin",
+    "LivingEntitySwingMixin",
+    "EntityTemporalFreezeMixin",
+    "LivingEntityTemporalFreezeMixin",
+    "ArrowTemporalFreezeMixin",
+    "ThrowableProjectileTemporalFreezeMixin",
+    "AbstractHurtingProjectileTemporalFreezeMixin",
+    "ItemEntityTemporalFreezeMixin",
+    "PrimedTntTemporalFreezeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

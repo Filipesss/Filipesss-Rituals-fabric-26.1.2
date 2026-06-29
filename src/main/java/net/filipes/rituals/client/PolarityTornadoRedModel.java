@@ -1,13 +1,12 @@
 package net.filipes.rituals.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
@@ -61,7 +60,7 @@ public class PolarityTornadoRedModel {
         return LayerDefinition.create(meshDefinition, 128, 128);
     }
 
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource,
+    public void render(PoseStack poseStack, SubmitNodeCollector buffers,
                        int light, float ageInTicks) {
 
         poseStack.pushPose();
@@ -72,12 +71,25 @@ public class PolarityTornadoRedModel {
         this.bone2.yRot = ageInTicks * 0.50f;
         this.bone3.yRot = ageInTicks * 0.55f;
 
-        VertexConsumer consumer = bufferSource.getBuffer(
-                RenderTypes.entityCutout(TEXTURE));
+        int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
 
-        this.bone.render(poseStack,  consumer, light, OverlayTexture.NO_OVERLAY);
-        this.bone2.render(poseStack, consumer, light, OverlayTexture.NO_OVERLAY);
-        this.bone3.render(poseStack, consumer, light, OverlayTexture.NO_OVERLAY);
+        buffers.submitModelPart(
+                this.bone, poseStack, RenderTypes.entityCutout(TEXTURE),
+                light, OverlayTexture.NO_OVERLAY,
+                null, mainColor, null
+        );
+
+        buffers.submitModelPart(
+                this.bone2, poseStack, RenderTypes.entityCutout(TEXTURE),
+                light, OverlayTexture.NO_OVERLAY,
+                null, mainColor, null
+        );
+
+        buffers.submitModelPart(
+                this.bone3, poseStack, RenderTypes.entityCutout(TEXTURE),
+                light, OverlayTexture.NO_OVERLAY,
+                null, mainColor, null
+        );
 
         poseStack.popPose();
     }

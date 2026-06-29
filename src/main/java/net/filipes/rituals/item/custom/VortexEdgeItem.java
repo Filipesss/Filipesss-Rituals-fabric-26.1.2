@@ -24,7 +24,6 @@ public class VortexEdgeItem extends Item implements RitualsTooltipStyle {
             target.push(xVel, yVel, zVel);
             target.hurtMarked = true;
 
-            // Stage 4+ check
             int stage = ModDataComponents.getStage(stack);
             if (stage >= 4) {
                 attacker.addEffect(new MobEffectInstance(MobEffects.SPEED, 10, 2));

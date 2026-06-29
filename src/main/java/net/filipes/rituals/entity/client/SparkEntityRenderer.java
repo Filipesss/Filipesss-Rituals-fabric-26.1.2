@@ -1,15 +1,14 @@
 package net.filipes.rituals.entity.client;
 
+import com.mojang.blaze3d.PrimitiveTopology; // Imported for draw topology
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DestFactor;
-import com.mojang.blaze3d.platform.SourceFactor;
+import com.mojang.blaze3d.platform.BlendFactor; // Used for all blend steps now
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -19,7 +18,6 @@ import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.rendertype.OutputTarget;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
@@ -34,9 +32,12 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
                     .withVertexShader("core/rendertype_lightning")
                     .withFragmentShader("core/rendertype_lightning")
                     .withColorTargetState(new ColorTargetState(
-                            new BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE, SourceFactor.ONE, DestFactor.ZERO)
+                            // FIX: Replaced DestFactor.ZERO with BlendFactor.ZERO
+                            new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE, BlendFactor.ONE, BlendFactor.ZERO)
                     ))
-                    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+                    // FIX: Updated to match modern pipeline layout rules
+                    .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+                    .withPrimitiveTopology(PrimitiveTopology.QUADS)
                     .withDepthStencilState(DepthStencilState.DEFAULT)
                     .withCull(false)
                     .build()
@@ -49,8 +50,6 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
                     .setOutputTarget(OutputTarget.WEATHER_TARGET)
                     .createRenderSetup()
     );
-
-
 
     public static class SparkRenderState extends EntityRenderState {
         final List<Vec3> trail = new ArrayList<>();
@@ -68,7 +67,6 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
     }
 
     public SparkEntityRenderer(EntityRendererProvider.Context ctx) { super(ctx); }
-
 
     @Override public SparkRenderState createRenderState() { return new SparkRenderState(); }
 
@@ -234,7 +232,6 @@ public class SparkEntityRenderer<T extends SparkEntity> extends EntityRenderer<T
                 .add(axis.cross(v).scale(sin))
                 .add(axis.scale(axis.dot(v) * (1.0 - cos)));
     }
-
 
     private static void vQuad(PoseStack.Pose pose, VertexConsumer v,
                               Vec3 a, Vec3 b, Vec3 wingA, Vec3 wingB, float w,

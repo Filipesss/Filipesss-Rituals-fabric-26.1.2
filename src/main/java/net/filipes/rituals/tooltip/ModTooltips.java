@@ -13,12 +13,11 @@ public class ModTooltips {
 
         TooltipRegistry.register(ModItems.ROSEGOLD_BOOTS,
                 TooltipLine.builder()
-                        .literal("This item makes you ", 0xFFFFFF)
-                        .literal("Double Jump", 0xFF0000).bold().underline()
+                        .literal("double jump", 0xFFFDDF).minecraftFive()
                         .build()
         );
 
-        TooltipRegistry.register(ModItems.LIGHTNING_RAPIER,
+        /*TooltipRegistry.register(ModItems.LIGHTNING_RAPIER,
                 TooltipLine.builder()
                         .literal("Stage 1", 0xFFFFFF).bold().underline()
                         .build(),
@@ -35,6 +34,6 @@ public class ModTooltips {
                         .literal("Lightning", 0xFFFF00).italic()
                         .literal(" on hit", 0xFFFFFF)
                         .build()
-        );
+        );*/
     }
 }

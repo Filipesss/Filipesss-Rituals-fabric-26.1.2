@@ -33,10 +33,14 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderers;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomModelData;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.List;
 
 @Environment(EnvType.CLIENT)
 public class RitualsClient implements ClientModInitializer {
@@ -50,12 +54,28 @@ public class RitualsClient implements ClientModInitializer {
     public static KeyMapping actionThree;
     private static int laserAnimTicks = 0;
     private static int solarChargeTicks      = -1;
-    private static final int SOLAR_CHARGE_DURATION = 12; // ~0.6 s
+    private static final int SOLAR_CHARGE_DURATION = 12;
     private static int     solarActiveTicks   = 0;
     private static boolean resonanceActivated = false;
     private static int clientBlightDashCount = 0;
     private static long clientBlightDashTime = 0;
-
+    private static boolean temporalRecallCloneActive = false;
+    private static int shadeshatterFrame  = 1;
+    private static int shadeshatterTicker = 0;
+    private static int shadeshatterSpellFrame  = -1;
+    private static int shadeshatterSpellTicker = 0;
+    private static final int SPELL_TICKS_PER_FRAME = 3;
+    private static int shadeshatterMimicFrame  = -1;
+    private static int shadeshatterMimicTicker = 0;
+    private static final int MIMIC_TICKS_PER_FRAME = 3;
+    private static final int TICKS_PER_FRAME = 3;
+    private static int     shadeshatterWormholeFrame  = -1;
+    private static int     shadeshatterWormholeTicker = 0;
+    private static net.minecraft.core.BlockPos shadeshatterWormholeTarget = null;
+    private static final int WORMHOLE_TICKS_PER_FRAME = 3;
+    public static boolean isShadeshatterAbilityAnimationPlaying() {
+        return shadeshatterMimicFrame >= 0 || shadeshatterWormholeFrame >= 0;
+    }
 
     @Override
     public void onInitializeClient() {
@@ -85,79 +105,31 @@ public class RitualsClient implements ClientModInitializer {
             TooltipStyleHolder.clear();
             TooltipStyleHolder.set(stack);
         });
-        //ENTITY
-
-        BlockEntityRenderers.register(
-                ModBlockEntities.RITUAL_PEDESTAL_BE,
-                RitualPedestalBlockEntityRenderer::new
-        );
-
-        EntityRendererRegistry.register(
-                ModEntities.PULSE_BLASTER_BEAM,
-                PulseBlasterBeamRenderer::new
-        );
-        EntityRendererRegistry.register(
-                ModEntities.SCREEN_SHAKE,
-                ScreenShakeEntityRenderer::new
-        );
-        EntityRendererRegistry.register(
-                ModEntities.ELECTRIC_BOLT,
-                ElectricBoltEntityRenderer::new
-        );
-        ModelLayerRegistry.registerModelLayer(
-                CinderboltShieldModel.LAYER,
-                CinderboltShieldModel::createBodyLayer);
-
-// Renderer:
-        EntityRendererRegistry.register(
-                ModEntities.CINDERBOLT_SHIELD,
-                CinderboltShieldEntityRenderer::new);
-
-        ModelLayerRegistry.registerModelLayer(
-                PulseBlasterGunModel.LAYER,
-                PulseBlasterGunModel::getTexturedModelData
-        );
-        ModelLayerRegistry.registerModelLayer(
-                PolarityTornadoBlueModel.LAYER,
-                PolarityTornadoBlueModel::getTexturedModelData);
-        ModelLayerRegistry.registerModelLayer(
-                DepthstrikeGroundModel.LAYER,
-                DepthstrikeGroundModel::createBodyLayer);
-        ModelLayerRegistry.registerModelLayer(
-                PharathornGroundSmashModel.LAYER,
-                PharathornGroundSmashModel::createBodyLayer);
-        EntityRendererRegistry.register(
-                ModEntities.PHARATHORN_GROUND_SMASH,
-                PharathornGroundSmashEntityRenderer::new);
 
 
-        ModelLayerRegistry.registerModelLayer(
-                PolarityTornadoRedModel.LAYER,
-                PolarityTornadoRedModel::getTexturedModelData);
-        ModelLayerRegistry.registerModelLayer(
-                LunarFragmentModel.LAYER,
-                LunarFragmentModel::createBodyLayer);
-        ModelLayerRegistry.registerModelLayer(
-                DepthstrikeChargedBallModel.LAYER,
-                DepthstrikeChargedBallModel::createBodyLayer
-        );
-        ModelLayerRegistry.registerModelLayer(
-                SolarStormcellModel.LAYER,
-                SolarStormcellModel::createBodyLayer
-        );
-        EntityRendererRegistry.register(
-                ModEntities.POLARITY_TORNADO_BLUE,
-                PolarityTornadoBlueEntityRenderer::new);
-        EntityRendererRegistry.register(
-                ModEntities.POLARITY_TORNADO_RED,
-                PolarityTornadoRedEntityRenderer::new);
-        ModelLayerRegistry.registerModelLayer(
-                PolarityShieldModel.LAYER,
-                PolarityShieldModel::createBodyLayer);
+        BlockEntityRenderers.register(ModBlockEntities.RITUAL_PEDESTAL_BE, RitualPedestalBlockEntityRenderer::new);
 
+        ModelLayerRegistry.registerModelLayer(CinderboltShieldModel.LAYER, CinderboltShieldModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(PulseBlasterGunModel.LAYER, PulseBlasterGunModel::getTexturedModelData);
+        ModelLayerRegistry.registerModelLayer(PolarityTornadoBlueModel.LAYER, PolarityTornadoBlueModel::getTexturedModelData);
+        ModelLayerRegistry.registerModelLayer(DepthstrikeGroundModel.LAYER, DepthstrikeGroundModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(PharathornGroundSmashModel.LAYER, PharathornGroundSmashModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(PolarityTornadoRedModel.LAYER, PolarityTornadoRedModel::getTexturedModelData);
+        ModelLayerRegistry.registerModelLayer(LunarFragmentModel.LAYER, LunarFragmentModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(DepthstrikeChargedBallModel.LAYER, DepthstrikeChargedBallModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(SolarStormcellModel.LAYER, SolarStormcellModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(PolarityShieldModel.LAYER, PolarityShieldModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(TemporalShieldModel.LAYER, TemporalShieldModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(TemporalRecallModel.LAYER, TemporalRecallModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(ShadeshatterSpellModel.LAYER, ShadeshatterSpellModel::createBodyLayer);
 
+        EntityRendererRegistry.register(ModEntities.PULSE_BLASTER_BEAM, PulseBlasterBeamRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SCREEN_SHAKE, ScreenShakeEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.ELECTRIC_BOLT, ElectricBoltEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.POLARITY_ARROW_BLUE, PolarityArrowBlueEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.POLARITY_TORNADO_BLUE, PolarityTornadoBlueEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.POLARITY_ARROW_RED, PolarityArrowRedEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.POLARITY_TORNADO_RED, PolarityTornadoRedEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CINDER_ARROW, CinderArrowEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CINDERBOLT_BEAM, CinderboltBeamEntityRenderer::new);
@@ -168,10 +140,12 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.LIGHTNING_TRAIL, LightningTrailEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.SPARK, SparkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.BURST_SPARK, SparkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.CINDERBOLT_SHIELD, CinderboltShieldEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.LIGHTNING_SPARK, LightningSparkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.LIGHTNING_EXPLOSION, LightningExplosionEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.THROWN_DEPTHSTRIKE, ThrownDepthstrikeRenderer::new);
         EntityRendererRegistry.register(ModEntities.POLARITY_TORNADO_BLUE, PolarityTornadoBlueEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.PHARATHORN_GROUND_SMASH, PharathornGroundSmashEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_GROUND, DepthstrikeGroundEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_CHARGED_BALL, DepthstrikeChargedBallEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.WIND_GUST_BIG, WindGustBigEntityRenderer::new);
@@ -188,15 +162,17 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.SOLAR_STAR, SolarStarEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.MULTI_BURST_SPARK, MultiBurstSparkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.BLIGHTED_PUDDLE, BlightedPuddleEntityRenderer::new);
-        EntityRendererRegistry.register(ModEntities.VORTEX_PROJECTILE, VortexProjectileEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.REVERSE_POLARITY_ARROW, ReversePolarityArrowEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.POLARITY_SHIELD, PolarityShieldEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.VORTEX_BOOM, VortexBoomEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.TEMPORAL_SLOW_ZONE_GROUND, TemporalSlowZoneGroundEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.TEMPORAL_SHIELD, TemporalShieldEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.TEMPORAL_MUTE_MARK, TemporalMuteMarkEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.TEMPORAL_RECALL, TemporalRecallEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.SHADESHATTER_SPELL, ShadeshatterSpellEntityRenderer::new);
 
 
 
-
-        //SPECIAL MODELS
         SpecialModelRenderers.ID_MAPPER.put(
                 Identifier.fromNamespaceAndPath("rituals", "pulse_blaster"),
                 (MapCodec<? extends SpecialModelRenderer.Unbaked<?>>) (MapCodec<?>) PulseBlasterSpecialRenderer.Unbaked.CODEC
@@ -245,6 +221,12 @@ public class RitualsClient implements ClientModInitializer {
         CooldownManager.register("polarity_reverse_charge", "Reverse Shot", 20_000, 0xFFDD00);
         CooldownManager.register("polarity_tornado", "Polarity Tornado", 12_000, 0x6644FF);
         CooldownManager.register("polarity_bow_dash", "Polarity Dash", 10_000, 0x6644FF);
+        CooldownManager.register("temporal_slow_zone", "Chronos Field", 25_000, 0x66CCFF);
+        CooldownManager.register("temporal_shield_barrier", "Temporal Barrier", 25_000, 0x66CCFF);
+        CooldownManager.register("temporal_mute", "Chronos Silence", 30_000, 0x66CCFF);
+        CooldownManager.register("temporal_recall", "Temporal Recall", 30_000, 0x66CCFF);
+        CooldownManager.register("shadeshatter_morph", "Shade Mimic", 25_000, 0xBB55FF);
+        CooldownManager.register("shadeshatter_wormhole", "Wormhole", 25_000, 0xBB55FF);
 
 
 
@@ -254,15 +236,22 @@ public class RitualsClient implements ClientModInitializer {
         ShadowguardHudOverlay.register();
         LunarBladeHudOverlay.register();
         SolarBladeHudOverlay.register();
+        TemporalMuteHudOverlay.register();
+        WarpedHudOverlay.register();
         LunarBladeActivePacket.registerClient();
         SolarBladeActivePacket.registerClient();
-
-
-
+        TemporalMuteActivePacket.registerClient();
 
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadowguardInvisiblePacket.TYPE,
                 (packet, context) -> ShadowguardHudOverlay.trigger()
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                TemporalRecallStartCooldownPacket.TYPE,
+                (pkt, ctx) -> {
+                    CooldownManager.trigger("temporal_recall");
+                    temporalRecallCloneActive = false;
+                }
         );
         ClientPlayNetworking.registerGlobalReceiver(
                 ReverseControlsPacket.TYPE,
@@ -279,25 +268,31 @@ public class RitualsClient implements ClientModInitializer {
                 TwinsStartCooldownPacket.TYPE,
                 (packet, context) -> CooldownManager.trigger("twins_action_two")
         );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ShadeshatterSpellStartPacket.TYPE,
+                (pkt, ctx) -> {
+                    shadeshatterSpellFrame  = 0;
+                    shadeshatterSpellTicker = 0;
+                }
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ShadeshatterHastePacket.TYPE,
+                (packet, ctx) -> CooldownManager.setTickRate(packet.tickRate())
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ShadeshatterAbilityResetPacket.TYPE,
+                (packet, ctx) -> CooldownManager.clearAll()
+        );
 
         //PARTICLES
-        ParticleProviderRegistry.getInstance().register(
-                ModParticles.LIGHTNING_BOLT_MINI,
-                spriteSet -> new LightningBoltMiniParticle.Factory(spriteSet)
-        );
-        ParticleProviderRegistry.getInstance().register(
-                ModParticles.LIGHTNING_TRAIL,
-                spriteSet -> new LightningTrailParticle.Factory(spriteSet)
-        );
-        ParticleProviderRegistry.getInstance().register(
-                ModParticles.LIGHTNING_EXPLOSION,
-                spriteSet -> new LightningExplosionParticle.Factory(spriteSet)
-        );
-        ParticleProviderRegistry.getInstance().register(
-                ModParticles.LIGHTNING_SPARK,
-                spriteSet -> new LightningSparkParticle.Factory(spriteSet)
-        );
+        ParticleProviderRegistry.getInstance().register(ModParticles.LIGHTNING_BOLT_MINI, spriteSet -> new LightningBoltMiniParticle.Factory(spriteSet));
+        ParticleProviderRegistry.getInstance().register(ModParticles.LIGHTNING_TRAIL, spriteSet -> new LightningTrailParticle.Factory(spriteSet));
+        ParticleProviderRegistry.getInstance().register(ModParticles.LIGHTNING_EXPLOSION, spriteSet -> new LightningExplosionParticle.Factory(spriteSet));
+        ParticleProviderRegistry.getInstance().register(ModParticles.LIGHTNING_SPARK, spriteSet -> new LightningSparkParticle.Factory(spriteSet));
         ParticleProviderRegistry.getInstance().register(ModParticles.BLIGHTED, BlightedParticle.Factory::new);
+        ParticleProviderRegistry.getInstance().register(ModParticles.GLASSREAVER_CRIT, GlassreaverCritParticle.Factory::new);
+        ParticleProviderRegistry.getInstance().register(ModParticles.TEMPORAL_HOURGLASS, TemporalHourglassParticle.Factory::new);
+        ParticleProviderRegistry.getInstance().register(ModParticles.MOON, MoonParticle.Factory::new);
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.player != null) {
@@ -306,6 +301,66 @@ public class RitualsClient implements ClientModInitializer {
             }
             if (client.player == null) return;
             PulseBlasterCylinderState.tick();
+            shadeshatterTicker++;
+            if (shadeshatterTicker % TICKS_PER_FRAME == 0) {
+                shadeshatterFrame = (shadeshatterFrame % 4) + 1;
+            }
+
+            ItemStack shadeshatterStack = client.player != null
+                    ? client.player.getMainHandItem() : ItemStack.EMPTY;
+
+            if (shadeshatterStack.is(ModItems.SHADESHATTER)) {
+                float frameValue;
+
+                if (shadeshatterMimicFrame >= 0) {
+                    // Mimic animation: frames 19–32
+                    frameValue = shadeshatterMimicFrame + 19f;
+                    shadeshatterMimicTicker++;
+                    if (shadeshatterMimicTicker >= MIMIC_TICKS_PER_FRAME) {
+                        shadeshatterMimicTicker = 0;
+                        shadeshatterMimicFrame++;
+                        if (shadeshatterMimicFrame >= 14) {
+                            shadeshatterMimicFrame = -1;
+                            ClientPlayNetworking.send(new ShadeshatterMorphPacket());
+                        }
+                    }
+                } else if (shadeshatterSpellFrame >= 0) {
+                    // Spell animation: frames 5–18
+                    frameValue = shadeshatterSpellFrame + 5f;
+                    shadeshatterSpellTicker++;
+                    if (shadeshatterSpellTicker >= TICKS_PER_FRAME) {
+                        shadeshatterSpellTicker = 0;
+                        shadeshatterSpellFrame++;
+                        if (shadeshatterSpellFrame >= 14) {
+                            shadeshatterSpellFrame = -1;
+                        }
+                    }
+                } else if (shadeshatterWormholeFrame >= 0) {
+                    // Wormhole animation: frames 33–46 (shadeshatter_tp_0 to shadeshatter_tp_13)
+                    frameValue = shadeshatterWormholeFrame + 33f;
+                    shadeshatterWormholeTicker++;
+                    if (shadeshatterWormholeTicker >= WORMHOLE_TICKS_PER_FRAME) {
+                        shadeshatterWormholeTicker = 0;
+                        shadeshatterWormholeFrame++;
+                        if (shadeshatterWormholeFrame >= 14) {
+                            shadeshatterWormholeFrame = -1;
+                            // Animation done — send packet with the position captured on key press.
+                            if (shadeshatterWormholeTarget != null) {
+                                ClientPlayNetworking.send(new ShadeshatterWormholePacket(shadeshatterWormholeTarget));
+                                shadeshatterWormholeTarget = null;
+                            }
+                        }
+                    }
+                } else {
+                    // Idle animation: frames 1–4
+                    frameValue = shadeshatterFrame;
+                }
+
+                shadeshatterStack.set(
+                        DataComponents.CUSTOM_MODEL_DATA,
+                        new CustomModelData(List.of(frameValue), List.of(), List.of(), List.of())
+                );
+            }
             if (solarChargeTicks > 0) {
                 if (client.player != null) {
                     var heldDuringCharge = client.player.getMainHandItem().getItem();
@@ -371,6 +426,19 @@ public class RitualsClient implements ClientModInitializer {
                         if (stage >= 2 && !CooldownManager.isOnCooldown("lunar_mark")) {
                             ClientPlayNetworking.send(new LunarMarkPacket());
                             CooldownManager.trigger("lunar_mark");
+                        }
+                    } else if (held.getItem() instanceof TemporalGlassreaverItem) {
+                        if (mc.player.isShiftKeyDown()) {
+
+                            if (stage >= 7 && !CooldownManager.isOnCooldown("temporal_slow_zone")) {
+                                ClientPlayNetworking.send(new TemporalSlowZonePacket());
+                                CooldownManager.trigger("temporal_slow_zone");
+                            }
+                        } else {
+                            if (stage >= 2 && !CooldownManager.isOnCooldown("temporal_shield_barrier")) {
+                                ClientPlayNetworking.send(new TemporalShieldPacket());
+                                CooldownManager.trigger("temporal_shield_barrier");
+                            }
                         }
                     } else if (held.getItem() instanceof SolarBladeItem) {
                         if (stage >= 2 && !CooldownManager.isOnCooldown("solar_mark")) {
@@ -466,6 +534,15 @@ public class RitualsClient implements ClientModInitializer {
                                 CooldownManager.trigger("vortex_swap");
                             }
                         }
+                    } else if (held.getItem() instanceof ShadeshatterItem) {
+                        if (shadeshatterMimicFrame == -1
+                                && shadeshatterSpellFrame == -1
+                                && !client.player.getCooldowns().isOnCooldown(held)
+                                && !CooldownManager.isOnCooldown("shadeshatter_morph")) {
+                            shadeshatterMimicFrame  = 0;
+                            shadeshatterMimicTicker = 0;
+                            CooldownManager.trigger("shadeshatter_morph");
+                        }
                     } else if (held.getItem() instanceof RosegoldPickaxeItem
                             && RosegoldPickaxeItem.getStage(held) >= 4) {
                         ClientPlayNetworking.send(new TogglePickaxeMiningPacket());
@@ -526,6 +603,11 @@ public class RitualsClient implements ClientModInitializer {
                                 CooldownManager.trigger("blight_dash");
                             }
                         }
+                    } else if (held.getItem() instanceof TemporalGlassreaverItem) {
+                        if (stage >= 3 && !CooldownManager.isOnCooldown("temporal_mute")) {
+                            ClientPlayNetworking.send(new TemporalMutePacket());
+                            CooldownManager.trigger("temporal_mute");
+                        }
                     } else if (held.getItem() instanceof VortexEdgeItem
                             && ModDataComponents.getStage(held) >= 3) {
                         if (!CooldownManager.isOnCooldown("vortex_shockwave")) {
@@ -537,6 +619,22 @@ public class RitualsClient implements ClientModInitializer {
                         if (!CooldownManager.isOnCooldown("polarity_reverse_charge")) {
                             ClientPlayNetworking.send(new ReversePolarityChargePacket());
                             CooldownManager.trigger("polarity_reverse_charge");
+                        }
+                    } else if (held.getItem() instanceof ShadeshatterItem) {
+                        if (shadeshatterWormholeFrame == -1
+                                && shadeshatterMimicFrame == -1
+                                && shadeshatterSpellFrame == -1
+                                && !CooldownManager.isOnCooldown("shadeshatter_wormhole")
+                                && !client.player.getCooldowns().isOnCooldown(held)) {
+
+                            var longRay = mc.player.pick(24.0, 1.0f, false);
+                            if (longRay instanceof net.minecraft.world.phys.BlockHitResult blockHit
+                                    && blockHit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+                                ClientPlayNetworking.send(new ShadeshatterWormholePacket(blockHit.getBlockPos()));
+                                CooldownManager.trigger("shadeshatter_wormhole");
+                                shadeshatterWormholeFrame  = 0;
+                                shadeshatterWormholeTicker = 0;
+                            }
                         }
                     } else if (held.getItem() instanceof CinderboltItem
                             && ModDataComponents.getStage(held) >= 5) {
@@ -658,6 +756,11 @@ public class RitualsClient implements ClientModInitializer {
                         if (!CooldownManager.isOnCooldown("pharathorn_dash")) {
                             ClientPlayNetworking.send(new PharathornDashPacket());
                             CooldownManager.trigger("pharathorn_dash");
+                        }
+                    } else if (held.getItem() instanceof TemporalGlassreaverItem) {
+                        if (stage >= 5 && !CooldownManager.isOnCooldown("temporal_recall")) {
+                            ClientPlayNetworking.send(new TemporalRecallPacket());
+                            temporalRecallCloneActive = !temporalRecallCloneActive;
                         }
                     }
                 }

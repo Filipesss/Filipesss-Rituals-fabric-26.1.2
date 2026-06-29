@@ -1,5 +1,6 @@
 package net.filipes.rituals.pedestal;
 
+import net.filipes.rituals.item.ModItems;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -28,7 +29,7 @@ public class PedestalTypes {
             ),
             access -> {
 
-                ItemStack stack = new ItemStack(net.filipes.rituals.item.ModItems.ROSEGOLD_PICKAXE);
+                ItemStack stack = new ItemStack(ModItems.ROSEGOLD_PICKAXE);
 
                 Registry<Enchantment> enchReg = access.lookupOrThrow(Registries.ENCHANTMENT);
                 ItemEnchantments.Mutable ench = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);

@@ -36,7 +36,7 @@ public class CooldownHudOverlay {
 
     private static void render(GuiGraphicsExtractor guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.options.hideGui) return;
+        if (mc.player == null || mc.gui.hud.isHidden()) return;
 
         List<Map.Entry<String, CooldownManager.AbilityDefinition>> toRender = new ArrayList<>();
         for (Map.Entry<String, CooldownManager.AbilityDefinition> entry : CooldownManager.getDefinitions().entrySet()) {

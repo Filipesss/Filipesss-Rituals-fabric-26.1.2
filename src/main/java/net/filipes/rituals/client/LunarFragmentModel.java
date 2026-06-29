@@ -1,12 +1,11 @@
 package net.filipes.rituals.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
@@ -21,7 +20,6 @@ public class LunarFragmentModel {
     private static final Identifier TEXTURE_2 =
             Identifier.fromNamespaceAndPath("rituals", "textures/entity/lunar_fragment_2.png");
 
-    // How many ticks each texture is shown before switching
     private static final int TEXTURE_SWITCH_INTERVAL = 5;
 
     private final ModelPart bone;
@@ -72,15 +70,26 @@ public class LunarFragmentModel {
         return LayerDefinition.create(mesh, 32, 32);
     }
 
-    public void render(PoseStack ps, MultiBufferSource buffers, int packedLight, float ageInTicks) {
+    public void render(PoseStack ps, SubmitNodeCollector buffers, int packedLight, float ageInTicks) {
         bone.yRot   = ageInTicks * 0.1F;
         bbMain.yRot = ageInTicks * 0.1F;
 
         int frame = ((int) ageInTicks / TEXTURE_SWITCH_INTERVAL) % 2;
         Identifier texture = (frame == 0) ? TEXTURE_1 : TEXTURE_2;
-        VertexConsumer vc = buffers.getBuffer(RenderTypes.entityTranslucent(texture));
 
-        bone.render(ps, vc, packedLight, OverlayTexture.NO_OVERLAY);
-        bbMain.render(ps, vc, packedLight, OverlayTexture.NO_OVERLAY);
+        int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
+
+        // Separately submit the specific model parts tracking animation parameters
+        buffers.submitModelPart(
+                bone, ps, RenderTypes.entityTranslucent(texture),
+                packedLight, OverlayTexture.NO_OVERLAY,
+                null, mainColor, null
+        );
+
+        buffers.submitModelPart(
+                bbMain, ps, RenderTypes.entityTranslucent(texture),
+                packedLight, OverlayTexture.NO_OVERLAY,
+                null, mainColor, null
+        );
     }
 }

@@ -45,7 +45,7 @@ public class CinderArrowEntityRenderer extends ArrowRenderer<CinderArrowEntity, 
         }
         state.arrowType = entity.getArrowType();
 
-        Vec3 camWorld = Minecraft.getInstance().gameRenderer.getMainCamera().position();
+        Vec3 camWorld = Minecraft.getInstance().gameRenderer.mainCamera().position();
         state.cameraOffset = camWorld.subtract(cx, cy, cz);
     }
 

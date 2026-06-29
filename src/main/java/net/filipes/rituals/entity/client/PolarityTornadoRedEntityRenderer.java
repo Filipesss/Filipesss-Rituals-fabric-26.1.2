@@ -3,8 +3,6 @@ package net.filipes.rituals.entity.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.filipes.rituals.client.PolarityTornadoRedModel;
 import net.filipes.rituals.entity.custom.PolarityTornadoRedEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -54,13 +52,12 @@ public class PolarityTornadoRedEntityRenderer
                        SubmitNodeCollector collector,
                        CameraRenderState camera) {
 
-        MultiBufferSource bufferSource = Minecraft.getInstance()
-                .renderBuffers()
-                .bufferSource();
-
         poseStack.pushPose();
         poseStack.scale(state.visualScale, state.visualScale, state.visualScale);
-        model.render(poseStack, bufferSource, 15728880, state.ageInTicks);
+
+        // Pass the collector directly to the model
+        model.render(poseStack, collector, 15728880, state.ageInTicks);
+
         poseStack.popPose();
     }
 

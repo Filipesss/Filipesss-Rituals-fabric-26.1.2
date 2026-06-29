@@ -55,7 +55,7 @@ public class PulseBlasterHudOverlay {
 
     private static void renderHud(GuiGraphicsExtractor graphics) {
         Minecraft client = Minecraft.getInstance();
-        if (client.player == null || client.options.hideGui) return;
+        if (client.player == null || client.gui.hud.isHidden()) return;
 
         ItemStack main = client.player.getItemInHand(InteractionHand.MAIN_HAND);
         ItemStack off  = client.player.getItemInHand(InteractionHand.OFF_HAND);

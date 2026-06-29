@@ -118,7 +118,7 @@ public class CinderboltBeamEntityRenderer extends EntityRenderer<CinderboltBeamE
         final boolean fp = s.clearerView;
         final float yaw = s.yawDeg;
         final float pitch = s.pitchDeg;
-        final float camXRot = Minecraft.getInstance().gameRenderer.getMainCamera().xRot();
+        final float camXRot = Minecraft.getInstance().gameRenderer.mainCamera().xRot();
         final Quaternionf camQuat = this.entityRenderDispatcher.camera.rotation();
 
         ps.pushPose();

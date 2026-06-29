@@ -1,0 +1,6 @@
+{
+  "parent": "rituals:item/temporal_glassreaver",
+  "textures": {
+    "0": "rituals:item/temporal_glassreaver_crit"
+  }
+}

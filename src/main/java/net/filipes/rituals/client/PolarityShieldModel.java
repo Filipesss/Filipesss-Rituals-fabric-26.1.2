@@ -1,13 +1,12 @@
 package net.filipes.rituals.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderType; // Kept your environment's specific package path
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
@@ -35,19 +34,16 @@ public class PolarityShieldModel {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition part = mesh.getRoot();
 
-        // Base anchor bone translated from Blockbench pivot point
         PartDefinition bone = part.addOrReplaceChild("bone",
                 CubeListBuilder.create(),
                 PartPose.offset(0.0F, 13.0F, 2.0F));
 
-        // Upper section angled block (cube_r1)
         bone.addOrReplaceChild("cube_r1",
                 CubeListBuilder.create()
                         .texOffs(0, 0)
                         .addBox(-7.0F, -11.0F, -2.0F, 14.0F, 13.0F, 4.0F, CubeDeformation.NONE),
                 PartPose.offsetAndRotation(0.0F, -1.0F, 2.2F, 0.3054F, 0.0F, 0.0F));
 
-        // Lower section angled block (cube_r2)
         bone.addOrReplaceChild("cube_r2",
                 CubeListBuilder.create()
                         .texOffs(0, 17)
@@ -57,73 +53,52 @@ public class PolarityShieldModel {
         return LayerDefinition.create(mesh, 64, 64);
     }
 
-    // UPDATED: Now accepts the scaling 'alpha' parameter from your entity renderer
-    public void render(PoseStack ps, MultiBufferSource buffers, int packedLight,
+    public void render(PoseStack ps, SubmitNodeCollector buffers, int packedLight,
                        float ageInTicks, boolean isRed, boolean firstPerson, float alpha) {
 
         Identifier activeTexture = isRed ? RED_TEXTURE : BLUE_TEXTURE;
 
         ps.pushPose();
-
-        // Minor baseline positioning offset adjust
         ps.translate(0.0f, 0.25f, 0.0f);
 
-        // --- 1. GLOW PASSTHROUGH LAYER ---
         if (!firstPerson) {
             int r = isRed ? 255 : 0;
             int g = isRed ? 30  : 160;
             int b = isRed ? 30  : 255;
-            // Dynamically scale down the default glow alpha (160) by our fade modifier
             int dynamicAlpha = Math.round(160 * alpha);
 
-            VertexConsumer energyVc = new ForcedColorConsumer(
-                    buffers.getBuffer(RenderTypes.lightning()),
-                    r, g, b, dynamicAlpha
+            // Pack the custom lightning colors into an ARGB int
+            int energyColor = (dynamicAlpha << 24) | (r << 16) | (g << 8) | b;
+
+            // Submit the model part directly using RenderType.lightning()
+            buffers.submitModelPart(
+                    root, ps, RenderTypes.lightning(),
+                    15728880, OverlayTexture.NO_OVERLAY,
+                    null, energyColor, null
             );
-            root.render(ps, energyVc, 15728880, OverlayTexture.NO_OVERLAY);
         }
 
-        // --- 2. BASE TEXTURE RENDER LAYERS ---
         if (!firstPerson) {
-            // UPDATED: Wrapped the standard third-person render pipeline in your ForcedColorConsumer
-            // so the core texture map can smoothly dissolve to 0 alpha.
             int baseAlpha = Math.round(255 * alpha);
-            VertexConsumer mainVc = new ForcedColorConsumer(
-                    buffers.getBuffer(RenderTypes.entityTranslucent(activeTexture)),
-                    255, 255, 255, baseAlpha
-            );
-            root.render(ps, mainVc, packedLight, OverlayTexture.NO_OVERLAY);
-        } else {
-            // Dynamically scale down the first person baseline opacity (90) by our fade modifier
-            int firstPersonAlpha = Math.round(90 * alpha);
+            // Pack into full white tint with dynamic opacity
+            int mainColor = (baseAlpha << 24) | (255 << 16) | (255 << 8) | 255;
 
-            VertexConsumer ghostVc = new ForcedColorConsumer(
-                    buffers.getBuffer(RenderTypes.eyes(activeTexture)),
-                    255, 255, 255, firstPersonAlpha
+            buffers.submitModelPart(
+                    root, ps, RenderTypes.entityTranslucent(activeTexture),
+                    packedLight, OverlayTexture.NO_OVERLAY,
+                    null, mainColor, null
             );
-            root.render(ps, ghostVc, 15728880, OverlayTexture.NO_OVERLAY);
+        } else {
+            int firstPersonAlpha = Math.round(90 * alpha);
+            int ghostColor = (firstPersonAlpha << 24) | (255 << 16) | (255 << 8) | 255;
+
+            buffers.submitModelPart(
+                    root, ps, RenderTypes.eyes(activeTexture),
+                    15728880, OverlayTexture.NO_OVERLAY,
+                    null, ghostColor, null
+            );
         }
 
         ps.popPose();
-    }
-
-    // Custom pipeline interceptor to force specific color channel alpha inputs over models
-    private static final class ForcedColorConsumer implements VertexConsumer {
-        private final VertexConsumer inner;
-        private final int r, g, b, a;
-
-        ForcedColorConsumer(VertexConsumer inner, int r, int g, int b, int a) {
-            this.inner = inner;
-            this.r = r; this.g = g; this.b = b; this.a = a;
-        }
-
-        @Override public VertexConsumer addVertex(float x, float y, float z)  { inner.addVertex(x, y, z); return this; }
-        @Override public VertexConsumer setColor(int r, int g, int b, int a)   { inner.setColor(this.r, this.g, this.b, this.a); return this; }
-        @Override public VertexConsumer setColor(int argb)                     { inner.setColor(this.a << 24 | this.r << 16 | this.g << 8 | this.b); return this; }
-        @Override public VertexConsumer setUv(float u, float v)                { inner.setUv(u, v); return this; }
-        @Override public VertexConsumer setUv1(int u, int v)                   { inner.setUv1(u, v); return this; }
-        @Override public VertexConsumer setUv2(int u, int v)                   { inner.setUv2(u, v); return this; }
-        @Override public VertexConsumer setNormal(float x, float y, float z)   { inner.setNormal(x, y, z); return this; }
-        @Override public VertexConsumer setLineWidth(float width)              { inner.setLineWidth(width); return this; }
     }
 }

@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.filipes.rituals.client.CinderboltShieldModel;
 import net.filipes.rituals.entity.custom.CinderboltShieldEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -48,12 +47,10 @@ public class CinderboltShieldEntityRenderer
         if (entity.owner != null) {
             LivingEntity owner = entity.owner;
 
-            // Owner's smoothly interpolated world position
             double ownerX = owner.xo + (owner.getX() - owner.xo) * partialTick;
             double ownerY = owner.yo + (owner.getY() - owner.yo) * partialTick;
             double ownerZ = owner.zo + (owner.getZ() - owner.zo) * partialTick;
 
-            // Entity's interpolated world position (what base class used for camera offset)
             double entityX = entity.xo + (entity.getX() - entity.xo) * partialTick;
             double entityY = entity.yo + (entity.getY() - entity.yo) * partialTick;
             double entityZ = entity.zo + (entity.getZ() - entity.zo) * partialTick;
@@ -68,7 +65,6 @@ public class CinderboltShieldEntityRenderer
         }
     }
 
-
     @Override
     public boolean shouldRender(CinderboltShieldEntity entity,
                                 Frustum frustum, double x, double y, double z) {
@@ -78,16 +74,15 @@ public class CinderboltShieldEntityRenderer
     @Override
     public void submit(ShieldRenderState state, PoseStack ps,
                        SubmitNodeCollector snc, CameraRenderState cam) {
-        MultiBufferSource buffers = Minecraft.getInstance()
-                .renderBuffers().bufferSource();
-
         ps.pushPose();
         ps.translate(state.ownerOffsetX, state.ownerOffsetY, state.ownerOffsetZ);
-        model.render(ps, buffers, 15728880, state.ageInTicks, state.isFirstPerson, state.currentRadius);
+
+        // Pass the collector downstream instead of local buffer flushes
+        model.render(ps, snc, 15728880, state.ageInTicks, state.isFirstPerson, state.currentRadius);
+
         ps.popPose();
     }
 
     @Override protected float getShadowRadius  (ShieldRenderState s) { return 0f; }
     @Override protected float getShadowStrength(ShieldRenderState s) { return 0f; }
-
 }

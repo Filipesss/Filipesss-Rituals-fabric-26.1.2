@@ -108,10 +108,16 @@ public class Rituals implements ModInitializer {
 		RosegoldPickaxeUsageEvent.register();
 		KillUpgradeRegistry.registerAll();
 		PharathornStillHandler.register();
+		TemporalGlassreaverHandler.register();
 		CinderboltShieldHandler.register();
 		CinderboltDeathSaveHandler.register();
+		ShadeshatterMorphHandler.register();
+		ShadeshatterWormholeHandler.register();
 		TwinBladesHandler.register();
-
+		ServerTickEvents.START_SERVER_TICK.register(TemporalSlowZonePacket::startServerZones);
+		ServerTickEvents.END_SERVER_TICK.register(TemporalSlowZonePacket::tickServerZones);
+		ServerTickEvents.END_SERVER_TICK.register(ShadeshatterSpellHandler::tick);
+		ServerTickEvents.END_SERVER_TICK.register(ShadeshatterMorphHandler::tick);
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 20 != 0) return;
 
@@ -189,6 +195,12 @@ public class Rituals implements ModInitializer {
 			if (world.isClientSide()) return net.minecraft.world.InteractionResult.PASS;
 			if (!(player instanceof ServerPlayer sp)) return net.minecraft.world.InteractionResult.PASS;
 			if (!(entity instanceof LivingEntity target)) return net.minecraft.world.InteractionResult.PASS;
+			ItemStack heldStack = sp.getMainHandItem();
+			if (heldStack.getItem() instanceof ShadeshatterItem) {
+				int stage = ModDataComponents.getStage(heldStack);
+				if (stage < 2 || sp.getCooldowns().isOnCooldown(heldStack))
+					return net.minecraft.world.InteractionResult.FAIL;
+			}
 			if (!(sp.getMainHandItem().getItem() instanceof LunarBladeItem))
 				return net.minecraft.world.InteractionResult.PASS;
 			if (LunarBladeOnHitTracker.isActive(sp.getUUID())) {
@@ -300,6 +312,21 @@ public class Rituals implements ModInitializer {
 					level.addFreshEntity(spark);
 				}
 			}
+			ShadeshatterPowerup powerup = ShadeshatterPowerupTracker.getActivePowerup(attacker.getUUID());
+
+			if (powerup != null
+					&& damageTaken > 0
+					&& entity instanceof LivingEntity livingTarget
+					&& entity.level() instanceof ServerLevel powerupLevel
+					&& !ShadeshatterPowerupTracker.isGuarded(entity.getUUID())) {
+
+				ShadeshatterPowerupTracker.guard(entity.getUUID());
+				try {
+					powerup.onHit(attacker, livingTarget, source, damageTaken, killed, powerupLevel);
+				} finally {
+					ShadeshatterPowerupTracker.unguard(entity.getUUID());
+				}
+			}
 		});
 
 		PayloadTypeRegistry.serverboundPlay().register(DoubleJumpPayload.ID, DoubleJumpPayload.CODEC);
@@ -368,6 +395,10 @@ public class Rituals implements ModInitializer {
 		PayloadTypeRegistry.clientboundPlay().register(
 				SolarBladeActivePacket.TYPE,
 				SolarBladeActivePacket.CODEC
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				TemporalMuteActivePacket.TYPE,
+				TemporalMuteActivePacket.CODEC
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
 				CinderboltTriplePacket.TYPE,
@@ -621,6 +652,65 @@ public class Rituals implements ModInitializer {
 		ServerPlayNetworking.registerGlobalReceiver(
 				PolarityTornadoLaunchPacket.TYPE,
 				PolarityTornadoLaunchPacket::handle);
+		PayloadTypeRegistry.serverboundPlay().register(
+				TemporalSlowZonePacket.TYPE,
+				TemporalSlowZonePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				TemporalSlowZonePacket.TYPE,
+				TemporalSlowZonePacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				TemporalShieldPacket.TYPE,
+				TemporalShieldPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				TemporalShieldPacket.TYPE,
+				TemporalShieldPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				TemporalMutePacket.TYPE,
+				TemporalMutePacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				TemporalMutePacket.TYPE,
+				TemporalMutePacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				TemporalRecallPacket.TYPE,
+				TemporalRecallPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				TemporalRecallPacket.TYPE,
+				TemporalRecallPacket::handle
+		);
+		PayloadTypeRegistry.serverboundPlay().register(
+				ShadeshatterMorphPacket.TYPE,
+				ShadeshatterMorphPacket.CODEC
+		);
+		ServerPlayNetworking.registerGlobalReceiver(
+				ShadeshatterMorphPacket.TYPE,
+				ShadeshatterMorphPacket::handle
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				ShadeshatterHastePacket.TYPE, ShadeshatterHastePacket.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(
+				ShadeshatterAbilityResetPacket.TYPE, ShadeshatterAbilityResetPacket.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(
+				ShadeshatterSpellPacket.TYPE, ShadeshatterSpellPacket.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(
+				ShadeshatterSpellPacket.TYPE, ShadeshatterSpellPacket::handle);
+		PayloadTypeRegistry.serverboundPlay().register(
+				ShadeshatterWormholePacket.TYPE, ShadeshatterWormholePacket.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(
+				ShadeshatterWormholePacket.TYPE, ShadeshatterWormholePacket::handle);
+
+		PayloadTypeRegistry.clientboundPlay().register(
+				ShadeshatterSpellStartPacket.TYPE, ShadeshatterSpellStartPacket.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(
+				TemporalRecallStartCooldownPacket.TYPE,
+				TemporalRecallStartCooldownPacket.CODEC
+		);
 
 
 		Set<UUID> hasDoubleJumped = ConcurrentHashMap.newKeySet();
@@ -675,6 +765,8 @@ public class Rituals implements ModInitializer {
 					if (p.onGround()) hasDoubleJumped.remove(p.getUUID());
 					LightningRapierStreakTracker.tick(server);
 					PolarityBowSwitchPacket.tickServerSparks(server);
+					TemporalRecallTracker.tick(server);
+					ShadeshatterWormholeHandler.tick(server);
 					ServerTickEvents.END_SERVER_TICK.register(VortexSlamPacket::tickServerSlams);
 					long currentTime = server.overworld().getGameTime();
 
@@ -870,6 +962,9 @@ public class Rituals implements ModInitializer {
 		);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
 				TwinsResonancePacket.onPlayerDisconnect(handler.getPlayer().getUUID())
+		);
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
+				ShadeshatterSpellHandler.onPlayerDisconnect(handler.getPlayer().getUUID())
 		);
 
 

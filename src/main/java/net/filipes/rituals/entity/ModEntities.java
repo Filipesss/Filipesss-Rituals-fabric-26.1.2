@@ -10,6 +10,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 
+import java.time.temporal.Temporal;
+
 public class ModEntities {
 
     public static final EntityType<PulseBlasterBeamEntity> PULSE_BLASTER_BEAM = Registry.register(
@@ -541,22 +543,7 @@ public class ModEntities {
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "blighted_puddle")
                     ))
     );
-    public static final EntityType<VortexProjectileEntity> VORTEX_PROJECTILE = Registry.register(
-            BuiltInRegistries.ENTITY_TYPE,
-            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_projectile"),
-            EntityType.Builder.<VortexProjectileEntity>of(
-                            (type, level) -> new VortexProjectileEntity(
-                                    (EntityType<? extends VortexProjectileEntity>) type, level),
-                            MobCategory.MISC
-                    )
-                    .sized(0.4f, 0.4f)
-                    .clientTrackingRange(64)
-                    .updateInterval(1)
-                    .build(ResourceKey.create(
-                            Registries.ENTITY_TYPE,
-                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_projectile")
-                    ))
-    );
+
     public static final EntityType<ReversePolarityArrowEntity> REVERSE_POLARITY_ARROW =
             Registry.register(
                     BuiltInRegistries.ENTITY_TYPE,
@@ -598,6 +585,86 @@ public class ModEntities {
                     .build(ResourceKey.create(
                             Registries.ENTITY_TYPE,
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "vortex_boom")
+                    ))
+    );
+    public static final EntityType<TemporalSlowZoneGroundEntity> TEMPORAL_SLOW_ZONE_GROUND = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_slow_zone_ground"),
+            EntityType.Builder.<TemporalSlowZoneGroundEntity>of(
+                            (type, level) -> new TemporalSlowZoneGroundEntity(
+                                    (EntityType<? extends TemporalSlowZoneGroundEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.1f, 0.1f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_slow_zone_ground")
+                    ))
+    );
+    public static final EntityType<TemporalShieldEntity> TEMPORAL_SHIELD = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_shield"),
+            EntityType.Builder.<TemporalShieldEntity>of(
+                            (type, level) -> new TemporalShieldEntity(
+                                    (EntityType<? extends TemporalShieldEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_shield")
+                    ))
+    );
+    public static final EntityType<TemporalMuteMarkEntity> TEMPORAL_MUTE_MARK = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_mute_mark"),
+            EntityType.Builder.<TemporalMuteMarkEntity>of(
+                            (type, level) -> new TemporalMuteMarkEntity(
+                                    (EntityType<? extends TemporalMuteMarkEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_mute_mark")
+                    ))
+    );
+    public static final EntityType<TemporalRecallEntity> TEMPORAL_RECALL = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_recall"),
+            EntityType.Builder.<TemporalRecallEntity>of(
+                            (type, level) -> new TemporalRecallEntity(
+                                    (EntityType<? extends TemporalRecallEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "temporal_recall")
+                    ))
+    );
+    public static final EntityType<ShadeshatterSpellEntity> SHADESHATTER_SPELL = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "shadeshatter_spell"),
+            EntityType.Builder.<ShadeshatterSpellEntity>of(
+                            (type, level) -> new ShadeshatterSpellEntity(
+                                    (EntityType<? extends ShadeshatterSpellEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "shadeshatter_spell")
                     ))
     );
 

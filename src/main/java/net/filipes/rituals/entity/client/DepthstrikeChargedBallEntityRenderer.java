@@ -3,15 +3,12 @@ package net.filipes.rituals.entity.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.filipes.rituals.client.DepthstrikeChargedBallModel;
 import net.filipes.rituals.entity.custom.DepthstrikeChargedBallEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.resources.Identifier;
 
 public class DepthstrikeChargedBallEntityRenderer
         extends EntityRenderer<DepthstrikeChargedBallEntity, DepthstrikeChargedBallEntityRenderer.ChargedBallRenderState> {
@@ -50,16 +47,13 @@ public class DepthstrikeChargedBallEntityRenderer
     @Override
     public void submit(ChargedBallRenderState state, PoseStack poseStack,
                        SubmitNodeCollector collector, CameraRenderState camera) {
-
-        MultiBufferSource bufferSource = Minecraft.getInstance()
-                .renderBuffers().bufferSource();
-
         poseStack.pushPose();
-        model.render(poseStack, bufferSource, 15728880, state.ageInTicks);
+
+        // Use engine scheduler directly
+        model.render(poseStack, collector, 15728880, state.ageInTicks);
+
         poseStack.popPose();
     }
-
-
 
     @Override
     protected float getShadowRadius(ChargedBallRenderState state) { return 0.3f; }

@@ -47,7 +47,7 @@ public class PolarityArrowRedEntityRenderer extends ArrowRenderer<PolarityArrowR
             }
         }
 
-        Vec3 camWorld = Minecraft.getInstance().gameRenderer.getMainCamera().position();
+        Vec3 camWorld = Minecraft.getInstance().gameRenderer.mainCamera().position();
         state.cameraOffset = camWorld.subtract(cx, cy, cz);
     }
 

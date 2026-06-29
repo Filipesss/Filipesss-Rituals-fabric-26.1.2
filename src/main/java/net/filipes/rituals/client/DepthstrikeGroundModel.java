@@ -1,13 +1,12 @@
 package net.filipes.rituals.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
@@ -19,7 +18,6 @@ public class DepthstrikeGroundModel {
 
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("rituals", "textures/entity/depthstrike_ground.png");
-
 
     private final ModelPart root;
     private final ModelPart bone;
@@ -65,7 +63,7 @@ public class DepthstrikeGroundModel {
         return LayerDefinition.create(mesh, 64, 64);
     }
 
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource,
+    public void render(PoseStack poseStack, SubmitNodeCollector buffers,
                        int packedLight, float ageInTicks) {
 
         poseStack.pushPose();
@@ -78,8 +76,13 @@ public class DepthstrikeGroundModel {
         this.bone.xRot  = 0.3927F + boneXRad;
         this.bone2.xRot = bone2XRad;
 
-        VertexConsumer vc = bufferSource.getBuffer(RenderTypes.entityTranslucent(TEXTURE));
-        this.root.render(poseStack, vc, packedLight, OverlayTexture.NO_OVERLAY);
+        int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
+
+        buffers.submitModelPart(
+                this.root, poseStack, RenderTypes.entityTranslucent(TEXTURE),
+                packedLight, OverlayTexture.NO_OVERLAY,
+                null, mainColor, null
+        );
 
         poseStack.popPose();
     }

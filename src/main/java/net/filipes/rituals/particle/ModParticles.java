@@ -12,9 +12,10 @@ public class ModParticles {
     public static final SimpleParticleType LIGHTNING_TRAIL = FabricParticleTypes.simple();
     public static final SimpleParticleType LIGHTNING_EXPLOSION = FabricParticleTypes.simple();
     public static final SimpleParticleType LIGHTNING_SPARK = FabricParticleTypes.simple();
-
-    // The single Blighted Particle registration
     public static final SimpleParticleType BLIGHTED = FabricParticleTypes.simple();
+    public static final SimpleParticleType GLASSREAVER_CRIT = FabricParticleTypes.simple();
+    public static final SimpleParticleType TEMPORAL_HOURGLASS = FabricParticleTypes.simple();
+    public static final SimpleParticleType MOON = FabricParticleTypes.simple();
 
     public static void register() {
         Registry.register(BuiltInRegistries.PARTICLE_TYPE, Identifier.fromNamespaceAndPath("rituals", "lightning_bolt_mini"), LIGHTNING_BOLT_MINI);
@@ -26,6 +27,21 @@ public class ModParticles {
                 BuiltInRegistries.PARTICLE_TYPE,
                 Identifier.fromNamespaceAndPath("rituals", "blighted"),
                 BLIGHTED
+        );
+        Registry.register(
+                BuiltInRegistries.PARTICLE_TYPE,
+                Identifier.fromNamespaceAndPath("rituals", "glassreaver_crit"),
+                GLASSREAVER_CRIT
+        );
+        Registry.register(
+                BuiltInRegistries.PARTICLE_TYPE,
+                Identifier.fromNamespaceAndPath("rituals", "temporal_hourglass"),
+                TEMPORAL_HOURGLASS
+        );
+        Registry.register(
+                BuiltInRegistries.PARTICLE_TYPE,
+                Identifier.fromNamespaceAndPath("rituals", "moon"),
+                MOON
         );
     }
 }

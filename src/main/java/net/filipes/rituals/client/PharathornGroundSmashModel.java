@@ -1,13 +1,12 @@
 package net.filipes.rituals.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.Identifier;
@@ -30,7 +29,6 @@ public class PharathornGroundSmashModel {
         MeshDefinition mesh     = new MeshDefinition();
         PartDefinition partRoot = mesh.getRoot();
 
-        // Translated directly from the Blockbench Yarn export to Mojmap conventions
         partRoot.addOrReplaceChild("bb_main",
                 CubeListBuilder.create()
                         .texOffs(0, 24).addBox(-4.0F, -11.0F, -4.0F, 6.0F, 11.0F, 8.0F, new CubeDeformation(0.0F))
@@ -40,18 +38,19 @@ public class PharathornGroundSmashModel {
         return LayerDefinition.create(mesh, 64, 64);
     }
 
-    /**
-     * Renders the model. The renderer is responsible for the yOffset translation
-     * and Y-rotation before calling this; this method only handles the internal
-     * flip needed to match Blockbench's Y-down convention.
-     */
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource, int packedLight) {
+    public void render(PoseStack poseStack, SubmitNodeCollector buffers, int packedLight) {
         poseStack.pushPose();
-        poseStack.mulPose(Axis.XP.rotationDegrees(180.0f)); // flip from Blockbench Y-down to render Y-up
-        poseStack.translate(0.0, -1.5, 0.0);               // seat the pivot at ground level
+        poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
+        poseStack.translate(0.0, -1.5, 0.0);
 
-        VertexConsumer vc = bufferSource.getBuffer(RenderTypes.entityTranslucent(TEXTURE));
-        bbMain.render(poseStack, vc, packedLight, OverlayTexture.NO_OVERLAY);
+        int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
+
+        buffers.submitModelPart(
+                bbMain, poseStack, RenderTypes.entityTranslucent(TEXTURE),
+                packedLight, OverlayTexture.NO_OVERLAY,
+                null, mainColor, null
+        );
+
         poseStack.popPose();
     }
 }

@@ -43,7 +43,7 @@ public class SolarBladeHudOverlay {
 
     private static void render(GuiGraphicsExtractor guiGraphics) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.options.hideGui) return;
+        if (mc.player == null || mc.gui.hud.isHidden()) return;
 
         long remaining = activeUntil - System.currentTimeMillis();
         if (remaining <= 0) return;

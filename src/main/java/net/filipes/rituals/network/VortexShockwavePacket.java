@@ -21,6 +21,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ambient.Bat;
 import net.minecraft.world.phys.AABB;
@@ -209,7 +210,7 @@ public record VortexShockwavePacket() implements CustomPacketPayload {
             double bz = pos.z + Math.sin(angle) * spawnR;
             double by = pos.y + 0.6 + random.nextDouble() * 0.5;
 
-            Bat bat = new Bat(EntityType.BAT, level);
+            Bat bat = new Bat(EntityTypes.BAT, level);
             bat.setPos(bx, by, bz);
             bat.setNoAi(false);
             double speed = 0.45 + random.nextDouble() * 0.35;

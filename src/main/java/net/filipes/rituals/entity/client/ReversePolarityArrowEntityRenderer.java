@@ -43,7 +43,7 @@ public class ReversePolarityArrowEntityRenderer extends ArrowRenderer<ReversePol
             Vec3 wp = entity.trailPositions[idx];
             if (wp != null) state.trail.add(new Vec3(wp.x - cx, wp.y - cy, wp.z - cz));
         }
-        Vec3 camWorld = Minecraft.getInstance().gameRenderer.getMainCamera().position();
+        Vec3 camWorld = Minecraft.getInstance().gameRenderer.mainCamera().position();
         state.cameraOffset = camWorld.subtract(cx, cy, cz);
     }
 

@@ -5,7 +5,6 @@ import com.mojang.math.Axis;
 import net.filipes.rituals.client.PolarityShieldModel;
 import net.filipes.rituals.entity.custom.PolarityShieldEntity;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -13,7 +12,6 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 public class PolarityShieldEntityRenderer
@@ -82,8 +80,6 @@ public class PolarityShieldEntityRenderer
 
     @Override
     public void submit(ShieldRenderState state, PoseStack ps, SubmitNodeCollector snc, CameraRenderState cam) {
-        MultiBufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-
         ps.pushPose();
         ps.translate(state.correctionDx, state.correctionDy, state.correctionDz);
         ps.mulPose(Axis.YP.rotationDegrees(-state.yaw));
@@ -94,33 +90,22 @@ public class PolarityShieldEntityRenderer
         float alpha = 1.0F;
 
         if (state.actionState == 1) {
-            // MISS FADE: Progress maps over the 7-tick remaining dash window (ticking from 5 to 12)
-            float progress = (state.deathTicks + state.ageInTicks % 1.0F) / 7.0F;
-            progress = Mth.clamp(progress, 0.0F, 1.0F);
+            float progress = Mth.clamp((state.deathTicks + state.ageInTicks % 1.0F) / 7.0F, 0.0F, 1.0F);
             scale = 1.0F + (progress * 0.6F);
             alpha = 1.0F - progress;
         } else if (state.actionState == 2) {
-            // HIT EXPLOSION: Progress maps over standard 10-tick duration
-            float progress = (state.deathTicks + state.ageInTicks % 1.0F) / 10.0F;
-            progress = Mth.clamp(progress, 0.0F, 1.0F);
+            float progress = Mth.clamp((state.deathTicks + state.ageInTicks % 1.0F) / 10.0F, 0.0F, 1.0F);
             scale = 1.0F + (progress * 0.6F);
             alpha = 1.0F - progress;
         }
 
-        // Y-Position stability calculation
-        double centerOffset = 0.7D;
-        double dynamicY = -1.85D - ((scale - 1.0F) * centerOffset);
-
+        double dynamicY = -1.85D - ((scale - 1.0F) * 0.7D);
         ps.translate(0.0D, dynamicY, 0.0D);
         ps.scale(scale, scale, scale);
 
-        model.render(ps, buffers, 15728880, state.ageInTicks, state.isRed, state.isFirstPerson, alpha);
+        model.render(ps, snc, 15728880, state.ageInTicks, state.isRed, state.isFirstPerson, alpha);
         ps.popPose();
     }
-
-
-
-
 
     @Override protected float getShadowRadius(ShieldRenderState s) { return 0f; }
     @Override protected float getShadowStrength(ShieldRenderState s) { return 0f; }

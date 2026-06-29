@@ -1,12 +1,11 @@
 package net.filipes.rituals.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
 
@@ -123,15 +122,24 @@ public class PulseBlasterGunModel {
         return LayerDefinition.create(meshDefinition, 64, 64);
     }
 
-    public void render(PoseStack poseStack, MultiBufferSource bufferSource,
+    public void render(PoseStack poseStack, SubmitNodeCollector buffers,
                        int light, int overlay, float cylinderAngle, boolean glowCylinder) {
         this.cylinder.yRot = cylinderAngle;
 
-        VertexConsumer consumer = bufferSource.getBuffer(RenderTypes.entityCutout(TEXTURE));
+        int mainColor = (255 << 24) | (255 << 16) | (255 << 8) | 255;
 
-        this.bb_main.render(poseStack, consumer, light, overlay);
+        buffers.submitModelPart(
+                this.bb_main, poseStack, RenderTypes.entityCutout(TEXTURE),
+                light, overlay,
+                null, mainColor, null
+        );
 
         int cylinderLight = glowCylinder ? 15728880 : light;
-        this.cylinder.render(poseStack, consumer, cylinderLight, overlay);
+
+        buffers.submitModelPart(
+                this.cylinder, poseStack, RenderTypes.entityCutout(TEXTURE),
+                cylinderLight, overlay,
+                null, mainColor, null
+        );
     }
 }

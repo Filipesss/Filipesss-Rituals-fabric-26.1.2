@@ -3,20 +3,14 @@ package net.filipes.rituals.client;
 import com.mojang.serialization.MapCodec;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
-
+import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.world.item.ItemStack;
-
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Unit;
-
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3fc;
-
 import java.util.function.Consumer;
 
 public class PulseBlasterSpecialRenderer implements SpecialModelRenderer<Unit> {
@@ -45,13 +39,9 @@ public class PulseBlasterSpecialRenderer implements SpecialModelRenderer<Unit> {
         matrices.scale(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
         matrices.mulPose(Axis.XP.rotationDegrees(-90f));
 
-        MultiBufferSource.BufferSource bufferSource =
-                Minecraft.getInstance().renderBuffers().bufferSource();
-
-        model.render(matrices, bufferSource, light, overlay,
+        // Use the model's updated submit-ready render method instead of an immediate buffer flush
+        model.render(matrices, submitNodeCollector, light, overlay,
                 PulseBlasterCylinderState.getAngle(), PulseBlasterCylinderState.isGlowing());
-
-        bufferSource.endBatch();
 
         matrices.popPose();
     }

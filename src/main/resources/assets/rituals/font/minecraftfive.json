@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "rituals:minecraftfive.ttf",
+      "shift": [0, 0],
+      "size": 5.0,
+      "oversample": 4.0
+    }
+  ]
+}

@@ -1,15 +1,14 @@
 package net.filipes.rituals.entity.client;
 
+import com.mojang.blaze3d.PrimitiveTopology; // Imported for drawing topology
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.ColorTargetState;
 import com.mojang.blaze3d.pipeline.DepthStencilState;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DestFactor;
-import com.mojang.blaze3d.platform.SourceFactor;
+import com.mojang.blaze3d.platform.BlendFactor; // Replaced SourceFactor and DestFactor
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import net.filipes.rituals.entity.custom.LightningStrikeEntity;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -33,9 +32,12 @@ public class LightningStrikeEntityRenderer
                     .withVertexShader("core/rendertype_lightning")
                     .withFragmentShader("core/rendertype_lightning")
                     .withColorTargetState(new ColorTargetState(
-                            new BlendFunction(SourceFactor.SRC_ALPHA, DestFactor.ONE, SourceFactor.ONE, DestFactor.ZERO)
+                            // FIX: Migrated SourceFactor/DestFactor constants to BlendFactor equivalents
+                            new BlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE, BlendFactor.ONE, BlendFactor.ZERO)
                     ))
-                    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS)
+                    // FIX: Updated layout system to match modern mappings
+                    .withVertexBinding(0, DefaultVertexFormat.POSITION_COLOR)
+                    .withPrimitiveTopology(PrimitiveTopology.QUADS)
                     .withDepthStencilState(DepthStencilState.DEFAULT)
                     .withCull(false)
                     .build()
@@ -48,7 +50,6 @@ public class LightningStrikeEntityRenderer
                     .setOutputTarget(OutputTarget.WEATHER_TARGET)
                     .createRenderSetup()
     );
-
 
     public static class StrikeRenderState extends EntityRenderState {
         float posX, posY, posZ;
@@ -100,7 +101,6 @@ public class LightningStrikeEntityRenderer
                        SubmitNodeCollector snc, CameraRenderState cam) {
         if (s.alpha < 0.005f) return;
 
-
         final int   mainAlpha = (int)(s.alpha * PEAK_ALPHA);
         final float age       = s.age;
         final long  seed      = s.seed;
@@ -119,7 +119,6 @@ public class LightningStrikeEntityRenderer
 
         ps.popPose();
     }
-
 
     private static void drawVerticalBolt(PoseStack.Pose pose, VertexConsumer v,
                                          float height, float width,
@@ -173,7 +172,6 @@ public class LightningStrikeEntityRenderer
             vQuad(pose, v, a, b, wingB, width, r, g, bl, alpha);
         }
     }
-
 
     private static void vQuad(PoseStack.Pose pose, VertexConsumer v,
                               Vec3 a, Vec3 b, Vec3 wing, float w,

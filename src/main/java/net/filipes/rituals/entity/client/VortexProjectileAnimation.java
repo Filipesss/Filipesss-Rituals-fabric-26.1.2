@@ -7,9 +7,6 @@ import net.minecraft.client.animation.KeyframeAnimations;
 
 public class VortexProjectileAnimation {
 
-    // One-shot: starts at scale 1.0, pulses, then shrinks to 0.2 as the projectile dies.
-    // Duration 1.0 s = 20 ticks.  Not looping — matches the projectile lifetime.
-    // VortexProjectileModel.computeScale() mirrors these exact keyframe values at runtime.
     public static final AnimationDefinition SCALE_PULSE =
             AnimationDefinition.Builder.withLength(1.0F)
                     .addAnimation("main", new AnimationChannel(AnimationChannel.Targets.SCALE,

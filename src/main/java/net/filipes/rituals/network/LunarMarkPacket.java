@@ -70,7 +70,7 @@ public class LunarMarkPacket implements CustomPacketPayload {
             LunarMarkTracker.mark(target.getUUID());
             Vec3 look = player.getLookAngle();
 
-            target.knockback(0.9, -look.x, -look.z);
+            target.knockback(0.9, -look.x, -look.z, level.damageSources().playerAttack(player), 0.0f);
             target.setDeltaMovement(target.getDeltaMovement().add(0, 0.2, 0));
 
             double spawnX = target.getX();

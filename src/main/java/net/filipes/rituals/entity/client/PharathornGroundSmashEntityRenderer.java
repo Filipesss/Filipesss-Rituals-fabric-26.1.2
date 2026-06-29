@@ -4,8 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.filipes.rituals.client.PharathornGroundSmashModel;
 import net.filipes.rituals.entity.custom.PharathornGroundSmashEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -48,40 +46,31 @@ public class PharathornGroundSmashEntityRenderer
 
     @Override
     public void submit(SmashRenderState state, PoseStack ps,
-                       SubmitNodeCollector collector, CameraRenderState cam) {
-
+                       SubmitNodeCollector snc, CameraRenderState cam) {
         float animTick = state.ageInTicks - state.delayTicks;
         if (animTick < 0) return;
 
         final float BURIED_DEPTH = 1.8f;
-
         float yOffset;
-        if (animTick < PharathornGroundSmashEntity.EMERGE_TICKS) {
 
-            float t     = animTick / (float) PharathornGroundSmashEntity.EMERGE_TICKS;
+        if (animTick < PharathornGroundSmashEntity.EMERGE_TICKS) {
+            float t = animTick / (float) PharathornGroundSmashEntity.EMERGE_TICKS;
             float eased = 1f - (float) Math.pow(1f - t, 3);
             yOffset = -BURIED_DEPTH * (1f - eased);
-        } else if (animTick < PharathornGroundSmashEntity.EMERGE_TICKS
-                + PharathornGroundSmashEntity.HOLD_TICKS) {
-
-            float holdTick   = animTick - PharathornGroundSmashEntity.EMERGE_TICKS;
+        } else if (animTick < PharathornGroundSmashEntity.EMERGE_TICKS + PharathornGroundSmashEntity.HOLD_TICKS) {
+            float holdTick = animTick - PharathornGroundSmashEntity.EMERGE_TICKS;
             float wobblePhase = state.yRot * ((float) Math.PI / 180f);
             yOffset = (float) Math.sin(holdTick * 0.38f + wobblePhase) * 0.045f;
         } else {
-
-            float t = Math.min(1f, (animTick - PharathornGroundSmashEntity.EMERGE_TICKS
-                    - PharathornGroundSmashEntity.HOLD_TICKS)
-                    / (float) PharathornGroundSmashEntity.RETRACT_TICKS);
+            float t = Math.min(1f, (animTick - PharathornGroundSmashEntity.EMERGE_TICKS - PharathornGroundSmashEntity.HOLD_TICKS) / (float) PharathornGroundSmashEntity.RETRACT_TICKS);
             yOffset = -BURIED_DEPTH * (t * t);
         }
 
-        MultiBufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-
         ps.pushPose();
         ps.translate(0.0, yOffset, 0.0);
-        ps.mulPose(Axis.YP.rotationDegrees(state.yRot)); // random per-spike rotation
+        ps.mulPose(Axis.YP.rotationDegrees(state.yRot));
         ps.scale(state.visualScale, state.visualScale, state.visualScale);
-        model.render(ps, bufferSource, 15728880);
+        model.render(ps, snc, 15728880);
         ps.popPose();
     }
 

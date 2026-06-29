@@ -52,11 +52,11 @@ public class LifestealMarkEntityRenderer
         s.relZ = (float)(eZ - s.z);
         s.frame      = e.getCurrentFrame();
         s.cameraYaw = e.level().getLevelData() != null
-                ? net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera().yRot()
+                ? net.minecraft.client.Minecraft.getInstance().gameRenderer.mainCamera().yRot()
                 : 0f;
 
         s.cameraPitch = e.level().getLevelData() != null
-                ? net.minecraft.client.Minecraft.getInstance().gameRenderer.getMainCamera().xRot()
+                ? net.minecraft.client.Minecraft.getInstance().gameRenderer.mainCamera().xRot()
                 : 0f;
         s.scale = e.getEntityScale();
     }
