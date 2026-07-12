@@ -37,5 +37,13 @@
   "key.rituals.action_two":   "Action 2",
   "key.rituals.action_three": "Action 3",
 
-  "item.rituals.upgrade.kill_upgrade": "Their blood makes you stronger..."
+  "item.rituals.upgrade.kill_upgrade": "Their blood makes you stronger...",
+
+  "effect.rituals.conductivity": "Condictivity",
+  "effect.rituals.stun": "Stun",
+  "effect.rituals.blighted": "Blighted",
+  "effect.rituals.moonshine": "Moonshine",
+  "effect.rituals.sunblessed": "Sunblessed",
+
+  "key.category.rituals.category": "Rituals"
 }
