@@ -77,11 +77,41 @@ public class UpgradeRecipeRegistry {
 
 
 
-        register(ModItems.PULSE_BLASTER, 1, new UpgradeRecipe(2, List.of(new IngredientRequirement(Items.DIRT, 1))));
-        register(ModItems.PULSE_BLASTER, 2, new UpgradeRecipe(3, List.of(new IngredientRequirement(Items.DIRT, 1))));
-        register(ModItems.PULSE_BLASTER, 3, new UpgradeRecipe(4, List.of(new IngredientRequirement(Items.DIRT, 1))));
-        register(ModItems.PULSE_BLASTER, 4, new UpgradeRecipe(5, List.of(new IngredientRequirement(Items.DIRT, 1))));
-        register(ModItems.PULSE_BLASTER, 5, new UpgradeRecipe(6, List.of(new IngredientRequirement(Items.DIRT, 1))));
+        register(ModItems.PULSE_BLASTER, 1, new UpgradeRecipe(2, List.of(
+                new IngredientRequirement(Items.REDSTONE_BLOCK, 16),
+                new IngredientRequirement(Items.IRON_BLOCK, 12),
+                new IngredientRequirement(Items.PISTON, 16)
+        )));
+
+        register(ModItems.PULSE_BLASTER, 2, new UpgradeRecipe(3, List.of(
+                new IngredientRequirement(Items.OBSERVER, 32),
+                new IngredientRequirement(Items.DISPENSER, 24),
+                new IngredientRequirement(Items.COPPER_BLOCK.waxed().unaffected(), 24),
+                new IngredientRequirement(Items.REDSTONE, 32)
+
+        )));
+
+        register(ModItems.PULSE_BLASTER, 3, new UpgradeRecipe(4, List.of(
+                new IngredientRequirement(Items.STICKY_PISTON, 24),
+                new IngredientRequirement(Items.SLIME_BLOCK, 16),
+                new IngredientRequirement(Items.REDSTONE_BLOCK, 24)
+        )));
+
+        register(ModItems.PULSE_BLASTER, 4, new UpgradeRecipe(5, List.of(
+                new IngredientRequirement(Items.HEAVY_CORE, 1),
+                new IngredientRequirement(Items.COPPER_BULB.waxed().unaffected(), 16),
+                new IngredientRequirement(Items.OBSERVER, 32),
+                new IngredientRequirement(Items.IRON_BLOCK, 24)
+        )));
+
+        register(ModItems.PULSE_BLASTER, 5, new UpgradeRecipe(6, List.of(
+                new IngredientRequirement(Items.SCULK_CATALYST, 24),
+                new IngredientRequirement(Items.NETHER_STAR, 1),
+                new IngredientRequirement(Items.REDSTONE_BLOCK, 32),
+                new IngredientRequirement(Items.COPPER_BULB.weathering().unaffected(), 32),
+                new IngredientRequirement(Items.DIAMOND_BLOCK, 8)
+        )));
+
 
         register(ModItems.CINDERBOLT, 1, new UpgradeRecipe(2, List.of(
                 new IngredientRequirement(Items.FIRE_CHARGE, 16),
@@ -100,7 +130,8 @@ public class UpgradeRecipeRegistry {
         register(ModItems.CINDERBOLT, 3, new UpgradeRecipe(4, List.of(
                 new IngredientRequirement(Items.NETHER_WART, 32),
                 new IngredientRequirement(Items.MAGMA_BLOCK, 32),
-                new IngredientRequirement(Items.FIRE_CHARGE, 32)
+                new IngredientRequirement(Items.FIRE_CHARGE, 32),
+                new IngredientRequirement(Items.HONEY_BLOCK, 12)
         )));
 
         register(ModItems.CINDERBOLT, 4, new UpgradeRecipe(5, List.of(
@@ -113,7 +144,8 @@ public class UpgradeRecipeRegistry {
                 new IngredientRequirement(Items.GOLD_BLOCK, 24),
                 new IngredientRequirement(Items.GHAST_TEAR, 8),
                 new IngredientRequirement(Items.BLAZE_POWDER, 64),
-                new IngredientRequirement(Items.CRYING_OBSIDIAN, 24)
+                new IngredientRequirement(Items.CRYING_OBSIDIAN, 24),
+                new IngredientRequirement(Items.HONEYCOMB_BLOCK, 12)
         )));
 
         register(ModItems.CINDERBOLT, 6, new UpgradeRecipe(7, List.of(
@@ -128,7 +160,8 @@ public class UpgradeRecipeRegistry {
         register(ModItems.LUNAR_BLADE, 1, new UpgradeRecipe(2, List.of(
                 new IngredientRequirement(Items.AMETHYST_SHARD, 32),
                 new IngredientRequirement(Items.GLOW_INK_SAC, 16),
-                new IngredientRequirement(Items.PRISMARINE_SHARD, 32)
+                new IngredientRequirement(Items.PRISMARINE_SHARD, 32),
+                new IngredientRequirement(Items.HONEYCOMB_BLOCK, 12)
         )));
 
         register(ModItems.LUNAR_BLADE, 2, new UpgradeRecipe(3, List.of(
@@ -162,7 +195,8 @@ public class UpgradeRecipeRegistry {
         register(ModItems.SOLAR_BLADE, 1, new UpgradeRecipe(2, List.of(
                 new IngredientRequirement(Items.GOLD_INGOT, 32),
                 new IngredientRequirement(Items.GLOWSTONE_DUST, 64),
-                new IngredientRequirement(Items.SUNFLOWER, 32)
+                new IngredientRequirement(Items.SUNFLOWER, 32),
+                new IngredientRequirement(Items.HONEY_BLOCK, 14)
         )));
 
         register(ModItems.SOLAR_BLADE, 2, new UpgradeRecipe(3, List.of(
@@ -181,7 +215,8 @@ public class UpgradeRecipeRegistry {
         register(ModItems.SOLAR_BLADE, 4, new UpgradeRecipe(5, List.of(
                 new IngredientRequirement(Items.NETHERITE_INGOT, 3),
                 new IngredientRequirement(Items.OCHRE_FROGLIGHT, 16),
-                new IngredientRequirement(Items.GOLD_BLOCK, 16)
+                new IngredientRequirement(Items.GOLD_BLOCK, 16),
+                new IngredientRequirement(Items.HONEYCOMB_BLOCK, 12)
         )));
 
         register(ModItems.SOLAR_BLADE, 5, new UpgradeRecipe(6, List.of(
@@ -246,7 +281,8 @@ public class UpgradeRecipeRegistry {
                 new IngredientRequirement(Items.NETHER_WART, 32),
                 new IngredientRequirement(Items.ROTTEN_FLESH, 64),
                 new IngredientRequirement(Items.SPIDER_EYE, 32),
-                new IngredientRequirement(Items.GOLD_BLOCK, 12)
+                new IngredientRequirement(Items.GOLD_BLOCK, 12),
+                new IngredientRequirement(Items.MANGROVE_ROOTS, 64)
         )));
 
         register(ModItems.BLIGHTSPEAR, 4, new UpgradeRecipe(5, List.of(
@@ -282,7 +318,8 @@ public class UpgradeRecipeRegistry {
                 new IngredientRequirement(Items.BLAZE_ROD, 16),
                 new IngredientRequirement(Items.FIRE_CHARGE, 32),
                 new IngredientRequirement(Items.AMETHYST_SHARD, 48),
-                new IngredientRequirement(Items.BREEZE_ROD, 24)
+                new IngredientRequirement(Items.BREEZE_ROD, 24),
+                new IngredientRequirement(Items.HONEY_BLOCK, 12)
         )));
 
         register(ModItems.TEMPORAL_GLASSREAVER, 4, new UpgradeRecipe(5, List.of(
@@ -292,7 +329,7 @@ public class UpgradeRecipeRegistry {
         )));
 
         register(ModItems.TEMPORAL_GLASSREAVER, 5, new UpgradeRecipe(6, List.of(
-                new IngredientRequirement(Items.WITHER_SKELETON_SKULL, 2),
+                new IngredientRequirement(Items.WITHER_SKELETON_SKULL, 3),
                 new IngredientRequirement(Items.GOLD_BLOCK, 32),
                 new IngredientRequirement(Items.IRON_BLOCK, 24)
         )));

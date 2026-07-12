@@ -29,7 +29,7 @@ public class PedestalTypes {
                     Map.entry(ModItems.ROSEGOLD_INGOT, 6),
                     Map.entry(Items.NETHERITE_INGOT, 3),
                     Map.entry(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 2),
-                    Map.entry(Items.COPPER_BLOCK.waxed().unaffected(), 32),
+                    Map.entry(Items.COPPER_BLOCK.weathering().unaffected(), 32),
                     Map.entry(Items.AMETHYST_SHARD, 24),
                     Map.entry(Items.GOLD_BLOCK, 16)
             ),
@@ -49,7 +49,7 @@ public class PedestalTypes {
                     Map.entry(ModItems.ROSEGOLD_INGOT, 10),
                     Map.entry(Items.NETHERITE_INGOT, 4),
                     Map.entry(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 2),
-                    Map.entry(Items.COPPER_BLOCK.waxed().unaffected(), 32),
+                    Map.entry(Items.COPPER_BLOCK.weathering().unaffected(), 32),
                     Map.entry(Items.AMETHYST_SHARD, 24),
                     Map.entry(Items.GOLD_BLOCK, 20)
             ),
@@ -65,7 +65,7 @@ public class PedestalTypes {
                     Map.entry(ModItems.ROSEGOLD_INGOT, 12),
                     Map.entry(Items.NETHERITE_INGOT, 5),
                     Map.entry(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 3),
-                    Map.entry(Items.COPPER_BLOCK.waxed().unaffected(), 32),
+                    Map.entry(Items.COPPER_BLOCK.weathering().unaffected(), 32),
                     Map.entry(Items.AMETHYST_SHARD, 24),
                     Map.entry(Items.GOLD_BLOCK, 24)
             ),
@@ -81,7 +81,7 @@ public class PedestalTypes {
                     Map.entry(ModItems.ROSEGOLD_INGOT, 10),
                     Map.entry(Items.NETHERITE_INGOT, 5),
                     Map.entry(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 3),
-                    Map.entry(Items.COPPER_BLOCK.waxed().unaffected(), 32),
+                    Map.entry(Items.COPPER_BLOCK.weathering().unaffected(), 32),
                     Map.entry(Items.AMETHYST_SHARD, 24),
                     Map.entry(Items.GOLD_BLOCK, 24)
             ),
@@ -97,7 +97,7 @@ public class PedestalTypes {
                     Map.entry(ModItems.ROSEGOLD_INGOT, 8),
                     Map.entry(Items.NETHERITE_INGOT, 4),
                     Map.entry(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 2),
-                    Map.entry(Items.COPPER_BLOCK.waxed().unaffected(), 32),
+                    Map.entry(Items.COPPER_BLOCK.weathering().unaffected(), 32),
                     Map.entry(Items.AMETHYST_SHARD, 24),
                     Map.entry(Items.GOLD_BLOCK, 20)
             ),
@@ -110,13 +110,13 @@ public class PedestalTypes {
             "lightning_rapier_pedestal",
             Map.ofEntries(
                     Map.entry(Items.PLAYER_HEAD, 1),
-                    Map.entry(Items.COPPER_BLOCK.waxed().unaffected(), 32),
-                    Map.entry(Items.LIGHTNING_ROD.waxed().unaffected(), 64),
+                    Map.entry(Items.COPPER_BLOCK.weathering().unaffected(), 32),
+                    Map.entry(Items.LIGHTNING_ROD.weathering().unaffected(), 64),
                     Map.entry(Items.QUARTZ_BLOCK, 32),
                     Map.entry(Items.GOLD_BLOCK, 16),
                     Map.entry(Items.NETHERITE_INGOT, 4),
                     Map.entry(Items.SKELETON_SKULL, 1),
-                    Map.entry(Items.LIGHTNING_ROD.waxed().oxidized(), 16)
+                    Map.entry(Items.LIGHTNING_ROD.weathering().oxidized(), 16)
             ),
             access -> {
                 ItemStack stack = new ItemStack(ModItems.LIGHTNING_RAPIER);
@@ -133,7 +133,8 @@ public class PedestalTypes {
                     Map.entry(Items.OCHRE_FROGLIGHT, 8),
                     Map.entry(Items.GLOWSTONE, 32),
                     Map.entry(Items.PLAYER_HEAD, 1),
-                    Map.entry(Items.NETHERITE_INGOT, 2)
+                    Map.entry(Items.NETHERITE_INGOT, 2),
+                    Map.entry(Items.HONEYCOMB_BLOCK, 16)
             ),
             access -> {
                 ItemStack stack = new ItemStack(ModItems.SOLAR_BLADE);
@@ -150,7 +151,8 @@ public class PedestalTypes {
                     Map.entry(Items.DIAMOND_BLOCK, 12),
                     Map.entry(Items.PEARLESCENT_FROGLIGHT, 8),
                     Map.entry(Items.PLAYER_HEAD, 1),
-                    Map.entry(Items.NETHERITE_INGOT, 2)
+                    Map.entry(Items.NETHERITE_INGOT, 2),
+                    Map.entry(Items.HONEYCOMB_BLOCK, 16)
             ),
             access -> {
                 ItemStack stack = new ItemStack(ModItems.LUNAR_BLADE);
@@ -238,7 +240,8 @@ public class PedestalTypes {
                     Map.entry(Items.NETHERITE_INGOT, 4),
                     Map.entry(Items.IRON_BLOCK, 16),
                     Map.entry(Items.ECHO_SHARD, 6),
-                    Map.entry(Items.CRYING_OBSIDIAN, 16)
+                    Map.entry(Items.CRYING_OBSIDIAN, 16),
+                    Map.entry(Items.HONEYCOMB_BLOCK, 8)
             ),
             access -> {
                 ItemStack stack = new ItemStack(ModItems.TEMPORAL_GLASSREAVER);
@@ -255,7 +258,8 @@ public class PedestalTypes {
                     Map.entry(Items.CAMPFIRE, 8),
                     Map.entry(Items.NETHER_WART, 24),
                     Map.entry(Items.NETHERITE_INGOT, 4),
-                    Map.entry(Items.RESIN_BLOCK, 16)
+                    Map.entry(Items.RESIN_BLOCK, 16),
+                    Map.entry(Items.HONEYCOMB_BLOCK, 24)
             ),
             access -> {
                 ItemStack stack = new ItemStack(ModItems.CINDERBOLT);
@@ -272,7 +276,7 @@ public class PedestalTypes {
                     Map.entry(Items.IRON_BLOCK, 48),
                     Map.entry(Items.NETHERITE_INGOT, 3),
                     Map.entry(Items.DIAMOND_BLOCK, 12),
-                    Map.entry(Items.COPPER_BLOCK.waxed().unaffected(), 64),
+                    Map.entry(Items.COPPER_BLOCK.weathering().unaffected(), 64),
                     Map.entry(Items.HEAVY_CORE, 2),
                     Map.entry(Items.BLAZE_POWDER, 24),
                     Map.entry(Items.OBSERVER, 32),
@@ -293,7 +297,8 @@ public class PedestalTypes {
                     Map.entry(Items.TERRACOTTA, 64),
                     Map.entry(Items.GOLD_BLOCK, 24),
                     Map.entry(Items.OBSIDIAN, 16),
-                    Map.entry(Items.HEART_OF_THE_SEA, 2)
+                    Map.entry(Items.HEART_OF_THE_SEA, 2),
+                    Map.entry(Items.HONEYCOMB_BLOCK, 16)
             ),
             access -> {
                 ItemStack stack = new ItemStack(ModItems.PHARATHORN);
@@ -309,7 +314,7 @@ public class PedestalTypes {
                     Map.entry(Items.PLAYER_HEAD, 2),
                     Map.entry(Items.IRON_BLOCK, 48),
                     Map.entry(Items.LODESTONE, 16),
-                    Map.entry(Items.LIGHTNING_ROD.waxed().unaffected(), 24),
+                    Map.entry(Items.LIGHTNING_ROD.weathering().unaffected(), 24),
                     Map.entry(Items.COMPASS, 4)
             ),
             access -> {
