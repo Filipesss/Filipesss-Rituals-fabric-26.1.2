@@ -8,6 +8,7 @@ import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPreset;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.VortexEdgeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -45,6 +46,7 @@ public record VortexShockwavePacket() implements CustomPacketPayload {
 
     public static void handle(VortexShockwavePacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         MinecraftServer server = ctx.server();
 
         server.execute(() -> {
@@ -62,7 +64,10 @@ public record VortexShockwavePacket() implements CustomPacketPayload {
                     e -> e != player && e.isAlive() && player.distanceToSqr(e) <= radius * radius);
 
             for (LivingEntity target : targets) {
-                target.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 200, 0, false, true));
+                target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 200, 0, false, true));
+                if (target instanceof ServerPlayer targetPlayer) {
+                    ServerPlayNetworking.send(targetPlayer, new VortexDarknessPacket(200));
+                }
             }
 
             ScreenShakeEntity shake = new ScreenShakeEntity(level, playerPos, 22f, 0.45f, 16);

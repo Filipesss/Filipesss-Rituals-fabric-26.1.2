@@ -59,14 +59,14 @@ public class ShadeshatterItem extends Item implements RitualsTooltipStyle {
     }
 
     @Override
-    public int getNameColor() { return 0xBB55FF; }
+    public int getNameColor() { return 0xff5de1f0; }
 
     @Override
-    public int getTooltipBorderColorTop() { return 0xAA33FF; }
+    public int getTooltipBorderColorTop() { return 0xff38c8d9; }
 
     @Override
-    public int getTooltipBorderColorBottom() { return 0x220033; }
+    public int getTooltipBorderColorBottom() { return 0xff4e5878; }
 
     @Override
-    public int getTooltipBackgroundColor() { return 0xFF150025; }
+    public int getTooltipBackgroundColor() { return 0xe51d2233; }
 }

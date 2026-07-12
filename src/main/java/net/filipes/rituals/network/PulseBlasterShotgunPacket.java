@@ -5,6 +5,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.PulseBlasterBeamEntity;
 import net.filipes.rituals.item.custom.PulseBlasterItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -37,12 +38,15 @@ public class PulseBlasterShotgunPacket implements CustomPacketPayload {
 
     public static void handle(PulseBlasterShotgunPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof PulseBlasterItem)) return;
             if (ModDataComponents.getStage(stack) < 4) return;
 
             UUID uuid = player.getUUID();
+            if (PulseBlasterItem.isOverheated(uuid)) return;
+
             long now  = System.currentTimeMillis();
             Long last = SERVER_COOLDOWNS.get(uuid);
             if (last != null && now - last < COOLDOWN_MS) return;
@@ -77,6 +81,9 @@ public class PulseBlasterShotgunPacket implements CustomPacketPayload {
                 beam.setDeltaMovement(dir.scale(BEAM_SPEED));
                 player.level().addFreshEntity(beam);
             }
+
+            float heatCost = ammo * PulseBlasterItem.HEAT_PER_SHOT_BASE * PulseBlasterItem.SHOTGUN_HEAT_MULTIPLIER;
+            PulseBlasterItem.addHeat(player, stack, heatCost);
 
             PulseBlasterItem.setAmmo(stack, 0);
             PulseBlasterItem.clearActiveAmmo(uuid);

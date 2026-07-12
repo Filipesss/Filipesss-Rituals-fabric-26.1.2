@@ -8,6 +8,8 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -59,7 +61,6 @@ public class TemporalRecallEntity extends Entity {
 
         if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
 
-
             if (!initializedSpawnVisuals) {
                 spawnArrivalVisuals(serverLevel);
                 for (int i = 0; i < NUM_ORBIT_SPARKS; i++) {
@@ -71,6 +72,11 @@ public class TemporalRecallEntity extends Entity {
             boolean recalling = isRecalling();
             double progress = 0.0;
             double angularVelocity = Math.PI / 40.0;
+
+            if (this.tickCount % 60 == 0 && !recalling) {
+                level().playSound(null, this.getX(), this.getY(), this.getZ(),
+                        SoundEvents.CONDUIT_AMBIENT, SoundSource.NEUTRAL, 0.8F, 1.0F);
+            }
 
             if (!recalling) {
                 this.currentOrbitAngle += angularVelocity;
@@ -105,6 +111,8 @@ public class TemporalRecallEntity extends Entity {
         double px = getX();
         double py = getY() + 0.5;
         double pz = getZ();
+
+        level.playSound(null, px, py, pz, SoundEvents.CONDUIT_ACTIVATE, SoundSource.NEUTRAL, 1.0F, 1.0F);
 
         level.sendParticles(ModParticles.MOON, px, py, pz, 8, 0.3, 0.4, 0.3, 0.05);
         level.sendParticles(ModParticles.TEMPORAL_HOURGLASS, px, py, pz, 6, 0.2, 0.3, 0.2, 0.05);

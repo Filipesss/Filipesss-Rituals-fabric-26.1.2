@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.SolarBladeChargeTracker;
 import net.filipes.rituals.item.custom.SolarBladeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -24,6 +25,7 @@ public class SolarBladeChargePacket implements CustomPacketPayload {
 
     public static void handle(SolarBladeChargePacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof SolarBladeItem)) return;

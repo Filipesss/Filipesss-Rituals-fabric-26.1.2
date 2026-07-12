@@ -8,6 +8,7 @@ import net.filipes.rituals.entity.custom.SolarMarkTracker;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.SolarBladeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -42,7 +43,7 @@ public class SolarMarkPacket implements CustomPacketPayload {
 
     public static void handle(SolarMarkPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
-
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof SolarBladeItem)) return;
@@ -82,7 +83,7 @@ public class SolarMarkPacket implements CustomPacketPayload {
             level.playSound(null, spawnX, spawnY, spawnZ,
                     SoundEvents.TRIAL_SPAWNER_OMINOUS_ACTIVATE,
                     net.minecraft.sounds.SoundSource.PLAYERS,
-                    1.0f, 0.7f);
+                    1.4f, 1.4f);
         });
     }
 

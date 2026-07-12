@@ -58,7 +58,7 @@ public class CinderboltShieldHandler {
                                 1.0f
                         );
 
-                        double radius = 6.0;
+                        double radius = 2.0;
                         net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(
                                 player.getX() - radius, player.getY() - 2, player.getZ() - radius,
                                 player.getX() + radius, player.getY() + 4, player.getZ() + radius);
@@ -74,6 +74,11 @@ public class CinderboltShieldHandler {
                             double strength = 0.9 * (1.0 - dist / radius);
                             net.minecraft.world.phys.Vec3 impulse = diff.normalize().scale(strength).add(0, 0.4, 0);
                             target.setDeltaMovement(target.getDeltaMovement().add(impulse));
+
+                            if (target instanceof ServerPlayer targetPlayer) {
+                                targetPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(
+                                        targetPlayer.getId(), targetPlayer.getDeltaMovement()));
+                            }
 
                             net.filipes.rituals.entity.custom.SparkEntity spark =
                                     new net.filipes.rituals.entity.custom.SparkEntity(
@@ -110,6 +115,14 @@ public class CinderboltShieldHandler {
 
             return false;
         });
+    }
+    public static void applySpinBoost(ServerPlayer player, int durationTicks) {
+        Integer id = shieldEntityIds.get(player.getUUID());
+        if (id == null) return;
+        Entity e = ((ServerLevel) player.level()).getEntity(id);
+        if (e instanceof CinderboltShieldEntity shield) {
+            shield.applySpinBoost(durationTicks);
+        }
     }
 
     private static boolean isShieldActive(ServerPlayer player) {

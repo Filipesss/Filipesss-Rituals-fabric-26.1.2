@@ -7,6 +7,7 @@ import net.filipes.rituals.entity.custom.BlightedPuddleEntity;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.BlightspearItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -47,6 +48,7 @@ public class BlightDashPacket implements CustomPacketPayload {
 
     public static void handle(BlightDashPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof BlightspearItem)) return;
@@ -152,7 +154,7 @@ public class BlightDashPacket implements CustomPacketPayload {
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 0.5f);
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
-                    SoundEvents.GOAT_HORN_SOUND_VARIANTS.get(3).value(), SoundSource.PLAYERS, 0.4f, 1.8f);
+                    SoundEvents.PLAYER_HURT_FREEZE, SoundSource.PLAYERS, 0.9f, 0.9f);
 
             player.setDeltaMovement(dashDir.scale(1.6));
             player.hurtMarked = true;

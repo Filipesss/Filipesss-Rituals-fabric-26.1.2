@@ -100,7 +100,7 @@ public class DepthstrikeGroundEntity extends Entity {
         AABB hitbox = this.getBoundingBox().inflate(1.5, 1.0, 1.5);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, hitbox);
         for (LivingEntity target : targets) {
-            target.hurt(level.damageSources().magic(), 6.0f);
+            target.hurt(level.damageSources().magic(), 13.0f);
         }
     }
 

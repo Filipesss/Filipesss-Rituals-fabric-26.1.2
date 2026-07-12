@@ -5,8 +5,7 @@
 	"gui_light": "front",
 	"textures": {
 		"0": "rituals:item/depthstrike_outlines",
-		"1": "rituals:item/depthstrike",
-		"particle": "depthstrike_outlines"
+		"1": "rituals:item/depthstrike"
 	},
 	"elements": [
 		{

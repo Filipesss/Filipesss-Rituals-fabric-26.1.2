@@ -8,6 +8,7 @@ import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.PolarityBowItem;
 import net.filipes.rituals.sound.ModSounds;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -42,6 +43,7 @@ public class PolarityBowDashPacket implements CustomPacketPayload {
 
     public static void handle(PolarityBowDashPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof PolarityBowItem)) return;

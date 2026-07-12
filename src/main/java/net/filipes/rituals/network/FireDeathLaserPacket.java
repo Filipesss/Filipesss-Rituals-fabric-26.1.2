@@ -6,6 +6,7 @@ import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.DeathLaserEntity;
 import net.filipes.rituals.item.custom.PulseBlasterItem;
 import net.filipes.rituals.sound.ModSounds;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -32,13 +33,14 @@ public class FireDeathLaserPacket implements CustomPacketPayload {
     public  static final long COOLDOWN_MS = 20_000L;
 
     private static final int   LASER_DURATION = 60;
-    private static final float LASER_DAMAGE   = 4.0f;
+    private static final float LASER_DAMAGE   = 5.5f;
     private static final float LASER_HP_PCT   = 2.0f;
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(FireDeathLaserPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof PulseBlasterItem)) return;
@@ -76,6 +78,8 @@ public class FireDeathLaserPacket implements CustomPacketPayload {
                     1.2f
             );
             player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+
+            PulseBlasterItem.startHeatDrain(player, stack, LASER_DURATION);
         });
     }
 }

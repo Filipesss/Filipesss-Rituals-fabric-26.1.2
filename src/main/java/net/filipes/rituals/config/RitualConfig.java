@@ -13,6 +13,7 @@ public class RitualConfig {
     public static boolean MACE_DAMAGE_CAP_ENABLED = true;
     public static float MAX_TNT_MINECART_DAMAGE = 14.0f;
     public static boolean TNT_MINECART_DAMAGE_CAP_ENABLED = true;
+    public static boolean HIDE_INVISIBLE_PLAYER_NAMES = true;
 
     private static final Path CONFIG_PATH =
             FabricLoader.getInstance().getConfigDir().resolve("rituals.json");
@@ -31,6 +32,8 @@ public class RitualConfig {
                 TNT_MINECART_DAMAGE_CAP_ENABLED = obj.get("tnt_minecart_damage_cap_enabled").getAsBoolean();
             if (obj.has("max_tnt_minecart_damage"))
                 MAX_TNT_MINECART_DAMAGE = obj.get("max_tnt_minecart_damage").getAsFloat();
+            if (obj.has("hide_invisible_player_names"))
+                HIDE_INVISIBLE_PLAYER_NAMES = obj.get("hide_invisible_player_names").getAsBoolean();
         } catch (Exception e) {
             System.err.println("[Rituals] Failed to load config: " + e.getMessage());
         }
@@ -44,6 +47,7 @@ public class RitualConfig {
         obj.addProperty("max_mace_damage", MAX_MACE_DAMAGE);
         obj.addProperty("tnt_minecart_damage_cap_enabled", TNT_MINECART_DAMAGE_CAP_ENABLED);
         obj.addProperty("max_tnt_minecart_damage", MAX_TNT_MINECART_DAMAGE);
+        obj.addProperty("hide_invisible_player_names", HIDE_INVISIBLE_PLAYER_NAMES);
         try (Writer w = Files.newBufferedWriter(CONFIG_PATH)) {
             new GsonBuilder().setPrettyPrinting().create().toJson(obj, w);
         } catch (Exception e) {

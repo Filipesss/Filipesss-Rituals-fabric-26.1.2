@@ -25,8 +25,8 @@ import java.util.UUID;
 public class SolarBladeChargeTracker {
 
     public static final int   DURATION_TICKS = 100;
-    private static final float DAMAGE_BONUS  = 4.0f;
-    private static final float SPEED_BONUS   = 1.0f;
+    private static final float DAMAGE_BONUS  = 1.0f;
+    private static final float SPEED_BONUS   = 0.5f;
 
     private static final int SOLAR_COLOR = 0xFFC850;
 

@@ -7,6 +7,7 @@ import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPreset;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.BlightspearItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -40,13 +41,16 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
     );
 
     public static final Identifier MODIFIER_ID = Identifier.fromNamespaceAndPath("rituals", "blight_drain");
+    public static final Identifier TARGET_MODIFIER_ID = Identifier.fromNamespaceAndPath("rituals", "blight_drain_target");
     public static final Map<UUID, Long> ACTIVE_DRAINS = new HashMap<>();
+    public static final Map<UUID, Long> ACTIVE_TARGET_DRAINS = new HashMap<>();
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(BlightDrainPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer caster = ctx.player();
+        if (MuteTracker.isMuted(caster.getUUID())) return;
         MinecraftServer server = ctx.server();
 
         server.execute(() -> {
@@ -57,9 +61,8 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
 
             ServerLevel level = (ServerLevel) caster.level();
             Entity targetEntity = level.getEntity(pkt.targetId());
-            boolean isMannequin = targetEntity != null && targetEntity.getType().toString().contains("mannequin");
 
-            if (targetEntity instanceof LivingEntity target && (target instanceof Player || isMannequin)) {
+            if (targetEntity instanceof Player target) {
                 target.hurt(caster.damageSources().magic(), 4.0f);
 
                 var attribute = caster.getAttribute(Attributes.MAX_HEALTH);
@@ -73,6 +76,22 @@ public record BlightDrainPacket(int targetId) implements CustomPacketPayload {
 
                     caster.heal(4.0f);
                     ACTIVE_DRAINS.put(caster.getUUID(), level.getGameTime() + 600);
+
+                    var targetAttribute = target.getAttribute(Attributes.MAX_HEALTH);
+                    if (targetAttribute != null) {
+                        targetAttribute.removeModifier(TARGET_MODIFIER_ID);
+                        targetAttribute.addPermanentModifier(new AttributeModifier(
+                                TARGET_MODIFIER_ID,
+                                -2.0,
+                                AttributeModifier.Operation.ADD_VALUE
+                        ));
+
+                        if (target.getHealth() > targetAttribute.getValue()) {
+                            target.setHealth((float) targetAttribute.getValue());
+                        }
+
+                        ACTIVE_TARGET_DRAINS.put(target.getUUID(), level.getGameTime() + 600);
+                    }
 
                     double targetCenterY = target.getY() + (target.getBbHeight() * 0.5);
                     for (int i = 0; i < 6; i++) {

@@ -42,31 +42,6 @@ public class ShadowguardItem extends MaceItem implements RitualsTooltipStyle, Ri
         invisibleUntil.put(uuid, System.currentTimeMillis() + 3000);
     }
 
-    @Override
-    public void postHurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        super.postHurtEnemy(stack, target, attacker);
-
-
-        if (attacker.level().isClientSide()) return;
-
-        int stage = ModDataComponents.getStage(stack);
-
-        if (stage >= 2) {
-            float roll = attacker.level().getRandom().nextFloat();
-
-            if (roll < 0.50f) {
-
-                attacker.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, false, false));
-
-                invisibleUntil.put(attacker.getUUID(), System.currentTimeMillis() + 3000);
-
-                if (attacker instanceof ServerPlayer serverPlayer) {
-                    ServerPlayNetworking.send(serverPlayer, new ShadowguardInvisiblePacket());
-                }
-            }
-        }
-    }
-
     public static void tickInvisibility() {
         long now = System.currentTimeMillis();
         invisibleUntil.entrySet().removeIf(entry -> entry.getValue() <= now);
@@ -77,35 +52,10 @@ public class ShadowguardItem extends MaceItem implements RitualsTooltipStyle, Ri
         return expiry != null && System.currentTimeMillis() < expiry;
     }
 
-    @Override
-    public Component getName(ItemStack stack) {
-        int stage = ModDataComponents.getStage(stack);
-        MutableComponent nameComponent = Component.literal("")
-                .append(Component.translatable(getDescriptionId())
-                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getNameColor())).withItalic(false)));
-        if (stage > 1) {
-            nameComponent
-                    .append(Component.literal(" [").withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFF9B6DFF))))
-                    .append(Component.literal("★".repeat(stage - 1)).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFF7744CC))))
-                    .append(Component.literal("]").withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFF9B6DFF))));
-        }
-        return nameComponent;
-    }
-
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
-        super.appendHoverText(stack, context, display, builder, flag);
-        int kills = ModDataComponents.getKillCount(stack);
-        builder.accept(
-                Component.translatable("tooltip.rituals.shadowguard.kills", kills)
-                        .withStyle(s -> s.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
-        );
-    }
-
-    @Override public int getNameColor()                { return 0xFF9B6DFF; }
+    @Override public int getNameColor()                { return 0xFF9d6dd1; }
     @Override public int getTooltipBorderColorTop()    { return 0xFF9B6DFF; }
     @Override public int getTooltipBorderColorBottom() { return 0xFF330066; }
-    @Override public int getTooltipBackgroundColor()   { return 0xFF550000; }
+    @Override public int getTooltipBackgroundColor()   { return 0xe5292033; }
 
     @Override
     public EnchantmentPolicy getEnchantmentPolicy() {

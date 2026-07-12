@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.item.ModItems;
 import net.filipes.rituals.item.custom.ShadeshatterItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -58,7 +59,7 @@ public class ShadeshatterMorphPacket implements CustomPacketPayload {
 
     public static void handle(ShadeshatterMorphPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
-
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof ShadeshatterItem)) return;

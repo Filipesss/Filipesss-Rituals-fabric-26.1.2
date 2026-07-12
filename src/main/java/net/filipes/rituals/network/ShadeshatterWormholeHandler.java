@@ -5,6 +5,7 @@ import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -135,6 +136,8 @@ public class ShadeshatterWormholeHandler {
                 if (dist > 0 && dist < PULL_RADIUS) {
                     double strength = PULL_STRENGTH * (1.0 - dist / PULL_RADIUS);
                     entity.setDeltaMovement(entity.getDeltaMovement().add(dir.normalize().scale(strength)));
+
+                    syncPlayerVelocity(entity);
                 }
             }
 
@@ -148,6 +151,7 @@ public class ShadeshatterWormholeHandler {
                             : new Vec3(level.getRandom().nextDouble() - 0.5, 0.3,
                             level.getRandom().nextDouble() - 0.5).normalize().scale(1.2);
                     entity.setDeltaMovement(burst);
+                    syncPlayerVelocity(entity);
                 }
 
                 spawnOutburstSparks(level, w.center, 16);
@@ -164,6 +168,12 @@ public class ShadeshatterWormholeHandler {
 
             return false;
         });
+    }
+
+    private static void syncPlayerVelocity(LivingEntity entity) {
+        if (entity instanceof ServerPlayer sp) {
+            sp.connection.send(new ClientboundSetEntityMotionPacket(sp));
+        }
     }
 
 

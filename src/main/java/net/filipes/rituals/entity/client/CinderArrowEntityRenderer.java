@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth; // Added import for lerping
 import net.minecraft.world.phys.Vec3;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -34,7 +35,11 @@ public class CinderArrowEntityRenderer extends ArrowRenderer<CinderArrowEntity, 
         super.extractRenderState(entity, state, partialTick);
 
         state.trail.clear();
-        double cx = entity.getX(), cy = entity.getY(), cz = entity.getZ();
+
+        double cx = Mth.lerp(partialTick, entity.xo, entity.getX());
+        double cy = Mth.lerp(partialTick, entity.yo, entity.getY());
+        double cz = Mth.lerp(partialTick, entity.zo, entity.getZ());
+
         int size = entity.trailSize;
         for (int i = 0; i < size; i++) {
             int idx = Math.floorMod(entity.trailHead - 1 - i, CinderArrowEntity.TRAIL_LENGTH);
@@ -117,7 +122,6 @@ public class CinderArrowEntityRenderer extends ArrowRenderer<CinderArrowEntity, 
             }
 
             snc.submitCustomGeometry(ps, RenderTypes.lightning(), (pose, v) -> {
-
                 v.addVertex(pose, (float)fa0.x, (float)fa0.y, (float)fa0.z).setColor(r, g, cb, iaA);
                 v.addVertex(pose, (float)fa1.x, (float)fa1.y, (float)fa1.z).setColor(r, g, cb, iaA);
                 v.addVertex(pose, (float)fb1.x, (float)fb1.y, (float)fb1.z).setColor(r, g, cb, iaB);

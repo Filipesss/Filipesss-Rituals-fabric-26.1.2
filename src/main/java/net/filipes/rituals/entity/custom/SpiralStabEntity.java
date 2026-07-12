@@ -1,5 +1,6 @@
 package net.filipes.rituals.entity.custom;
 
+import net.filipes.rituals.sound.ModSounds;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -98,12 +99,19 @@ public class SpiralStabEntity extends Entity {
         }
         if (owner == null) return;
 
-        float baseDamage = (float) owner.getAttributeValue(Attributes.ATTACK_DAMAGE) * 0.62f; // damage
+        float baseDamage = (float) owner.getAttributeValue(Attributes.ATTACK_DAMAGE) * 1.03f;
 
         for (int i = 0; i < stabs.size(); i++) {
             StabData s = stabs.get(i);
 
             if (tickCount - 1 != s.spawnTick) continue;
+
+            float volume = 0.3F + level().getRandom().nextFloat() * 0.1F; // Range: 0.4 to 0.5
+            float pitch = 0.85F + level().getRandom().nextFloat() * 0.3F; // Range: 0.85 to 1.15
+
+            level().playSound(null, s.originX, s.originY, s.originZ,
+                    ModSounds.GROUND_STAB, net.minecraft.sounds.SoundSource.NEUTRAL, volume, pitch);
+
             if (damagedStabs.contains(i)) continue;
             damagedStabs.add(i);
 

@@ -6,6 +6,7 @@ import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.TemporalRecallEntity;
 import net.filipes.rituals.entity.custom.TemporalRecallTracker;
 import net.filipes.rituals.item.custom.TemporalGlassreaverItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -28,7 +29,7 @@ public class TemporalRecallPacket implements CustomPacketPayload {
 
     public static void handle(TemporalRecallPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
-
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof TemporalGlassreaverItem)) return;

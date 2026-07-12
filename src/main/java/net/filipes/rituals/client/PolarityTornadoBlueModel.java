@@ -64,6 +64,7 @@ public class PolarityTornadoBlueModel {
                        int light, float ageInTicks) {
 
         poseStack.pushPose();
+        poseStack.scale(1.35f, 1.35f, 1.35f);
         poseStack.mulPose(Axis.XP.rotationDegrees(180.0f));
         poseStack.translate(0.0, -1.5, 0.0);
 

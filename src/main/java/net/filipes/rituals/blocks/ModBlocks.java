@@ -74,6 +74,9 @@ public class ModBlocks {
         BlockItem item = new BlockItem(block, new Item.Properties().setId(key));
         Registry.register(BuiltInRegistries.ITEM, key, item);
     }
+    public static Item item(Block block) {
+        return block.asItem();
+    }
 
     public static void registerModBlocks() {
         Rituals.LOGGER.info("Registering mod blocks for " + Rituals.MOD_ID);

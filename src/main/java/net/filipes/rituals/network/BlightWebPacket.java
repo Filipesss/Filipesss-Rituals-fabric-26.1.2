@@ -8,6 +8,7 @@ import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPreset;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.BlightspearItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -41,6 +42,7 @@ public record BlightWebPacket(int targetId) implements CustomPacketPayload {
 
     public static void handle(BlightWebPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         MinecraftServer server = ctx.server();
 
         server.execute(() -> {

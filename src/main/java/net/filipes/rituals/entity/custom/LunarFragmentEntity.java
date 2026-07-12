@@ -66,8 +66,8 @@ public class LunarFragmentEntity extends Entity {
     private static final float RESONANCE_ACCELERATION = 0.12f;
     private static final float TURN_RATE         = 0.55f;
     private static final float HIT_RADIUS_SQ     = 0.2f * 0.2f;
-    private static final float LAUNCH_DAMAGE     = 12.0f;
-    private static final float DAMAGE_RAMP       = 3.0f;
+    private static final float LAUNCH_DAMAGE     = 10.0f;
+    private static final float DAMAGE_RAMP       = 1.0f;
     private static final float SPEED_RAMP        = 0.08f;
     private static final int   MAX_LAUNCH_TICKS  = 100;
     private static final float LAUNCH_SPARK_HEIGHT = 0.35f;
@@ -85,6 +85,13 @@ public class LunarFragmentEntity extends Entity {
     private float damageMult = 1.0f;
     public void setDamageMult(float mult) { this.damageMult = mult; }
     private boolean customSpawnPos = false;
+    public boolean isResonanceMode()  { return resonanceMode; }
+    public boolean isShardMode()      { return shardMode; }
+    public boolean isCustomSpawnPos() { return customSpawnPos; }
+    private int shardChainDepth = 0;
+    private java.util.concurrent.atomic.AtomicBoolean chainClaim = null;
+    public void setShardChainDepth(int d) { this.shardChainDepth = d; }
+    public void setChainClaim(java.util.concurrent.atomic.AtomicBoolean claim) { this.chainClaim = claim; }
 
     public void setCustomSpawnPos(boolean v) { this.customSpawnPos = v; }
 
@@ -396,7 +403,10 @@ public class LunarFragmentEntity extends Entity {
         if (launchTarget != null && launchTarget.isAlive()
                 && launchTarget.getBoundingBox().distanceToSqr(position()) < SHARD_INWARD_HIT_SQ) {
             ServerLevel sl = (ServerLevel) level();
-            launchTarget.hurtServer(sl, sl.damageSources().magic(), SHARD_DAMAGE);
+
+            launchTarget.invulnerableTime = 0;
+
+            launchTarget.hurtServer(sl, sl.damageSources().magic(), SHARD_DAMAGE + 2);
             spawnImpactSparks(launchTarget.getX(), launchTarget.getY(), launchTarget.getZ(), launchTarget);
             level().playSound(null, launchTarget.getX(), launchTarget.getY(), launchTarget.getZ(),
                     SoundEvents.AMETHYST_CLUSTER_BREAK,
@@ -443,10 +453,15 @@ public class LunarFragmentEntity extends Entity {
             double my = hit.getY() + hit.getBbHeight() * 0.5;
             double mz = hit.getZ();
 
-            LunarMarkEntity newMark = new LunarMarkEntity(ModEntities.LUNAR_MARK, sl, mx, my, mz);
-            newMark.setTargetUUID(hit.getUUID());
-            if (shardMarkOwnerUUID != null) newMark.setOwnerUUID(shardMarkOwnerUUID);
-            sl.addFreshEntity(newMark);
+            boolean canChain = chainClaim == null || chainClaim.compareAndSet(false, true);
+
+            if (canChain) {
+                LunarMarkEntity newMark = new LunarMarkEntity(ModEntities.LUNAR_MARK, sl, mx, my, mz);
+                newMark.setTargetUUID(hit.getUUID());
+                newMark.setChainDepth(this.shardChainDepth + 1);
+                if (shardMarkOwnerUUID != null) newMark.setOwnerUUID(shardMarkOwnerUUID);
+                sl.addFreshEntity(newMark);
+            }
 
             spawnImpactSparks(mx, my, mz, hit);
             sl.playSound(null, mx, my, mz,
@@ -539,7 +554,7 @@ public class LunarFragmentEntity extends Entity {
         if (!level().isClientSide()) {
             if (trailSpark != null && trailSpark.isAlive()) trailSpark.discard();
             if (!level().isClientSide() && shardMode) {
-                // Clean up trail only — don't touch twin cooldown logic
+
                 if (trailSpark != null && trailSpark.isAlive()) trailSpark.discard();
                 super.remove(reason);
                 return;

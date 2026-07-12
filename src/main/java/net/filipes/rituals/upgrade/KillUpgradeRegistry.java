@@ -14,7 +14,7 @@ public class KillUpgradeRegistry {
     private static final Map<UpgradeKey, KillUpgradeRecipe> RECIPES = new HashMap<>();
 
     public static void registerAll() {
-        register(ModItems.SHADOWGUARD, 1, new KillUpgradeRecipe(2, 2));
+        register(ModItems.SHADOWGUARD, 1, new KillUpgradeRecipe(2, 1));
         register(ModItems.SHADOWGUARD, 2, new KillUpgradeRecipe(3, 3));
         register(ModItems.SHADOWGUARD, 3, new KillUpgradeRecipe(4, 5));
         register(ModItems.SHADOWGUARD, 4, new KillUpgradeRecipe(5, 6));
@@ -42,9 +42,9 @@ public class KillUpgradeRegistry {
 
         register(ModItems.SHADESHATTER, 1, new KillUpgradeRecipe(2, 1));
         register(ModItems.SHADESHATTER, 2, new KillUpgradeRecipe(3, 2));
-        register(ModItems.SHADESHATTER, 3, new KillUpgradeRecipe(4, 3));
-        register(ModItems.SHADESHATTER, 4, new KillUpgradeRecipe(5, 5));
-        register(ModItems.SHADESHATTER, 5, new KillUpgradeRecipe(6, 6));
+        register(ModItems.SHADESHATTER, 3, new KillUpgradeRecipe(4, 4));
+        register(ModItems.SHADESHATTER, 4, new KillUpgradeRecipe(5, 6));
+        register(ModItems.SHADESHATTER, 5, new KillUpgradeRecipe(6, 7));
     }
 
     public static void register(Item item, int fromStage, KillUpgradeRecipe recipe) {
@@ -61,6 +61,13 @@ public class KillUpgradeRegistry {
         return RECIPES.keySet().stream().anyMatch(k -> k.item() == item);
     }
 
+
+    public static Optional<Integer> getKillsRequiredForStage(Item item, int targetStage) {
+        return RECIPES.entrySet().stream()
+                .filter(e -> e.getKey().item() == item && e.getValue().getResultStage() == targetStage)
+                .map(e -> e.getValue().getKillsRequired())
+                .findFirst();
+    }
 
     public static int getMaxStage(Item item) {
         return RECIPES.entrySet().stream()

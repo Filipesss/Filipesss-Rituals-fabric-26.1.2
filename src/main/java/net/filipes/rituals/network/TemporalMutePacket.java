@@ -41,7 +41,7 @@ public class TemporalMutePacket implements CustomPacketPayload {
 
     public static void handle(TemporalMutePacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
-
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof TemporalGlassreaverItem)) return;
@@ -83,7 +83,10 @@ public class TemporalMutePacket implements CustomPacketPayload {
 
             level.playSound(null, x, y, z,
                     SoundEvents.TRIAL_SPAWNER_OMINOUS_ACTIVATE,
-                    SoundSource.PLAYERS, 1.0f, 0.6f);
+                    SoundSource.PLAYERS, 1.4f, 1.4f);
+            level.playSound(null, x, y, z,
+                    SoundEvents.APPLY_EFFECT_RAID_OMEN,
+                    SoundSource.PLAYERS, 0.8f, 0.6f);
         });
     }
 

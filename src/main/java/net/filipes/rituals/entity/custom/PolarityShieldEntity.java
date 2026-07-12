@@ -203,6 +203,15 @@ public class PolarityShieldEntity extends Entity {
             sp.connection.send(new ClientboundSetEntityMotionPacket(target));
         }
 
+        ServerLevel serverLevel = (ServerLevel) level();
+
+        if (owner != null) {
+            var source = owner instanceof net.minecraft.world.entity.player.Player
+                    ? serverLevel.damageSources().playerAttack((net.minecraft.world.entity.player.Player) owner)
+                    : serverLevel.damageSources().mobAttack(owner);
+            target.hurtServer(serverLevel, source, 14.0f);
+        }
+
         if (owner != null) {
             owner.setDeltaMovement(owner.getDeltaMovement().scale(0.2));
             owner.hurtMarked = true;
@@ -213,8 +222,6 @@ public class PolarityShieldEntity extends Entity {
                 SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.3f, red ? 0.75f : 1.35f);
         level().playSound(null, getX(), getY(), getZ(),
                 SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.6f, 1.5f);
-
-        ServerLevel serverLevel = (ServerLevel) level();
 
         Vec3 impactPos = target.position().add(0, target.getBbHeight() * 0.5, 0);
 

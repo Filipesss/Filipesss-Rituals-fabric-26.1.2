@@ -61,8 +61,7 @@ public class Rituals implements ModInitializer {
 	public static final String MOD_ID = "rituals";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	private static final Set<UUID> BONUS_GUARD = new HashSet<>();
-	private static int vortexFrame = 0;
-	private static int frameTicker = 0;
+	private static final Map<UUID, Float> PRE_DAMAGE_HEALTH = new HashMap<>();
 
 	private static Vec3 randomSphere(double speed) {
 		double theta = Math.random() * Math.PI * 2.0;
@@ -201,6 +200,9 @@ public class Rituals implements ModInitializer {
 				if (stage < 2 || sp.getCooldowns().isOnCooldown(heldStack))
 					return net.minecraft.world.InteractionResult.FAIL;
 			}
+			if (heldStack.getItem() instanceof PharathornItem) {
+				PharathornStillHandler.onAttack(sp);
+			}
 			if (!(sp.getMainHandItem().getItem() instanceof LunarBladeItem))
 				return net.minecraft.world.InteractionResult.PASS;
 			if (LunarBladeOnHitTracker.isActive(sp.getUUID())) {
@@ -212,22 +214,33 @@ public class Rituals implements ModInitializer {
 			}
 			return net.minecraft.world.InteractionResult.PASS;
 		});
+		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
+			PRE_DAMAGE_HEALTH.put(entity.getUUID(), entity.getHealth());
+			return true;
+		});
 
 		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamageTaken, damageTaken, killed) -> {
 			if (!(source.getEntity() instanceof ServerPlayer attacker)) return;
 			if (damageTaken <= 0) return;
 
 			ItemStack mainHand = attacker.getMainHandItem();
+			if (mainHand.getItem() instanceof ShadowguardItem) {
+				int stage = ModDataComponents.getStage(mainHand);
+				if (stage >= 2 && attacker.level().getRandom().nextFloat() < 0.10f) {
+					attacker.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, false, false));
+					ShadowguardItem.markInvisible(attacker.getUUID());
+
+					ShadowguardInvisiblePacket packet = new ShadowguardInvisiblePacket(attacker.getUUID());
+					for (ServerPlayer tracking : net.fabricmc.fabric.api.networking.v1.PlayerLookup.tracking(attacker)) {
+						ServerPlayNetworking.send(tracking, packet);
+					}
+					ServerPlayNetworking.send(attacker, packet);
+				}
+			}
 
 			if (mainHand.getItem() instanceof PharathornItem
 					&& PharathornMarkTracker.isMarked(entity.getUUID())
 					&& entity.level() instanceof ServerLevel serverLevel) {
-
-				if (!BONUS_GUARD.contains(entity.getUUID())) {
-					BONUS_GUARD.add(entity.getUUID());
-					entity.hurtServer(serverLevel, source, 2.0f);
-					BONUS_GUARD.remove(entity.getUUID());
-				}
 
 				double cx = entity.getX();
 				double cy = entity.getY() + entity.getBbHeight() * 0.5;
@@ -256,20 +269,17 @@ public class Rituals implements ModInitializer {
 				}
 			}
 
-			if (mainHand.getItem() instanceof ShadowguardItem) {
-				int stage = ModDataComponents.getStage(mainHand);
-				if (stage >= 2 && attacker.level().getRandom().nextFloat() < 0.10f) {
-					attacker.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 60, 0, false, false));
-					ShadowguardItem.markInvisible(attacker.getUUID());
-					ServerPlayNetworking.send(attacker, new ShadowguardInvisiblePacket());
-				}
-			}
 
 			if (entity instanceof LivingEntity damagedEntity
 					&& LifestealMarkTracker.isMarkedBy(damagedEntity.getUUID(), attacker.getUUID())
 					&& attacker.level() instanceof ServerLevel level) {
 
-				float healAmount = damageTaken * 0.5f;
+				Float preHealth = PRE_DAMAGE_HEALTH.get(damagedEntity.getUUID());
+				float actualDamage = preHealth != null
+						? Math.max(0f, preHealth - damagedEntity.getHealth())
+						: damageTaken;
+
+				float healAmount = actualDamage * 0.75f;
 				attacker.heal(healAmount);
 
 				double targetX = damagedEntity.getX();
@@ -327,6 +337,7 @@ public class Rituals implements ModInitializer {
 					ShadeshatterPowerupTracker.unguard(entity.getUUID());
 				}
 			}
+			PRE_DAMAGE_HEALTH.remove(entity.getUUID());
 		});
 
 		PayloadTypeRegistry.serverboundPlay().register(DoubleJumpPayload.ID, DoubleJumpPayload.CODEC);
@@ -685,12 +696,29 @@ public class Rituals implements ModInitializer {
 				TemporalRecallPacket::handle
 		);
 		PayloadTypeRegistry.serverboundPlay().register(
-				ShadeshatterMorphPacket.TYPE,
-				ShadeshatterMorphPacket.CODEC
-		);
+				ShadeshatterMorphPacket.TYPE, ShadeshatterMorphPacket.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(
-				ShadeshatterMorphPacket.TYPE,
-				ShadeshatterMorphPacket::handle
+				ShadeshatterMorphPacket.TYPE, ShadeshatterMorphPacket::handle);
+
+		PayloadTypeRegistry.clientboundPlay().register(
+				ShadeshatterSpellStartPacket.TYPE, ShadeshatterSpellStartPacket.CODEC);
+
+		PayloadTypeRegistry.serverboundPlay().register(
+				ShadeshatterMimicTriggerPacket.TYPE, ShadeshatterMimicTriggerPacket.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(
+				ShadeshatterMimicTriggerPacket.TYPE, ShadeshatterMimicTriggerPacket::handle);
+		PayloadTypeRegistry.clientboundPlay().register(
+				ShadeshatterMimicStartPacket.TYPE, ShadeshatterMimicStartPacket.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(
+				ShadeshatterWormholeStartPacket.TYPE, ShadeshatterWormholeStartPacket.CODEC);
+
+		PayloadTypeRegistry.clientboundPlay().register(
+				TemporalRecallStartCooldownPacket.TYPE,
+				TemporalRecallStartCooldownPacket.CODEC
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				VortexDarknessPacket.TYPE,
+				VortexDarknessPacket.CODEC
 		);
 		PayloadTypeRegistry.clientboundPlay().register(
 				ShadeshatterHastePacket.TYPE, ShadeshatterHastePacket.CODEC);
@@ -704,12 +732,22 @@ public class Rituals implements ModInitializer {
 				ShadeshatterWormholePacket.TYPE, ShadeshatterWormholePacket.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(
 				ShadeshatterWormholePacket.TYPE, ShadeshatterWormholePacket::handle);
+		PayloadTypeRegistry.serverboundPlay().register(
+				ShadeshatterWormholeTriggerPacket.TYPE, ShadeshatterWormholeTriggerPacket.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(
+				ShadeshatterWormholeTriggerPacket.TYPE, ShadeshatterWormholeTriggerPacket::handle);
 
 		PayloadTypeRegistry.clientboundPlay().register(
-				ShadeshatterSpellStartPacket.TYPE, ShadeshatterSpellStartPacket.CODEC);
+				TemporalMuteClearPacket.TYPE,
+				TemporalMuteClearPacket.CODEC
+		);
 		PayloadTypeRegistry.clientboundPlay().register(
-				TemporalRecallStartCooldownPacket.TYPE,
-				TemporalRecallStartCooldownPacket.CODEC
+				PulseBlasterHeatPayload.ID,
+				PulseBlasterHeatPayload.CODEC
+		);
+		PayloadTypeRegistry.clientboundPlay().register(
+				LunarBladeFlashPacket.TYPE,
+				LunarBladeFlashPacket.CODEC
 		);
 
 
@@ -729,8 +767,8 @@ public class Rituals implements ModInitializer {
 
 							player.level().playSound(null,
 									player.getX(), player.getY(), player.getZ(),
-									ModSounds.LIGHTNING_RAPIER_ATTACK2,
-									SoundSource.PLAYERS, 1.0f, 0.4f);
+									ModSounds.LIGHTNING_CHARGE,
+									SoundSource.PLAYERS, 0.8f, 0.9f);
 						}
 					});
 				}
@@ -746,7 +784,25 @@ public class Rituals implements ModInitializer {
 						&& player.getItemBySlot(EquipmentSlot.FEET).is(ModItems.ROSEGOLD_BOOTS)) {
 
 					Vec3 vel = player.getDeltaMovement();
-					player.setDeltaMovement(vel.x, 0.55, vel.z);
+
+					boolean isMovingHorizontally = Math.abs(vel.x) > 0.005 || Math.abs(vel.z) > 0.005;
+
+					double newX = vel.x;
+					double newZ = vel.z;
+					double newY = 0.55;
+
+					if (isMovingHorizontally) {
+						double radians = Math.toRadians(player.getYRot());
+						double forwardX = -Math.sin(radians);
+						double forwardZ = Math.cos(radians);
+
+						double forwardBoost = player.isSprinting() ? 0.35 : 0.12;
+
+						newX += forwardX * forwardBoost;
+						newZ += forwardZ * forwardBoost;
+					}
+
+					player.setDeltaMovement(newX, newY, newZ);
 					player.connection.send(new ClientboundSetEntityMotionPacket(player.getId(), player.getDeltaMovement()));
 					hasDoubleJumped.add(player.getUUID());
 
@@ -759,13 +815,14 @@ public class Rituals implements ModInitializer {
 		});
 
 		ServerPlayNetworking.registerGlobalReceiver(PharathornDashPacket.TYPE, PharathornDashPacket::handle);
-
-		ServerTickEvents.END_SERVER_TICK.register(server ->
-				server.getPlayerList().getPlayers().forEach(p -> {
-					if (p.onGround()) hasDoubleJumped.remove(p.getUUID());
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
 					LightningRapierStreakTracker.tick(server);
 					PolarityBowSwitchPacket.tickServerSparks(server);
 					TemporalRecallTracker.tick(server);
+				});
+		ServerTickEvents.END_SERVER_TICK.register(server ->
+				server.getPlayerList().getPlayers().forEach(p -> {
+					if (p.onGround()) hasDoubleJumped.remove(p.getUUID());
 					ShadeshatterWormholeHandler.tick(server);
 					ServerTickEvents.END_SERVER_TICK.register(VortexSlamPacket::tickServerSlams);
 					long currentTime = server.overworld().getGameTime();
@@ -777,6 +834,20 @@ public class Rituals implements ModInitializer {
 								var attribute = player.getAttribute(Attributes.MAX_HEALTH);
 								if (attribute != null) {
 									attribute.removeModifier(BlightDrainPacket.MODIFIER_ID);
+								}
+							}
+							return true;
+						}
+						return false;
+					});
+
+					BlightDrainPacket.ACTIVE_TARGET_DRAINS.entrySet().removeIf(entry -> {
+						if (currentTime >= entry.getValue()) {
+							var target = server.getPlayerList().getPlayer(entry.getKey());
+							if (target != null) {
+								var attribute = target.getAttribute(Attributes.MAX_HEALTH);
+								if (attribute != null) {
+									attribute.removeModifier(BlightDrainPacket.TARGET_MODIFIER_ID);
 								}
 							}
 							return true;
@@ -814,7 +885,15 @@ public class Rituals implements ModInitializer {
 									player.hurtMarked = true;
 								}
 
-								if (currentTime % 6 == 0) {
+								tether.ticksAtBoundary++;
+
+								if (tether.ticksAtBoundary % 6 == 0) {
+									ServerPlayer owner = server.getPlayerList().getPlayer(tether.ownerUuid);
+									if (owner != null) {
+										var source = level.damageSources().indirectMagic(owner, owner);
+										living.hurtServer(level, source, 3.0f);
+									}
+
 									Vec3 crashOrigin = boundarySnapPos.add(0, living.getBbHeight() * 0.5, 0);
 									for (int i = 0; i < 5; i++) {
 										double spreadAngle = (level.getRandom().nextDouble() - 0.5) * 0.5;
@@ -834,12 +913,26 @@ public class Rituals implements ModInitializer {
 										crashSpark.forcedVelocity = outwardConeDir.scale(speed).add(0, 0.08 + level.getRandom().nextDouble() * 0.12, 0);
 										level.addFreshEntity(crashSpark);
 									}
+
+									for (int i = 0; i < 8; i++) {
+										Vec3 offset = randomSphere(0.3 + level.getRandom().nextDouble() * 0.4);
+										SparkEntity burst = new SparkEntity(ModEntities.SPARK, level,
+												crashOrigin.x, crashOrigin.y, crashOrigin.z);
+										burst.applyPreset(SparkPresets.BLIGHT_TETHER_BORDER);
+										burst.forcedVelocity = offset;
+										level.addFreshEntity(burst);
+									}
+
+									level.sendParticles(net.minecraft.core.particles.ParticleTypes.DAMAGE_INDICATOR,
+											crashOrigin.x, crashOrigin.y, crashOrigin.z, 6, 0.25, 0.3, 0.25, 0.05);
 								}
 
 								if (currentTime % 4 == 0) {
 									level.playSound(null, boundarySnapPos.x, boundarySnapPos.y, boundarySnapPos.z,
 											net.minecraft.sounds.SoundEvents.CHAIN_FALL, SoundSource.HOSTILE, 0.8f, 1.2f);
 								}
+							} else {
+								tether.ticksAtBoundary = 0;
 							}
 
 							if (tether.hookSpark != null && tether.hookSpark.isAlive()) {
@@ -920,21 +1013,7 @@ public class Rituals implements ModInitializer {
 					});
 				})
 		);
-		ClientTickEvents.END_CLIENT_TICK.register(client -> {
-			if (client.player == null) return;
 
-			frameTicker++;
-			if (frameTicker % 4 != 0) return;
-			vortexFrame = (vortexFrame + 1) % 9;
-
-			ItemStack held = client.player.getMainHandItem();
-			if (held.is(ModItems.VORTEX_EDGE)) {
-				held.set(
-						DataComponents.CUSTOM_MODEL_DATA,
-						new CustomModelData(List.of((float) vortexFrame), List.of(), List.of(), List.of())
-				);
-			}
-		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
 				hasDoubleJumped.remove(handler.player.getUUID())
@@ -949,8 +1028,6 @@ public class Rituals implements ModInitializer {
 				ShadeshatterSpellHandler.onPlayerDisconnect(handler.getPlayer().getUUID())
 		);
 
-
-		EntityRenderers.register(ModEntities.DEATH_LASER, DeathLaserEntityRenderer::new);
 
 		LOGGER.info("Hello Fabric world!");
 	}

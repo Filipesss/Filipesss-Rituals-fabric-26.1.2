@@ -100,9 +100,9 @@ public class PolarityTornadoBlueEntity extends Entity {
         double nz = getZ() + travelVelocity.z;
 
         BlockPos groundCheck = BlockPos.containing(nx, ny - 0.4, nz);
-        boolean wouldHitGround = !level().getBlockState(groundCheck).isAir()
-                && !level().getBlockState(groundCheck).getFluidState().isEmpty() == false
-                || !level().getBlockState(groundCheck).isAir();
+        boolean wouldHitGround = !level().getBlockState(groundCheck)
+                .getCollisionShape(level(), groundCheck)
+                .isEmpty();
 
         if (wouldHitGround && travelVelocity.y <= 0) {
             setPos(nx, groundCheck.getY() + 1.0, nz);

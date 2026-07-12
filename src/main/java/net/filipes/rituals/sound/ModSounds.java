@@ -113,6 +113,64 @@ public final class ModSounds {
                     SoundEvent.createVariableRangeEvent(POLARTIY_CHANGE_ID)
             );
 
+    public static final Identifier GROUND_STAB_ID =
+            Identifier.fromNamespaceAndPath("rituals", "ground_stab");
+
+    public static final SoundEvent GROUND_STAB =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    GROUND_STAB_ID,
+                    SoundEvent.createVariableRangeEvent(GROUND_STAB_ID)
+            );
+    public static final Identifier TIME_WARP_ID =
+            Identifier.fromNamespaceAndPath("rituals", "time_warp");
+
+    public static final SoundEvent TIME_WARP =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    TIME_WARP_ID,
+                    SoundEvent.createVariableRangeEvent(TIME_WARP_ID)
+            );
+
+    public static final Identifier SLOW_SOUND_ID =
+            Identifier.fromNamespaceAndPath("rituals", "slow_sound");
+
+    public static final SoundEvent SLOW_SOUND =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    SLOW_SOUND_ID,
+                    SoundEvent.createVariableRangeEvent(SLOW_SOUND_ID)
+            );
+
+    public static final Identifier SHIELD_PLACE_ID =
+            Identifier.fromNamespaceAndPath("rituals", "shield_place");
+
+    public static final SoundEvent SHIELD_PLACE =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    SHIELD_PLACE_ID,
+                    SoundEvent.createVariableRangeEvent(SHIELD_PLACE_ID)
+            );
+
+    public static final Identifier LIGHTNING_CHAIN_ID =
+            Identifier.fromNamespaceAndPath("rituals", "lightning_chain");
+
+    public static final SoundEvent LIGHTNING_CHAIN =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    LIGHTNING_CHAIN_ID,
+                    SoundEvent.createVariableRangeEvent(LIGHTNING_CHAIN_ID)
+            );
+    public static final Identifier LIGHTNING_CHARGE_ID =
+            Identifier.fromNamespaceAndPath("rituals", "lightning_charge");
+
+    public static final SoundEvent LIGHTNING_CHARGE =
+            Registry.register(
+                    BuiltInRegistries.SOUND_EVENT,
+                    LIGHTNING_CHARGE_ID,
+                    SoundEvent.createVariableRangeEvent(LIGHTNING_CHARGE_ID)
+            );
+
     public static void initialize() {
 
     }

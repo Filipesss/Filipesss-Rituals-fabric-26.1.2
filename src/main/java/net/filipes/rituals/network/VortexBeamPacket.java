@@ -5,6 +5,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.VortexBoomEntity;
 import net.filipes.rituals.item.custom.VortexEdgeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -30,7 +31,7 @@ public class VortexBeamPacket implements CustomPacketPayload {
 
     private static final Map<UUID, Long> SERVER_COOLDOWNS = new HashMap<>();
     public static final  long  COOLDOWN_MS = 15_000L;
-    private static final float DAMAGE      = 8f;
+    private static final float DAMAGE      = 26f;
     private static final float MAX_RANGE   = 20f;
 
     @Override
@@ -38,13 +39,13 @@ public class VortexBeamPacket implements CustomPacketPayload {
 
     public static void handle(VortexBeamPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
-
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof VortexEdgeItem)) return;
 
             int stage = ModDataComponents.getStage(stack);
-            if (stage < 3) return;
+            if (stage < 5) return;
 
             UUID uuid = player.getUUID();
             long now  = System.currentTimeMillis();

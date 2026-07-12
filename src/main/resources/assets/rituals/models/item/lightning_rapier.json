@@ -5,7 +5,6 @@
 	"gui_light": "front",
 	"textures": {
 		"0": "rituals:item/lightning_rapier"
-
 	},
 	"elements": [
 		{

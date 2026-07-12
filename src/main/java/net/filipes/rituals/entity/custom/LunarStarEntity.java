@@ -1,6 +1,9 @@
 package net.filipes.rituals.entity.custom;
 
 import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.particle.ModParticles;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -28,10 +31,14 @@ public class LunarStarEntity extends Entity {
     private static final float RISING_ORBIT_SPEED  = 0.22f;
     private static final float RISING_SPEED        = 0.06f;
 
+    private static final float CIRCLE_ORBIT_RADIUS = 0.7f;
+    private static final float SINE_AMPLITUDE      = 0.35f;
+    private static final float SINE_PERIOD_TICKS   = 70f;
 
     private SparkEntity risingSpark1;
     private SparkEntity risingSpark2;
     private float riseStartY;
+    private float circleBaseY;
 
     private UUID ownerUUID;
     public Entity ownerEntity;
@@ -71,6 +78,7 @@ public class LunarStarEntity extends Entity {
 
         if (tickCount == 1) {
             riseStartY = (float) owner.getY();
+            circleBaseY = riseStartY + 0.1f + RISING_TICKS * RISING_SPEED;
 
             risingSpark1 = spawnRisingSpark(sl, owner, 0f);
             risingSpark2 = spawnRisingSpark(sl, owner, (float) Math.PI);
@@ -81,11 +89,22 @@ public class LunarStarEntity extends Entity {
             float angle2 = angle1 + (float) Math.PI;
             float rise   = riseStartY + 0.1f + tickCount * RISING_SPEED;
 
-            repositionRisingSpark(risingSpark1, owner, angle1, rise);
-            repositionRisingSpark(risingSpark2, owner, angle2, rise);
+            repositionOrbitSpark(risingSpark1, owner, angle1, rise, RISING_ORBIT_RADIUS);
+            repositionOrbitSpark(risingSpark2, owner, angle2, rise, RISING_ORBIT_RADIUS);
         } else {
-            if (risingSpark1 != null && risingSpark1.isAlive()) { risingSpark1.discard(); risingSpark1 = null; }
-            if (risingSpark2 != null && risingSpark2.isAlive()) { risingSpark2.discard(); risingSpark2 = null; }
+            long tSinceRise = tickCount - RISING_TICKS;
+            float angle1 = tickCount * RISING_ORBIT_SPEED;
+            float angle2 = angle1 + (float) Math.PI;
+            float sineOffset = (float) Math.sin((tSinceRise / SINE_PERIOD_TICKS) * Math.PI * 2.0) * SINE_AMPLITUDE;
+            float y = circleBaseY + sineOffset;
+
+            if (risingSpark1 == null || !risingSpark1.isAlive()) risingSpark1 = spawnRisingSpark(sl, owner, angle1);
+            if (risingSpark2 == null || !risingSpark2.isAlive()) risingSpark2 = spawnRisingSpark(sl, owner, angle2);
+
+            repositionOrbitSpark(risingSpark1, owner, angle1, y, CIRCLE_ORBIT_RADIUS);
+            repositionOrbitSpark(risingSpark2, owner, angle2, y, CIRCLE_ORBIT_RADIUS);
+
+            spawnAmbientParticles(sl, owner);
         }
 
         if (!LunarBladeOnHitTracker.isActive(ownerUUID)) discard();
@@ -101,20 +120,39 @@ public class LunarStarEntity extends Entity {
         spark.setNoGravity(true);
         spark.setDeltaMovement(Vec3.ZERO);
         spark.forcedVelocity = Vec3.ZERO;
-        spark.maxLifetime = RISING_TICKS + 5;
+        spark.maxLifetime = 200;
         level.addFreshEntity(spark);
         return spark;
     }
 
-    private void repositionRisingSpark(SparkEntity spark, Entity owner,
-                                       float angle, float y) {
+    private void repositionOrbitSpark(SparkEntity spark, Entity owner,
+                                      float angle, float y, float radius) {
         if (spark == null || !spark.isAlive()) return;
         spark.setPos(
-                owner.getX() + Math.cos(angle) * RISING_ORBIT_RADIUS,
+                owner.getX() + Math.cos(angle) * radius,
                 y,
-                owner.getZ() + Math.sin(angle) * RISING_ORBIT_RADIUS);
+                owner.getZ() + Math.sin(angle) * radius);
         spark.setDeltaMovement(Vec3.ZERO);
         spark.forcedVelocity = Vec3.ZERO;
+    }
+
+    private void spawnAmbientParticles(ServerLevel level, Entity owner) {
+        var random = level.getRandom();
+
+        if (tickCount % 10 == 0) {
+            double mx = owner.getX() + (random.nextDouble() - 0.5) * 1.4;
+            double my = owner.getY() + 0.3 + random.nextDouble() * 1.2;
+            double mz = owner.getZ() + (random.nextDouble() - 0.5) * 1.4;
+            level.sendParticles(ModParticles.MOON, mx, my, mz, 1, 0.05, 0.05, 0.05, 0.01);
+        }
+
+        int dustCount = 2;
+        for (int i = 0; i < dustCount; i++) {
+            double dx = owner.getX() + (random.nextDouble() - 0.5) * 1.6;
+            double dy = owner.getY() + 0.2 + random.nextDouble() * 1.4;
+            double dz = owner.getZ() + (random.nextDouble() - 0.5) * 1.6;
+            level.sendParticles(new DustParticleOptions(0xAADDFF, 1.6f), dx, dy, dz, 1, 0.06, 0.06, 0.06, 0.0);
+        }
     }
 
     @Override

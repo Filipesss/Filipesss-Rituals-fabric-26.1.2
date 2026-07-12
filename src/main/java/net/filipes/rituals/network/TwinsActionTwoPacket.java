@@ -7,6 +7,7 @@ import net.filipes.rituals.entity.custom.LunarFragmentEntity;
 import net.filipes.rituals.entity.custom.SolarStormcellEntity;
 import net.filipes.rituals.item.custom.LunarBladeItem;
 import net.filipes.rituals.item.custom.SolarBladeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -44,7 +45,8 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
     private static final long SPAWN_DEBOUNCE_MS = 500L;
 
 
-    private static final Map<UUID, Long> LAST_SPAWN_TIME = new HashMap<>();
+    private static final Map<UUID, Long> LAST_FRAGMENT_SPAWN_TIME = new HashMap<>();
+    private static final Map<UUID, Long> LAST_SOLAR_CAST_TIME     = new HashMap<>();
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
@@ -57,6 +59,7 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
 
     public static void handle(TwinsActionTwoPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             ServerLevel level = (ServerLevel) player.level();
@@ -64,12 +67,17 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
 
             if (!pkt.isSolarCast) {
                 if (ModDataComponents.getStage(stack) < 5) return;
-
-                List<LunarFragmentEntity> orbiting = level.getEntitiesOfClass(
+                List<LunarFragmentEntity> ownedFragments = level.getEntitiesOfClass(
                         LunarFragmentEntity.class,
-                        player.getBoundingBox().inflate(5),
-                        f -> f.getOwnerId() == player.getId() && !f.isLaunched()
+                        player.getBoundingBox().inflate(70),
+                        f -> f.getOwnerId() == player.getId() && f.isAlive()
+                                && !f.isResonanceMode() && !f.isShardMode() && !f.isCustomSpawnPos()
                 );
+
+
+                List<LunarFragmentEntity> orbiting = ownedFragments.stream()
+                        .filter(f -> !f.isLaunched())
+                        .toList();
 
                 if (!orbiting.isEmpty()) {
                     LivingEntity target = findLookedAtEntity(player, level);
@@ -77,11 +85,13 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
                         int launchIndex = FRAGMENT_COUNT - orbiting.size();
                         orbiting.get(0).launch(target, launchIndex);
                     }
+                } else if (!ownedFragments.isEmpty()) {
+                    return;
                 } else {
                     long now = System.currentTimeMillis();
-                    Long last = LAST_SPAWN_TIME.get(uuid);
+                    Long last = LAST_FRAGMENT_SPAWN_TIME.get(uuid);
                     if (last != null && now - last < SPAWN_DEBOUNCE_MS) return;
-                    LAST_SPAWN_TIME.put(uuid, now);
+                    LAST_FRAGMENT_SPAWN_TIME.put(uuid, now);
 
                     for (int i = 0; i < FRAGMENT_COUNT; i++) {
                         LunarFragmentEntity fragment =
@@ -104,9 +114,9 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
                 if (ModDataComponents.getStage(solarStack) < 5) return;
 
                 long now = System.currentTimeMillis();
-                Long last = LAST_SPAWN_TIME.get(uuid);
+                Long last = LAST_SOLAR_CAST_TIME.get(uuid);
                 if (last != null && now - last < SPAWN_DEBOUNCE_MS) return;
-                LAST_SPAWN_TIME.put(uuid, now);
+                LAST_SOLAR_CAST_TIME.put(uuid, now);
 
                 LivingEntity target = findLookedAtEntity(player, level);
 
@@ -146,7 +156,7 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
                         stormcell.activateResonance();
                     }
                 }
-                if (!pkt.dualCombo || orbiting.size() <= toConsume) {
+                if (orbiting.size() <= toConsume) {
                     ServerPlayNetworking.send(player, new TwinsStartCooldownPacket());
                 }
 
@@ -190,6 +200,7 @@ public class TwinsActionTwoPacket implements CustomPacketPayload {
     }
 
     public static void onPlayerDisconnect(UUID uuid) {
-        LAST_SPAWN_TIME.remove(uuid);
+        LAST_FRAGMENT_SPAWN_TIME.remove(uuid);
+        LAST_SOLAR_CAST_TIME.remove(uuid);
     }
 }

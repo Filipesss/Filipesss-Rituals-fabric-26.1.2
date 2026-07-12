@@ -1,6 +1,5 @@
 package net.filipes.rituals.worldgen;
 
-import net.filipes.rituals.blocks.ModBlocks;
 import net.filipes.rituals.blocks.entity.RitualPedestalBlockEntity;
 import net.filipes.rituals.config.RitualConfig;
 import net.filipes.rituals.pedestal.PedestalSavedData;
@@ -22,39 +21,52 @@ public class RitualWorldGen {
         if (overworld == null) return;
 
         PedestalSavedData data = PedestalSavedData.getOrCreate(overworld);
-
         Random rng = new Random(overworld.getSeed() ^ 0xDEADBEEF_CAFEL);
 
         for (PedestalType type : PedestalTypes.REGISTRY.values()) {
             if (data.isTypeHandled(type.id())) continue;
+            BlockPos pos = findPlacementPos(overworld, rng, data);
 
-            BlockPos pos = findPlacementPos(overworld, rng);
-            placePedestal(overworld, pos, type);
+            boolean placed = PedestalStructurePlacer.placeAt(overworld, pos, rng);
+            if (!placed) {
+                System.out.println("[Rituals] Skipping '" + type.id() + "' — structure placement failed.");
+                continue;
+            }
+
+            if (overworld.getBlockEntity(pos) instanceof RitualPedestalBlockEntity be) {
+                be.setPedestalType(type.id());
+            }
+
             data.recordPlaced(type.id(), pos);
 
-            System.out.println("[Rituals] Placed '" + type.id() +
-                    "' pedestal at " + pos.toShortString());
         }
     }
 
-    private static BlockPos findPlacementPos(ServerLevel world, Random rng) {
+    private static BlockPos findPlacementPos(ServerLevel world, Random rng, PedestalSavedData data) {
         int radius = RitualConfig.PEDESTAL_SPAWN_RADIUS;
+        int minSeparation = 64;
 
         int x, z;
+        BlockPos candidate;
+        boolean tooClose;
         do {
             x = rng.nextInt(radius * 2) - radius;
             z = rng.nextInt(radius * 2) - radius;
-        } while (Math.abs(x) < 64 && Math.abs(z) < 64);
+            candidate = new BlockPos(x, 0, z);
+
+            tooClose = Math.abs(x) < 64 && Math.abs(z) < 64;
+            if (!tooClose) {
+                for (BlockPos existing : data.getPlaced().values()) {
+                    if (candidate.distSqr(new BlockPos(existing.getX(), 0, existing.getZ())) < (double) minSeparation * minSeparation) {
+                        tooClose = true;
+                        break;
+                    }
+                }
+            }
+        } while (tooClose);
 
         world.getChunk(x >> 4, z >> 4, ChunkStatus.FULL, true);
         int y = world.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
         return new BlockPos(x, y, z);
-    }
-
-    private static void placePedestal(ServerLevel world, BlockPos pos, PedestalType type) {
-        world.setBlock(pos, ModBlocks.RITUAL_PEDESTAL.defaultBlockState(), 3);
-        if (world.getBlockEntity(pos) instanceof RitualPedestalBlockEntity be) {
-            be.setPedestalType(type.id());
-        }
     }
 }

@@ -226,17 +226,45 @@ public class DeathLaserEntity extends Entity {
             blockSide   = null;
         }
 
+        double collideDistSq = from.distanceToSqr(collidePosX, collidePosY, collidePosZ);
+
         AABB scanBox = new AABB(
                 Math.min(getX(), collidePosX) - 1, Math.min(getY(), collidePosY) - 1, Math.min(getZ(), collidePosZ) - 1,
                 Math.max(getX(), collidePosX) + 1, Math.max(getY(), collidePosY) + 1, Math.max(getZ(), collidePosZ) + 1);
 
         List<LivingEntity> result = new ArrayList<>();
+        Vec3 closestEntityHit = null;
+        double closestEntityDistSq = Double.MAX_VALUE;
+
         for (LivingEntity entity : world.getEntitiesOfClass(LivingEntity.class, scanBox, e -> e != caster)) {
             float pad = entity.getPickRadius() + 0.5f;
             AABB padded = entity.getBoundingBox().inflate(pad, pad, pad);
             Optional<Vec3> hit = padded.clip(from, to);
-            if (padded.contains(from) || hit.isPresent()) result.add(entity);
+
+            Vec3 hitPoint = null;
+            if (padded.contains(from)) {
+                hitPoint = from;
+            } else if (hit.isPresent()) {
+                hitPoint = hit.get();
+            }
+
+            if (hitPoint != null) {
+                result.add(entity);
+                double distSq = from.distanceToSqr(hitPoint);
+                if (distSq < closestEntityDistSq) {
+                    closestEntityDistSq = distSq;
+                    closestEntityHit = hitPoint;
+                }
+            }
         }
+
+        if (closestEntityHit != null && closestEntityDistSq < collideDistSq) {
+            collidePosX = closestEntityHit.x;
+            collidePosY = closestEntityHit.y;
+            collidePosZ = closestEntityHit.z;
+            blockSide   = null;
+        }
+
         return result;
     }
 

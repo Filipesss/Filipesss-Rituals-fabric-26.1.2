@@ -14,19 +14,14 @@ public final class LayeredPolicy extends EnchantmentPolicy {
     private record Layer(
             int min,
             int max,
-            boolean enchantable,
-            @Nullable Set<ResourceKey<Enchantment>> whitelist
+            boolean deny,
+            boolean allowAll,
+            Set<ResourceKey<Enchantment>> whitelist
     ) {
         boolean covers(int stage) {
             return stage >= min && stage <= max;
         }
-
-        boolean permits(Holder<Enchantment> e) {
-            if (whitelist == null) return true;
-            return whitelist.stream().anyMatch(e::is);
-        }
     }
-
 
     private final List<Layer> layers;
 
@@ -34,24 +29,39 @@ public final class LayeredPolicy extends EnchantmentPolicy {
         this.layers = List.copyOf(layers);
     }
 
-    private @Nullable Layer layerFor(int stage) {
+    private List<Layer> layersFor(int stage) {
+        List<Layer> matching = new ArrayList<>();
         for (Layer l : layers) {
-            if (l.covers(stage)) return l;
+            if (l.covers(stage)) matching.add(l);
         }
-        return null;
+        return matching;
     }
 
     @Override
     public boolean isEnchantable(int stage) {
-        Layer l = layerFor(stage);
-        return l != null && l.enchantable();
+        List<Layer> covering = layersFor(stage);
+        if (covering.isEmpty()) return false;
+
+        // An explicit deny() layer in range blocks enchanting entirely for that stage,
+        // regardless of any other allow()/allowAll() layers overlapping the same range.
+        if (covering.stream().anyMatch(Layer::deny)) return false;
+
+        return true;
     }
 
     @Override
     public boolean isAllowed(Holder<Enchantment> enchantment, int stage) {
-        Layer l = layerFor(stage);
-        if (l == null) return false;
-        return l.permits(enchantment);
+        List<Layer> covering = layersFor(stage);
+        if (covering.isEmpty()) return false;
+        if (covering.stream().anyMatch(Layer::deny)) return false;
+
+        // allowAll() in any covering layer opens the gate completely for this stage.
+        if (covering.stream().anyMatch(Layer::allowAll)) return true;
+
+        // Otherwise: union of every covering layer's whitelist.
+        return covering.stream()
+                .flatMap(l -> l.whitelist().stream())
+                .anyMatch(enchantment::is);
     }
 
     public static Builder builder() {
@@ -78,18 +88,18 @@ public final class LayeredPolicy extends EnchantmentPolicy {
             }
 
             public Builder deny() {
-                layers.add(new Layer(from, to, false, Set.of()));
+                layers.add(new Layer(from, to, true, false, Set.of()));
                 return Builder.this;
             }
 
             @SafeVarargs
             public final Builder allow(ResourceKey<Enchantment>... keys) {
-                layers.add(new Layer(from, to, false, Set.of(keys)));
+                layers.add(new Layer(from, to, false, false, Set.of(keys)));
                 return Builder.this;
             }
 
             public Builder allowAll() {
-                layers.add(new Layer(from, to, true, null));
+                layers.add(new Layer(from, to, false, true, Set.of()));
                 return Builder.this;
             }
         }

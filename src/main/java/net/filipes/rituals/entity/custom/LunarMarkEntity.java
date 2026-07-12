@@ -43,6 +43,13 @@ public class LunarMarkEntity extends Entity implements Scalable {
     private UUID ownerUUID;
     private String appliedGlowTeamName = null;
     private String targetScoreboardName = null;
+    private boolean isChainMark = false;
+    public void setChainMark(boolean v) { this.isChainMark = v; }
+    private static final int MAX_CHAIN_DEPTH = 5;
+    private int chainDepth = 0;
+
+    public void setChainDepth(int d) { this.chainDepth = d; }
+    public int  getChainDepth()      { return chainDepth; }
 
     public LunarMarkEntity(EntityType<? extends LunarMarkEntity> type, Level level) {
         super(type, level);
@@ -104,7 +111,9 @@ public class LunarMarkEntity extends Entity implements Scalable {
             if (!level().isClientSide() && level() instanceof ServerLevel serverLevel) {
                 cleanupGlow(serverLevel);
                 spawnExplosionSparks(serverLevel);
-                spawnExplosionFragments(serverLevel);          // ← new
+                if (chainDepth < MAX_CHAIN_DEPTH) {
+                    spawnExplosionFragments(serverLevel);
+                }
                 serverLevel.playSound(null, getX(), getY(), getZ(),
                         SoundEvents.RESPAWN_ANCHOR_DEPLETE,
                         net.minecraft.sounds.SoundSource.PLAYERS,
@@ -222,15 +231,20 @@ public class LunarMarkEntity extends Entity implements Scalable {
                 shard.setPos(ex + ox, ey + oy, ez + oz);
                 shard.initAsShard(false, awayFromEnemy, targetUUID, ownerUUID);
                 shard.setShardInwardTarget(markedLiving);
+                shard.setShardChainDepth(this.chainDepth);
                 level.addFreshEntity(shard);
             }
         }
 
-        for (int i = 0; i < 3; i++) {
+        java.util.concurrent.atomic.AtomicBoolean chainClaim = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+        for (int i = 0; i < 2; i++) {
             Vec3 vel = randomSphere(0.30 + Math.random() * 0.16);
             LunarFragmentEntity shard = new LunarFragmentEntity(ModEntities.LUNAR_FRAGMENT, level);
             shard.setPos(x, y, z);
             shard.initAsShard(true, vel, targetUUID, ownerUUID);
+            shard.setShardChainDepth(this.chainDepth);
+            shard.setChainClaim(chainClaim);
             level.addFreshEntity(shard);
         }
     }

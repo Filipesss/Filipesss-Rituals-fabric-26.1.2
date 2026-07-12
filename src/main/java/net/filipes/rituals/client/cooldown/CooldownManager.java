@@ -10,23 +10,14 @@ public class CooldownManager {
     private static final Map<String, AbilityDefinition> definitions    = new LinkedHashMap<>();
     private static final Map<String, Integer>           remainingTicks = new LinkedHashMap<>();
 
-    /**
-     * Fractional drain rate per game tick.
-     *   1.0f = normal  (1 tick drained per game tick)
-     *   2.0f = haste   (2 ticks drained per game tick — recharges twice as fast)
-     *   0.5f = slow    (1 tick drained every 2 game ticks — recharges half as fast)
-     * Set by ShadeshatterHastePacket on the client; always reset to 1.0f when morph ends.
-     */
     private static float tickRate        = 1.0f;
     private static float tickAccumulator = 0.0f;
 
-    // ── Registration ──────────────────────────────────────────────────────────
 
     public static void register(String id, String displayName, long durationMs, int barColor) {
         definitions.put(id, new AbilityDefinition(displayName, durationMs, barColor));
     }
 
-    // ── Tick ──────────────────────────────────────────────────────────────────
 
     public static void tick() {
         tickAccumulator += tickRate;
@@ -41,7 +32,6 @@ public class CooldownManager {
         });
     }
 
-    // ── Control ───────────────────────────────────────────────────────────────
 
     public static void trigger(String id) {
         AbilityDefinition def = definitions.get(id);
@@ -49,7 +39,6 @@ public class CooldownManager {
         remainingTicks.put(id, msToTicks(def.durationMs()));
     }
 
-    /** Instantly expires all tracked cooldowns (called by RAPID_RESET). */
     public static void clearAll() {
         remainingTicks.clear();
         tickAccumulator = 0.0f;
@@ -58,10 +47,9 @@ public class CooldownManager {
 
     public static void setTickRate(float rate) {
         tickRate        = rate;
-        tickAccumulator = 0.0f;   // reset accumulator so the new rate takes clean effect
+        tickAccumulator = 0.0f;
     }
 
-    // ── Queries ───────────────────────────────────────────────────────────────
 
     public static boolean isOnCooldown(String id) {
         Integer t = remainingTicks.get(id);
@@ -82,7 +70,6 @@ public class CooldownManager {
         return (long) t * 50;
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static int msToTicks(long ms) { return (int)(ms / 50); }
 

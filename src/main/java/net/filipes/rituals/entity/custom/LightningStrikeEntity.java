@@ -1,11 +1,15 @@
 package net.filipes.rituals.entity.custom;
 
+import net.filipes.rituals.effect.ModStatusEffects;
 import net.filipes.rituals.entity.ModEntities;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -16,6 +20,8 @@ import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.UUID;
 
 public class LightningStrikeEntity extends Entity {
 
@@ -35,6 +41,8 @@ public class LightningStrikeEntity extends Entity {
     public boolean on = true;
 
     private int sparksSpawned = 0;
+    private int novaSparksSpawned = 0;
+    private UUID ownerUUID;
 
     public LightningStrikeEntity(EntityType<? extends LightningStrikeEntity> type, Level level) {
         super(type, level);
@@ -45,7 +53,7 @@ public class LightningStrikeEntity extends Entity {
                                float height, int duration,
                                int r, int g, int b,
                                float damage, float damageRadius,
-                               int impactSparks) {
+                               int impactSparks, LivingEntity owner) {
         var e = ModEntities.LIGHTNING_STRIKE.create(level, EntitySpawnReason.TRIGGERED);
         if (e == null) return;
         e.setPos(x, y, z);
@@ -55,6 +63,11 @@ public class LightningStrikeEntity extends Entity {
         e.setDamage(damage);
         e.setDamageRadius(damageRadius);
         e.setImpactSparks(impactSparks);
+
+        if (owner != null) {
+            e.ownerUUID = owner.getUUID();
+        }
+
         level.addFreshEntity(e);
     }
 
@@ -73,8 +86,14 @@ public class LightningStrikeEntity extends Entity {
         }
 
         if (!level().isClientSide() && on && level() instanceof ServerLevel serverLevel) {
+
             if (tickCount == APPEAR_TICKS + 1) {
                 applyImpactDamage(serverLevel);
+                spawnInstantImpactVisuals(serverLevel);
+            }
+
+            if (tickCount >= APPEAR_TICKS + 1) {
+                tickNovaSparks(serverLevel);
             }
 
             if (tickCount >= APPEAR_TICKS) {
@@ -87,25 +106,59 @@ public class LightningStrikeEntity extends Entity {
         }
     }
 
+    private void tickNovaSparks(ServerLevel level) {
+        int totalNovaSparks = 14;
+        if (novaSparksSpawned >= totalNovaSparks) return;
+
+        double x = getX();
+        double y = getY();
+        double z = getZ();
+
+        // Spawns 1 per tick instead of 2 to guarantee they separate cleanly over time
+        double angle = (novaSparksSpawned * (Math.PI * 2.0)) / totalNovaSparks;
+        angle += (level.getRandom().nextDouble() - 0.5) * 0.35; // Added more organic noise to the angle
+
+        double speed = 0.4 + level.getRandom().nextDouble() * 0.3;
+        double vy    = 0.15 + level.getRandom().nextDouble() * 0.25;
+
+        SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, x, y + 0.2, z);
+        spark.applyPreset(SparkPresets.LIGHTNING_STRIKE_IMPACT);
+
+        spark.forcedVelocity = new Vec3(
+                Math.cos(angle) * speed,
+                vy,
+                Math.sin(angle) * speed
+        );
+
+        level.addFreshEntity(spark);
+        novaSparksSpawned++;
+    }
+
     private void tickSparkSpawning(ServerLevel level) {
         int total = getImpactSparks();
         if (sparksSpawned >= total) return;
 
-        int elapsed       = tickCount - APPEAR_TICKS;
-        int ticksPerSpark = Math.max(1, getDuration() / Math.max(1, total));
+        int elapsed = tickCount - APPEAR_TICKS;
+        int duration = Math.max(1, getDuration());
+        if (elapsed < 0) return;
 
-        if (elapsed % ticksPerSpark == 0) {
+        // Dynamic target tracking distributes sparks completely evenly across the entire duration
+        int targetToSpawn = (int) Math.min(total, ((double) elapsed / duration) * total);
+
+        while (sparksSpawned < targetToSpawn) {
             double angle = level.getRandom().nextDouble() * Math.PI * 2.0;
             double speed = 0.25 + level.getRandom().nextDouble() * 0.30;
             double vy    = 0.10 + level.getRandom().nextDouble() * 0.15;
 
             SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, getX(), getY(), getZ());
             spark.applyPreset(SparkPresets.LIGHTNING_STRIKE_IMPACT);
+
             spark.forcedVelocity = new Vec3(
                     Math.cos(angle) * speed,
                     vy,
                     Math.sin(angle) * speed
             );
+
             level.addFreshEntity(spark);
             sparksSpawned++;
         }
@@ -123,18 +176,47 @@ public class LightningStrikeEntity extends Entity {
                 getX() + radius, getY() + radius, getZ() + radius);
 
         for (LivingEntity target : level().getEntitiesOfClass(LivingEntity.class, box)) {
+            if (this.ownerUUID != null && target.getUUID().equals(this.ownerUUID)) {
+                continue;
+            }
+
             double dx = target.getX() - getX();
             double dy = target.getY() - getY();
             double dz = target.getZ() - getZ();
             if (dx * dx + dy * dy + dz * dz <= r2) {
+                target.invulnerableTime = 0;
                 target.hurtServer(server, src, dmg);
+                target.addEffect(new MobEffectInstance(
+                        ModStatusEffects.STUN, 60, 0, false, true, true));
             }
         }
     }
 
+    private void spawnInstantImpactVisuals(ServerLevel level) {
+        double x = getX();
+        double y = getY();
+        double z = getZ();
+        float radius = getDamageRadius();
+
+        int dustCount = (int) (radius * 15);
+        level.sendParticles(
+                new DustParticleOptions(0xAADDFF, 1.6f),
+                x, y + 0.2, z,
+                dustCount,
+                radius * 0.5, 0.2, radius * 0.5,
+                0.0
+        );
+
+        int vanillaSparks = (int) (radius * 15);
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y + 0.2, z, vanillaSparks,
+                radius * 0.6, 0.2, radius * 0.6, 0.4);
+
+        level.sendParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 8, 0.3, 0.1, 0.3, 0.05);
+    }
+
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(STRIKE_HEIGHT,  14f);  // taller default
+        builder.define(STRIKE_HEIGHT,  14f);
         builder.define(DURATION,        20);
         builder.define(COLOR_R,         80);
         builder.define(COLOR_G,        160);

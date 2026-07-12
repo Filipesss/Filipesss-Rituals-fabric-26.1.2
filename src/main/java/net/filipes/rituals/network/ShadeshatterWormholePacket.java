@@ -1,13 +1,17 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.item.custom.ShadeshatterItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents; // Added sound event import
+import net.minecraft.sounds.SoundSource; // Added sound source import
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
@@ -40,10 +44,12 @@ public class ShadeshatterWormholePacket implements CustomPacketPayload {
 
     public static void handle(ShadeshatterWormholePacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
-
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof ShadeshatterItem)) return;
+            int stage = ModDataComponents.getStage(stack);
+            if (stage < 4) return;
 
             if (ShadeshatterWormholeHandler.isActive(player.getUUID())) return;
 
@@ -55,6 +61,7 @@ public class ShadeshatterWormholePacket implements CustomPacketPayload {
 
             Vec3 center = Vec3.atBottomCenterOf(pkt.targetPos.above());
             if (player.distanceToSqr(center) > 24 * 24) return;
+
 
             ShadeshatterWormholeHandler.beginWormhole(player, center, ShadeshatterWormholeHandler.WORMHOLE_TICKS);
         });

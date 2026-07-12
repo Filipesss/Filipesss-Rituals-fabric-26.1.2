@@ -5,6 +5,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.CinderboltBeamEntity;
 import net.filipes.rituals.item.custom.CinderboltItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -31,13 +32,14 @@ public class FireCinderboltBeamPacket implements CustomPacketPayload {
     public  static final long COOLDOWN_MS = 20_000L;
 
     private static final int   BEAM_DURATION = 60;
-    private static final float BEAM_DAMAGE   = 3.5f;
+    private static final float BEAM_DAMAGE   = 4.5f;
     private static final float BEAM_HP_PCT   = 1.5f;
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(FireCinderboltBeamPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof CinderboltItem)) return;

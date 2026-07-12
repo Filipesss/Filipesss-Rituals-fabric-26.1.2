@@ -69,7 +69,7 @@ public class PharathornGroundSmashEntity extends Entity {
             hasDamaged = true;
             AABB hitbox = getBoundingBox().inflate(0.9, 1.8, 0.9);
             for (LivingEntity t : ((ServerLevel) level()).getEntitiesOfClass(LivingEntity.class, hitbox))
-                t.hurt(level().damageSources().magic(), 5.0f);
+                t.hurt(level().damageSources().magic(), 16.0f);
         }
 
         if (eff >= ACTIVE_LIFETIME) discard();

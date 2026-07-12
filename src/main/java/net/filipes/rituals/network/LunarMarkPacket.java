@@ -8,6 +8,7 @@ import net.filipes.rituals.entity.custom.LunarMarkTracker;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.LunarBladeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -46,7 +47,7 @@ public class LunarMarkPacket implements CustomPacketPayload {
 
     public static void handle(LunarMarkPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
-
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof LunarBladeItem)) return;
@@ -86,7 +87,7 @@ public class LunarMarkPacket implements CustomPacketPayload {
             level.playSound(null, spawnX, spawnY, spawnZ,
                     SoundEvents.TRIAL_SPAWNER_OMINOUS_ACTIVATE,
                     net.minecraft.sounds.SoundSource.PLAYERS,
-                    1.0f, 0.7f);
+                    1.4f, 1.4f);
         });
     }
 

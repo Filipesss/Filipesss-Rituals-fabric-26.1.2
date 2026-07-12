@@ -17,7 +17,6 @@ public record PedestalType(
         return rewardSupplier.apply(access);
     }
 
-    /** Returns true if the given item list satisfies all requirements. */
     public boolean isSatisfied(List<ItemStack> items) {
         for (Map.Entry<Item, Integer> entry : requirements.entrySet()) {
             int found = 0;

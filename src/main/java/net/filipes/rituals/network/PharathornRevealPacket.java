@@ -8,6 +8,7 @@ import net.filipes.rituals.entity.custom.PharathornMarkTracker;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.PharathornItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -37,18 +38,19 @@ public class PharathornRevealPacket implements CustomPacketPayload {
     private static final Map<UUID, Long> SERVER_COOLDOWNS = new HashMap<>();
     public  static final long   COOLDOWN_MS  = 30_000L;
     private static final double REVEAL_RANGE = 32.0;
-    private static final int    REVEAL_TICKS = 100; // 5 seconds
+    private static final int    REVEAL_TICKS = 100;
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(PharathornRevealPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof PharathornItem)) return;
             int stage = ModDataComponents.getStage(stack);
-            if (stage < 3) return;
+            if (stage < 5) return;
 
             UUID uuid = player.getUUID();
             long now  = System.currentTimeMillis();
@@ -116,7 +118,7 @@ public class PharathornRevealPacket implements CustomPacketPayload {
 
             level.playSound(null, player.getX(), player.getY(), player.getZ(),
                     SoundEvents.TRIAL_SPAWNER_OMINOUS_ACTIVATE,
-                    SoundSource.PLAYERS, 1.0f, 0.8f);
+                    SoundSource.PLAYERS, 1.4f, 1.4f);
         });
     }
 

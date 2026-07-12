@@ -28,9 +28,12 @@ public class SolarStarEntity extends Entity {
     private static final float RISING_ORBIT_SPEED  = 0.22f;
     private static final float RISING_SPEED        = 0.06f;
 
+    private static final float CIRCLE_ORBIT_RADIUS = 0.7f;
+
     private SparkEntity risingSpark1;
     private SparkEntity risingSpark2;
     private float riseStartY;
+    private float circleY;
 
     private UUID ownerUUID;
     public Entity ownerEntity;
@@ -70,6 +73,7 @@ public class SolarStarEntity extends Entity {
 
         if (tickCount == 1) {
             riseStartY = (float) owner.getY();
+            circleY = riseStartY + 0.1f + RISING_TICKS * RISING_SPEED;
             risingSpark1 = spawnRisingSpark(sl, owner, 0f);
             risingSpark2 = spawnRisingSpark(sl, owner, (float) Math.PI);
         }
@@ -78,11 +82,19 @@ public class SolarStarEntity extends Entity {
             float angle1 = tickCount * RISING_ORBIT_SPEED;
             float angle2 = angle1 + (float) Math.PI;
             float rise   = riseStartY + 0.1f + tickCount * RISING_SPEED;
-            repositionRisingSpark(risingSpark1, owner, angle1, rise);
-            repositionRisingSpark(risingSpark2, owner, angle2, rise);
+            repositionOrbitSpark(risingSpark1, owner, angle1, rise, RISING_ORBIT_RADIUS);
+            repositionOrbitSpark(risingSpark2, owner, angle2, rise, RISING_ORBIT_RADIUS);
         } else {
-            if (risingSpark1 != null && risingSpark1.isAlive()) { risingSpark1.discard(); risingSpark1 = null; }
-            if (risingSpark2 != null && risingSpark2.isAlive()) { risingSpark2.discard(); risingSpark2 = null; }
+            float angle1 = tickCount * RISING_ORBIT_SPEED;
+            float angle2 = angle1 + (float) Math.PI;
+
+            if (risingSpark1 == null || !risingSpark1.isAlive()) risingSpark1 = spawnRisingSpark(sl, owner, angle1);
+            if (risingSpark2 == null || !risingSpark2.isAlive()) risingSpark2 = spawnRisingSpark(sl, owner, angle2);
+
+            repositionOrbitSpark(risingSpark1, owner, angle1, circleY, CIRCLE_ORBIT_RADIUS);
+            repositionOrbitSpark(risingSpark2, owner, angle2, circleY, CIRCLE_ORBIT_RADIUS);
+
+            spawnAmbientParticles(sl, owner);
         }
 
         if (!SolarBladeChargeTracker.isActive(ownerUUID)) discard();
@@ -94,21 +106,41 @@ public class SolarStarEntity extends Entity {
         double sz = owner.getZ() + Math.sin(startAngle) * RISING_ORBIT_RADIUS;
 
         SparkEntity spark = new SparkEntity(ModEntities.SPARK, level, sx, sy, sz);
-        spark.applyPreset(SparkPresets.SOLAR_MARK_END); // solar-coloured preset
+        spark.applyPreset(SparkPresets.SOLAR_MARK_END);
         spark.setNoGravity(true);
         spark.setDeltaMovement(Vec3.ZERO);
         spark.forcedVelocity = Vec3.ZERO;
-        spark.maxLifetime = RISING_TICKS + 5;
+        spark.maxLifetime = 200;
         level.addFreshEntity(spark);
         return spark;
     }
+    private void spawnAmbientParticles(ServerLevel level, Entity owner) {
+        var random = level.getRandom();
 
-    private void repositionRisingSpark(SparkEntity spark, Entity owner, float angle, float y) {
+        if (tickCount % 6 == 0) {
+            double ex = owner.getX() + (random.nextDouble() - 0.5) * 1.2;
+            double ey = owner.getY() + 0.3 + random.nextDouble() * 1.2;
+            double ez = owner.getZ() + (random.nextDouble() - 0.5) * 1.2;
+            level.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,
+                    ex, ey, ez, 1, 0.04, 0.04, 0.04, 0.01);
+        }
+
+        int dustCount = 2;
+        for (int i = 0; i < dustCount; i++) {
+            double dx = owner.getX() + (random.nextDouble() - 0.5) * 1.6;
+            double dy = owner.getY() + 0.2 + random.nextDouble() * 1.4;
+            double dz = owner.getZ() + (random.nextDouble() - 0.5) * 1.6;
+            level.sendParticles(new net.minecraft.core.particles.DustParticleOptions(0xFFC850, 1.6f),
+                    dx, dy, dz, 1, 0.06, 0.06, 0.06, 0.0);
+        }
+    }
+
+    private void repositionOrbitSpark(SparkEntity spark, Entity owner, float angle, float y, float radius) {
         if (spark == null || !spark.isAlive()) return;
         spark.setPos(
-                owner.getX() + Math.cos(angle) * RISING_ORBIT_RADIUS,
+                owner.getX() + Math.cos(angle) * radius,
                 y,
-                owner.getZ() + Math.sin(angle) * RISING_ORBIT_RADIUS);
+                owner.getZ() + Math.sin(angle) * radius);
         spark.setDeltaMovement(Vec3.ZERO);
         spark.forcedVelocity = Vec3.ZERO;
     }

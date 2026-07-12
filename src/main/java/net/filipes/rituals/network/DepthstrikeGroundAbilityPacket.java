@@ -1,11 +1,15 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.DepthstrikeGroundEntity;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.ModItems;
+import net.filipes.rituals.item.custom.DepthstrikeItem;
+import net.filipes.rituals.item.custom.SolarBladeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -14,6 +18,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
@@ -41,8 +46,13 @@ public class DepthstrikeGroundAbilityPacket implements CustomPacketPayload {
 
     public static void handle(DepthstrikeGroundAbilityPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
-            if (player.getMainHandItem().getItem() != ModItems.DEPTHSTRIKE) return;
+
+            ItemStack stack = player.getMainHandItem();
+            if (!(stack.getItem() instanceof DepthstrikeItem)) return;
+            int stage = ModDataComponents.getStage(stack);
+            if (stage < 5) return;
 
             UUID uuid = player.getUUID();
             long now  = System.currentTimeMillis();

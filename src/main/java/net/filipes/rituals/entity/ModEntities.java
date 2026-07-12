@@ -667,6 +667,22 @@ public class ModEntities {
                             Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "shadeshatter_spell")
                     ))
     );
+    public static final EntityType<DepthstrikeSplinterEntity> DEPTHSTRIKE_SPLINTER = Registry.register(
+            BuiltInRegistries.ENTITY_TYPE,
+            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_splinter"),
+            EntityType.Builder.<DepthstrikeSplinterEntity>of(
+                            (type, level) -> new DepthstrikeSplinterEntity(
+                                    (EntityType<? extends DepthstrikeSplinterEntity>) type, level),
+                            MobCategory.MISC
+                    )
+                    .sized(0.6f, 0.6f)
+                    .clientTrackingRange(64)
+                    .updateInterval(1)
+                    .build(ResourceKey.create(
+                            Registries.ENTITY_TYPE,
+                            Identifier.fromNamespaceAndPath(Rituals.MOD_ID, "depthstrike_splinter")
+                    ))
+    );
 
 
 

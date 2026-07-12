@@ -8,6 +8,7 @@ import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.item.custom.ShadowguardItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -46,6 +47,7 @@ public class LifestealMarkPacket implements CustomPacketPayload {
 
     public static void handle(LifestealMarkPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof ShadowguardItem)) return;
@@ -121,7 +123,7 @@ public class LifestealMarkPacket implements CustomPacketPayload {
                     target.getX(), target.getY(), target.getZ(),
                     SoundEvents.TRIAL_SPAWNER_OMINOUS_ACTIVATE,
                     net.minecraft.sounds.SoundSource.PLAYERS,
-                    1.0f, 0.6f);
+                    1.4f, 1.4f);
         });
     }
 

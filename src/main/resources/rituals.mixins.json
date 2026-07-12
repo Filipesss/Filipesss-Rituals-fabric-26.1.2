@@ -22,7 +22,15 @@
     "ThrowableProjectileTemporalFreezeMixin",
     "AbstractHurtingProjectileTemporalFreezeMixin",
     "ItemEntityTemporalFreezeMixin",
-    "PrimedTntTemporalFreezeMixin"
+    "PrimedTntTemporalFreezeMixin",
+    "PharathornMarkDamageMixin",
+    "ItemStackNameColorMixin",
+    "ItemStackDisplayNameColorMixin",
+    "ItemEntityVoidTeleportMixin",
+    "PlayerDisplayNameMixin",
+    "ServerPlayerDeathMessageMixin",
+    "PlayerListChatMixin",
+    "BundleExclusionMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -37,6 +45,11 @@
     "client.CameraMixin",
     "client.ClientPlayerMixin",
     "client.LivingEntityTravelMixin",
-    "client.EntityTurnMixin"
+    "client.EntityTurnMixin",
+    "client.ItemModelResolverMixin",
+    "client.HeldItemNameColorMixin",
+    "client.ContainerEventHandlerTooltipScrollMixin",
+    "client.GuiGraphicsExtractorTooltipScrollMixin",
+    "client.AbstractContainerScreenTooltipScrollMixin"
   ]
 }

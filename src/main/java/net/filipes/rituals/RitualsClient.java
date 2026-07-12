@@ -33,14 +33,9 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderers;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomModelData;
 import org.lwjgl.glfw.GLFW;
-
-import java.util.List;
 
 @Environment(EnvType.CLIENT)
 public class RitualsClient implements ClientModInitializer {
@@ -60,21 +55,14 @@ public class RitualsClient implements ClientModInitializer {
     private static int clientBlightDashCount = 0;
     private static long clientBlightDashTime = 0;
     private static boolean temporalRecallCloneActive = false;
-    private static int shadeshatterFrame  = 1;
-    private static int shadeshatterTicker = 0;
-    private static int shadeshatterSpellFrame  = -1;
-    private static int shadeshatterSpellTicker = 0;
-    private static final int SPELL_TICKS_PER_FRAME = 3;
-    private static int shadeshatterMimicFrame  = -1;
-    private static int shadeshatterMimicTicker = 0;
-    private static final int MIMIC_TICKS_PER_FRAME = 3;
-    private static final int TICKS_PER_FRAME = 3;
-    private static int     shadeshatterWormholeFrame  = -1;
-    private static int     shadeshatterWormholeTicker = 0;
+
+
     private static net.minecraft.core.BlockPos shadeshatterWormholeTarget = null;
-    private static final int WORMHOLE_TICKS_PER_FRAME = 3;
+
     public static boolean isShadeshatterAbilityAnimationPlaying() {
-        return shadeshatterMimicFrame >= 0 || shadeshatterWormholeFrame >= 0;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return false;
+        return ShadeshatterAnimTracker.isAnimating(mc.player.getId());
     }
 
     @Override
@@ -122,6 +110,7 @@ public class RitualsClient implements ClientModInitializer {
         ModelLayerRegistry.registerModelLayer(TemporalShieldModel.LAYER, TemporalShieldModel::createBodyLayer);
         ModelLayerRegistry.registerModelLayer(TemporalRecallModel.LAYER, TemporalRecallModel::createBodyLayer);
         ModelLayerRegistry.registerModelLayer(ShadeshatterSpellModel.LAYER, ShadeshatterSpellModel::createBodyLayer);
+        ModelLayerRegistry.registerModelLayer(DepthstrikeSplinterModel.LAYER, DepthstrikeSplinterModel::createBodyLayer);
 
         EntityRendererRegistry.register(ModEntities.PULSE_BLASTER_BEAM, PulseBlasterBeamRenderer::new);
         EntityRendererRegistry.register(ModEntities.SCREEN_SHAKE, ScreenShakeEntityRenderer::new);
@@ -170,6 +159,7 @@ public class RitualsClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.TEMPORAL_MUTE_MARK, TemporalMuteMarkEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.TEMPORAL_RECALL, TemporalRecallEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.SHADESHATTER_SPELL, ShadeshatterSpellEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.DEPTHSTRIKE_SPLINTER, DepthstrikeSplinterEntityRenderer::new);
 
 
 
@@ -238,13 +228,25 @@ public class RitualsClient implements ClientModInitializer {
         SolarBladeHudOverlay.register();
         TemporalMuteHudOverlay.register();
         WarpedHudOverlay.register();
+        ReverseControlsHudOverlay.register();
+        CinderboltSaveHudOverlay.register();
+        VortexDarknessOverlay.register();
         LunarBladeActivePacket.registerClient();
         SolarBladeActivePacket.registerClient();
         TemporalMuteActivePacket.registerClient();
+        TemporalMuteClearPacket.registerClient();
+        LunarBladeFlashPacket.registerClient();
 
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadowguardInvisiblePacket.TYPE,
-                (packet, context) -> ShadowguardHudOverlay.trigger()
+                (packet, context) -> {
+                    ShadowguardItem.markInvisible(packet.targetUUID());
+
+                    Minecraft mc = Minecraft.getInstance();
+                    if (mc.player != null && packet.targetUUID().equals(mc.player.getUUID())) {
+                        ShadowguardHudOverlay.trigger();
+                    }
+                }
         );
         ClientPlayNetworking.registerGlobalReceiver(
                 TemporalRecallStartCooldownPacket.TYPE,
@@ -255,12 +257,17 @@ public class RitualsClient implements ClientModInitializer {
         );
         ClientPlayNetworking.registerGlobalReceiver(
                 ReverseControlsPacket.TYPE,
-                (packet, context) -> ReverseControlsHandler.trigger(packet.durationTicks)
+                (packet, context) -> {
+                    ReverseControlsHandler.trigger(packet.durationTicks);
+                    ReverseControlsHudOverlay.trigger(packet.durationTicks);
+                }
         );
+
         ClientPlayNetworking.registerGlobalReceiver(
                 CinderboltSaveTriggeredPacket.TYPE,
                 (packet, context) -> {
                     CooldownManager.trigger("cinderbolt_death_save");
+                    CinderboltSaveHudOverlay.trigger();
                 }
         );
 
@@ -268,13 +275,23 @@ public class RitualsClient implements ClientModInitializer {
                 TwinsStartCooldownPacket.TYPE,
                 (packet, context) -> CooldownManager.trigger("twins_action_two")
         );
+
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadeshatterSpellStartPacket.TYPE,
-                (pkt, ctx) -> {
-                    shadeshatterSpellFrame  = 0;
-                    shadeshatterSpellTicker = 0;
-                }
+                (pkt, ctx) -> ShadeshatterAnimTracker.startSpell(pkt.entityId())
         );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ShadeshatterMimicStartPacket.TYPE,
+                (pkt, ctx) -> ShadeshatterAnimTracker.startMimic(pkt.entityId())
+        );
+        ClientPlayNetworking.registerGlobalReceiver(
+                ShadeshatterWormholeStartPacket.TYPE,
+                (pkt, ctx) -> ShadeshatterAnimTracker.startWormhole(pkt.entityId())
+        );
+        ClientPlayNetworking.registerGlobalReceiver(VortexDarknessPacket.TYPE, (packet, context) -> {
+            context.client().execute(() -> VortexDarknessOverlay.trigger(packet.durationTicks()));
+        });
+
         ClientPlayNetworking.registerGlobalReceiver(
                 ShadeshatterHastePacket.TYPE,
                 (packet, ctx) -> CooldownManager.setTickRate(packet.tickRate())
@@ -293,78 +310,33 @@ public class RitualsClient implements ClientModInitializer {
         ParticleProviderRegistry.getInstance().register(ModParticles.GLASSREAVER_CRIT, GlassreaverCritParticle.Factory::new);
         ParticleProviderRegistry.getInstance().register(ModParticles.TEMPORAL_HOURGLASS, TemporalHourglassParticle.Factory::new);
         ParticleProviderRegistry.getInstance().register(ModParticles.MOON, MoonParticle.Factory::new);
-
+        ParticleProviderRegistry.getInstance().register(ModParticles.CINDERBOLT_REVIVE, CinderboltReviveParticle.Factory::new);
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+
             if (client.player != null) {
                 CooldownManager.tick();
                 ReverseControlsHandler.tick();
-            }
-            if (client.player == null) return;
-            PulseBlasterCylinderState.tick();
-            shadeshatterTicker++;
-            if (shadeshatterTicker % TICKS_PER_FRAME == 0) {
-                shadeshatterFrame = (shadeshatterFrame % 4) + 1;
-            }
+                PulseBlasterCylinderState.tick();
+                ShadeshatterAnimTracker.tick();
 
-            ItemStack shadeshatterStack = client.player != null
-                    ? client.player.getMainHandItem() : ItemStack.EMPTY;
-
-            if (shadeshatterStack.is(ModItems.SHADESHATTER)) {
-                float frameValue;
-
-                if (shadeshatterMimicFrame >= 0) {
-                    frameValue = shadeshatterMimicFrame + 19f;
-                    shadeshatterMimicTicker++;
-                    if (shadeshatterMimicTicker >= MIMIC_TICKS_PER_FRAME) {
-                        shadeshatterMimicTicker = 0;
-                        shadeshatterMimicFrame++;
-                        if (shadeshatterMimicFrame >= 14) {
-                            shadeshatterMimicFrame = -1;
-                            ClientPlayNetworking.send(new ShadeshatterMorphPacket());
-                        }
-                    }
-                } else if (shadeshatterSpellFrame >= 0) {
-                    frameValue = shadeshatterSpellFrame + 5f;
-                    shadeshatterSpellTicker++;
-                    if (shadeshatterSpellTicker >= TICKS_PER_FRAME) {
-                        shadeshatterSpellTicker = 0;
-                        shadeshatterSpellFrame++;
-                        if (shadeshatterSpellFrame >= 14) {
-                            shadeshatterSpellFrame = -1;
-                        }
-                    }
-                } else if (shadeshatterWormholeFrame >= 0) {
-                    frameValue = shadeshatterWormholeFrame + 33f;
-                    shadeshatterWormholeTicker++;
-                    if (shadeshatterWormholeTicker >= WORMHOLE_TICKS_PER_FRAME) {
-                        shadeshatterWormholeTicker = 0;
-                        shadeshatterWormholeFrame++;
-                        if (shadeshatterWormholeFrame >= 14) {
-                            shadeshatterWormholeFrame = -1;
-                            if (shadeshatterWormholeTarget != null) {
-                                ClientPlayNetworking.send(new ShadeshatterWormholePacket(shadeshatterWormholeTarget));
-                                shadeshatterWormholeTarget = null;
-                            }
-                        }
-                    }
-                } else {
-                    frameValue = shadeshatterFrame;
+                if (ShadeshatterAnimTracker.consumeMimicCompletion(client.player.getId())) {
+                    ClientPlayNetworking.send(new ShadeshatterMorphPacket());
+                }
+                if (ShadeshatterAnimTracker.consumeWormholeCompletion(client.player.getId())
+                        && shadeshatterWormholeTarget != null) {
+                    ClientPlayNetworking.send(new ShadeshatterWormholePacket(shadeshatterWormholeTarget));
+                    shadeshatterWormholeTarget = null;
                 }
 
-                shadeshatterStack.set(
-                        DataComponents.CUSTOM_MODEL_DATA,
-                        new CustomModelData(List.of(frameValue), List.of(), List.of(), List.of())
-                );
-            }
-            if (solarChargeTicks > 0) {
-                if (client.player != null) {
-                    var heldDuringCharge = client.player.getMainHandItem().getItem();
-                    if (heldDuringCharge instanceof SolarBladeItem
-                            || heldDuringCharge instanceof LunarBladeItem) {
+                var heldItem = client.player.getMainHandItem();
+
+                if (solarChargeTicks > 0) {
+                    var heldDuringCharge = heldItem.getItem();
+                    if (heldDuringCharge instanceof SolarBladeItem || heldDuringCharge instanceof LunarBladeItem) {
                         solarChargeTicks--;
                         if (solarChargeTicks == 0) {
                             solarChargeTicks = -1;
-                            ItemStack offhand = client.player.getOffhandItem();
+                            var offhand = client.player.getOffhandItem();
                             boolean dualCombo = offhand.getItem() instanceof LunarBladeItem
                                     && ModDataComponents.getStage(offhand) >= 5;
                             ClientPlayNetworking.send(new TwinsActionTwoPacket(true, dualCombo));
@@ -373,37 +345,39 @@ public class RitualsClient implements ClientModInitializer {
                     } else {
                         solarChargeTicks = -1;
                     }
-                } else {
-                    solarChargeTicks = -1;
+                }
+
+                if (clientBlightDashCount == 1) {
+                    long now = System.currentTimeMillis();
+                    if (now - clientBlightDashTime > 10000L) {
+                        clientBlightDashCount = 0;
+                        CooldownManager.trigger("blight_dash");
+                    }
+                }
+
+                if (solarActiveTicks > 0) {
+                    solarActiveTicks--;
                 }
             }
-            if (clientBlightDashCount == 1) {
-                long now = System.currentTimeMillis();
-
-                if (now - clientBlightDashTime > 10000L) {
-                    clientBlightDashCount = 0;
-                    CooldownManager.trigger("blight_dash");
-                }
-            }
-
-            if (solarActiveTicks > 0) solarActiveTicks--;
 
 
             while (actionOne.consumeClick()) {
                 Minecraft mc = Minecraft.getInstance();
-                if (mc.player != null) {
-                    var held = mc.player.getMainHandItem();
-                    int stage = ModDataComponents.getStage(held);
+                if (mc.player == null || TemporalMuteHudOverlay.isActive()) continue;
+                var held = mc.player.getMainHandItem();
+                int stage = ModDataComponents.getStage(held);
 
-                    if (held.getItem() == ModItems.DEPTHSTRIKE && mc.player.isShiftKeyDown()) {
-                        if (stage >= 5 && !CooldownManager.isOnCooldown("depthstrike_charged_ball")) {
-                            ClientPlayNetworking.send(new DepthstrikeChargedBallPacket());
-                            CooldownManager.trigger("depthstrike_charged_ball");
-                        }
-                    }  else if (held.getItem() == ModItems.DEPTHSTRIKE && !mc.player.isShiftKeyDown()) {
-                        if (stage >= 4 && !CooldownManager.isOnCooldown("depthstrike_recall")) {
-                            ClientPlayNetworking.send(new DepthstrikeRecallPacket());
-                            CooldownManager.trigger("depthstrike_recall");
+                    if (held.getItem() == ModItems.DEPTHSTRIKE) {
+                        if (mc.player.isShiftKeyDown()) {
+                            if (stage >= 6 && !CooldownManager.isOnCooldown("depthstrike_charged_ball")) {
+                                ClientPlayNetworking.send(new DepthstrikeChargedBallPacket());
+                                CooldownManager.trigger("depthstrike_charged_ball");
+                            }
+                        } else {
+                            if (stage >= 2 && !CooldownManager.isOnCooldown("depthstrike_recall")) {
+                                ClientPlayNetworking.send(new DepthstrikeRecallPacket());
+                                CooldownManager.trigger("depthstrike_recall");
+                            }
                         }
                     } else if (held.getItem() instanceof PolarityBowItem) {
                         if (mc.player.isShiftKeyDown()) {
@@ -507,15 +481,19 @@ public class RitualsClient implements ClientModInitializer {
                             CooldownManager.trigger("pulse_blaster_shotgun");
                         }
                     } else if (held.getItem() instanceof VortexEdgeItem) {
-                        if (mc.player.isShiftKeyDown()) {
-                            if (stage >= 3 && !CooldownManager.isOnCooldown("vortex_beam")) {
-                                ClientPlayNetworking.send(new VortexBeamPacket());
-                                CooldownManager.trigger("vortex_beam");
+
+                        if (mc.player != null && mc.player.isShiftKeyDown()) {
+
+                            if (ModDataComponents.getStage(held) >= 6 && !CooldownManager.isOnCooldown("vortex_slam")) {
+                                if (!mc.player.onGround()) {
+                                    ClientPlayNetworking.send(new VortexSlamPacket());
+                                    CooldownManager.trigger("vortex_slam");
+                                } else {
+                                    mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.2f);
+                                }
                             }
                         } else {
-                            if (!CooldownManager.isOnCooldown("vortex_swap")
-                                    && ModDataComponents.getStage(held) >= 2) {
-
+                            if (!CooldownManager.isOnCooldown("vortex_swap") && ModDataComponents.getStage(held) >= 2) {
                                 if (mc.hitResult != null && mc.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.ENTITY) {
                                     net.minecraft.world.phys.EntityHitResult entityHit = (net.minecraft.world.phys.EntityHitResult) mc.hitResult;
                                     net.minecraft.world.entity.Entity target = entityHit.getEntity();
@@ -530,12 +508,12 @@ public class RitualsClient implements ClientModInitializer {
                             }
                         }
                     } else if (held.getItem() instanceof ShadeshatterItem) {
-                        if (shadeshatterMimicFrame == -1
-                                && shadeshatterSpellFrame == -1
+
+                        if (!ShadeshatterAnimTracker.isAnimating(mc.player.getId())
                                 && !client.player.getCooldowns().isOnCooldown(held)
                                 && !CooldownManager.isOnCooldown("shadeshatter_morph")) {
-                            shadeshatterMimicFrame  = 0;
-                            shadeshatterMimicTicker = 0;
+                            ShadeshatterAnimTracker.startMimic(mc.player.getId());
+                            ClientPlayNetworking.send(new ShadeshatterMimicTriggerPacket());
                             CooldownManager.trigger("shadeshatter_morph");
                         }
                     } else if (held.getItem() instanceof RosegoldPickaxeItem
@@ -549,9 +527,9 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     } else if (held.getItem() instanceof PharathornItem) {
                         if (mc.player.isShiftKeyDown() && stage >= 6) {
-                            if (!CooldownManager.isOnCooldown("pharathorn_spiral_stab")) {
-                                ClientPlayNetworking.send(new SpiralStabPacket());
-                                CooldownManager.trigger("pharathorn_spiral_stab");
+                            if (!CooldownManager.isOnCooldown("pharathorn_dash")) {
+                                ClientPlayNetworking.send(new PharathornDashPacket());
+                                CooldownManager.trigger("pharathorn_dash");
                             }
                         } else if (!mc.player.isShiftKeyDown() && stage >= 2) {
                             if (!CooldownManager.isOnCooldown("pharathorn_fortify")) {
@@ -561,13 +539,13 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     }
                 }
-            }
+
 
             while (actionTwo.consumeClick()) {
                 Minecraft mc = Minecraft.getInstance();
-                if (mc.player != null) {
-                    var held = mc.player.getMainHandItem();
-                    int stage = ModDataComponents.getStage(held);
+                if (mc.player == null || TemporalMuteHudOverlay.isActive()) continue;
+                var held = mc.player.getMainHandItem();
+                int stage = ModDataComponents.getStage(held);
 
                     if (held.getItem() instanceof ShadowguardItem) {
                         if (stage >= 5 && !CooldownManager.isOnCooldown("lifesteal_mark")) {
@@ -615,20 +593,19 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new ReversePolarityChargePacket());
                             CooldownManager.trigger("polarity_reverse_charge");
                         }
-                    } else if (held.getItem() instanceof ShadeshatterItem) {
-                        if (shadeshatterWormholeFrame == -1
-                                && shadeshatterMimicFrame == -1
-                                && shadeshatterSpellFrame == -1
+                    } else if (held.getItem() instanceof ShadeshatterItem
+                            && ModDataComponents.getStage(held) >= 4) {
+                        if (!ShadeshatterAnimTracker.isAnimating(mc.player.getId())
                                 && !CooldownManager.isOnCooldown("shadeshatter_wormhole")
                                 && !client.player.getCooldowns().isOnCooldown(held)) {
 
                             var longRay = mc.player.pick(24.0, 1.0f, false);
                             if (longRay instanceof net.minecraft.world.phys.BlockHitResult blockHit
                                     && blockHit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
-                                ClientPlayNetworking.send(new ShadeshatterWormholePacket(blockHit.getBlockPos()));
+                                shadeshatterWormholeTarget = blockHit.getBlockPos();
+                                ShadeshatterAnimTracker.startWormhole(mc.player.getId());
+                                ClientPlayNetworking.send(new ShadeshatterWormholeTriggerPacket());
                                 CooldownManager.trigger("shadeshatter_wormhole");
-                                shadeshatterWormholeFrame  = 0;
-                                shadeshatterWormholeTicker = 0;
                             }
                         }
                     } else if (held.getItem() instanceof CinderboltItem
@@ -660,25 +637,25 @@ public class RitualsClient implements ClientModInitializer {
                         }
                     } else if (held.getItem() instanceof PharathornItem) {
                         if (mc.player.isShiftKeyDown() && stage >= 7) {
+                            if (!CooldownManager.isOnCooldown("pharathorn_spiral_stab")) {
+                                ClientPlayNetworking.send(new SpiralStabPacket());
+                                CooldownManager.trigger("pharathorn_spiral_stab");
+                            }
+                        } else if (!mc.player.isShiftKeyDown() && stage >= 3) {
                             if (!CooldownManager.isOnCooldown("pharathorn_ground_smash")) {
                                 ClientPlayNetworking.send(new PharathornGroundSmashPacket());
                                 CooldownManager.trigger("pharathorn_ground_smash");
                             }
-                        } else if (!mc.player.isShiftKeyDown() && stage >= 3) {
-                            if (!CooldownManager.isOnCooldown("pharathorn_reveal")) {
-                                ClientPlayNetworking.send(new PharathornRevealPacket());
-                                CooldownManager.trigger("pharathorn_reveal");
-                            }
                         }
                     }
                 }
-            }
+
 
             while (actionThree.consumeClick()) {
                 Minecraft mc = Minecraft.getInstance();
-                if (mc.player != null) {
-                    var held = mc.player.getMainHandItem();
-                    int stage = ModDataComponents.getStage(held);
+                if (mc.player == null || TemporalMuteHudOverlay.isActive()) continue;
+                var held = mc.player.getMainHandItem();
+                int stage = ModDataComponents.getStage(held);
 
                     if (held.getItem() instanceof ShadowguardItem) {
                         if (stage >= 7 && !CooldownManager.isOnCooldown("shadowguard_grapple")) {
@@ -732,25 +709,20 @@ public class RitualsClient implements ClientModInitializer {
                             ClientPlayNetworking.send(new FireDeathLaserPacket());
                             CooldownManager.trigger("pulse_blaster_death_laser");
                         }
-                    } else if (held.getItem() instanceof VortexEdgeItem
-                            && ModDataComponents.getStage(held) >= 5) {
-                        if (!CooldownManager.isOnCooldown("vortex_slam")) {
-                            if (mc.player != null && !mc.player.onGround()) {
-                                ClientPlayNetworking.send(new VortexSlamPacket());
-                                CooldownManager.trigger("vortex_slam");
-                            } else if (mc.player != null) {
-                                mc.player.playSound(SoundEvents.DISPENSER_FAIL, 1.0f, 1.2f);
-                            }
+                    } else if (held.getItem() instanceof VortexEdgeItem) {
+                        if (stage >= 5 && !CooldownManager.isOnCooldown("vortex_beam")) {
+                            ClientPlayNetworking.send(new VortexBeamPacket());
+                            CooldownManager.trigger("vortex_beam");
                         }
                     }  else if (held.getItem() == ModItems.DEPTHSTRIKE) {
-                        if (stage >= 6 && !CooldownManager.isOnCooldown("depthstrike_ground_ability")) {
+                        if (stage >= 5 && !CooldownManager.isOnCooldown("depthstrike_ground_ability")) {
                             ClientPlayNetworking.send(new DepthstrikeGroundAbilityPacket());
                             CooldownManager.trigger("depthstrike_ground_ability");
                         }
                     } else if (held.getItem() instanceof PharathornItem && stage >= 5) {
-                        if (!CooldownManager.isOnCooldown("pharathorn_dash")) {
-                            ClientPlayNetworking.send(new PharathornDashPacket());
-                            CooldownManager.trigger("pharathorn_dash");
+                        if (!CooldownManager.isOnCooldown("pharathorn_reveal")) {
+                            ClientPlayNetworking.send(new PharathornRevealPacket());
+                            CooldownManager.trigger("pharathorn_reveal");
                         }
                     } else if (held.getItem() instanceof TemporalGlassreaverItem) {
                         if (stage >= 5 && !CooldownManager.isOnCooldown("temporal_recall")) {
@@ -760,6 +732,6 @@ public class RitualsClient implements ClientModInitializer {
                     }
                 }
             }
-        });
+        );
     }
 }

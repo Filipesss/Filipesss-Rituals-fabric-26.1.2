@@ -3,6 +3,7 @@ package net.filipes.rituals.network;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.item.custom.PharathornItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -28,13 +29,14 @@ public class PharathornFortifyPacket implements CustomPacketPayload {
     private static final Map<UUID, Long> SERVER_COOLDOWNS = new HashMap<>();
     public  static final long COOLDOWN_MS = 20_000L;
 
-    private static final int DURATION_TICKS = 60; // 3 seconds
+    private static final int DURATION_TICKS = 80;
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(PharathornFortifyPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof PharathornItem)) return;

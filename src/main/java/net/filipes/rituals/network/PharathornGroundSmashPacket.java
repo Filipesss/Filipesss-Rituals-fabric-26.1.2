@@ -5,6 +5,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.PharathornGroundSmashEntity;
 import net.filipes.rituals.entity.custom.ScreenShakeEntity;
 import net.filipes.rituals.item.custom.PharathornItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -43,11 +44,12 @@ public class PharathornGroundSmashPacket implements CustomPacketPayload {
 
     public static void handle(PharathornGroundSmashPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof PharathornItem)) return;
             int stage = ModDataComponents.getStage(stack);
-            if (stage < 7) return;
+            if (stage < 3) return;
 
             UUID uuid = player.getUUID();
             long now  = System.currentTimeMillis();

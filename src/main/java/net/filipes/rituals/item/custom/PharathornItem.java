@@ -57,33 +57,8 @@ public class PharathornItem extends Item implements RitualsTooltipStyle {
         );
     }
 
-    @Override
-    public Component getName(ItemStack stack) {
-        int stage = ModDataComponents.getStage(stack);
-        MutableComponent nameComponent = Component.literal("")
-                .append(Component.translatable(getDescriptionId())
-                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getNameColor())).withItalic(false)));
-        if (stage > 1) {
-            nameComponent
-                    .append(Component.literal(" [").withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFFFAA00))))
-                    .append(Component.literal("★".repeat(stage - 1)).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFCC7700))))
-                    .append(Component.literal("]").withStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xFFFFAA00))));
-        }
-        return nameComponent;
-    }
-
-    @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag flag) {
-        super.appendHoverText(stack, context, display, builder, flag);
-        int kills = ModDataComponents.getKillCount(stack);
-        builder.accept(
-                Component.translatable("tooltip.rituals.pharathorn.kills", kills)
-                        .withStyle(s -> s.withColor(TextColor.fromRgb(0xFFAA00)).withItalic(false))
-        );
-    }
-
-    @Override public int getNameColor()                { return 0xFFFFAA00; }
+    @Override public int getNameColor()                { return 0xFF30ffcb; }
     @Override public int getTooltipBorderColorTop()    { return 0xFFFFAA00; }
     @Override public int getTooltipBorderColorBottom() { return 0xFF664400; }
-    @Override public int getTooltipBackgroundColor()   { return 0xFF550000; }
+    @Override public int getTooltipBackgroundColor()   { return 0xe542320d; }
 }

@@ -118,7 +118,6 @@ public class TemporalShieldEntity extends Entity {
         radius = lerp(radius, MAX_RADIUS, 0.25f);
         entityData.set(CURRENT_RADIUS, radius);
 
-        // Render ambient energetic shell boundary lines while waiting
         if (level() instanceof ServerLevel serverLevel && lifeTimeTicks % 10 == 0) {
             spawnAmbientShieldHull(serverLevel, radius);
         }
@@ -141,9 +140,7 @@ public class TemporalShieldEntity extends Entity {
                 continue;
             }
 
-            Vec3 currentVelocity = projectile.getDeltaMovement();
-            projectile.setDeltaMovement(currentVelocity.scale(-1.5));
-            projectile.hurtMarked = true;
+            reflectProjectile(projectile, projOwner);
 
             if (this.owner != null) {
                 projectile.setOwner(this.owner);
@@ -159,7 +156,6 @@ public class TemporalShieldEntity extends Entity {
             registerHit();
             if (entityData.get(EXPLODING)) return;
         }
-
         for (LivingEntity target : level().getEntitiesOfClass(LivingEntity.class, detectionBox)) {
             if (target == this.owner || target.getId() == getOwnerId() || !target.isAlive()) {
                 continue;
@@ -215,6 +211,25 @@ public class TemporalShieldEntity extends Entity {
         level.sendParticles(new DustParticleOptions(color, 1.0f), impactPos.x, impactPos.y, impactPos.z, 4, 0.2, 0.2, 0.2, 0.1);
 
         level.sendParticles(ParticleTypes.GUST, impactPos.x, impactPos.y, impactPos.z, 1, 0, 0, 0, 0);
+    }
+    private void reflectProjectile(Projectile projectile, Entity attacker) {
+        Vec3 currentVelocity = projectile.getDeltaMovement();
+        double speed = currentVelocity.length();
+
+        Vec3 newVelocity;
+        if (attacker != null && attacker.isAlive()) {
+            Vec3 toAttacker = attacker.getEyePosition().subtract(projectile.position());
+            if (toAttacker.lengthSqr() > 1.0E-4) {
+                newVelocity = toAttacker.normalize().scale(speed * 1.5);
+            } else {
+                newVelocity = currentVelocity.scale(-1.5);
+            }
+        } else {
+            newVelocity = currentVelocity.scale(-1.5);
+        }
+
+        projectile.setDeltaMovement(newVelocity);
+        projectile.hurtMarked = true;
     }
 
     private void spawnVisualSparks(ServerLevel level, int count, double baseSpeed) {
@@ -288,8 +303,6 @@ public class TemporalShieldEntity extends Entity {
             victim.hurtMarked = true;
         }
     }
-
-
 
     private void triggerFinalBlastVisuals() {
         if (level() instanceof ServerLevel serverLevel) {

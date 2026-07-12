@@ -35,6 +35,10 @@ public class CinderboltShieldEntity extends Entity {
 
     private static final EntityDataAccessor<Integer> OWNER_ID =
             SynchedEntityData.defineId(CinderboltShieldEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> BOOST_TICKS_REMAINING =
+            SynchedEntityData.defineId(CinderboltShieldEntity.class, EntityDataSerializers.INT);
+    private static final float BOOSTED_SPIN_MULTIPLIER = 4.0f;
+    private float accumulatedRotation = 0f;
 
     public LivingEntity owner;
 
@@ -50,6 +54,14 @@ public class CinderboltShieldEntity extends Entity {
         this.setPos(owner.getX(), owner.getY(), owner.getZ());
         if (!level.isClientSide()) this.setOwnerId(owner.getId());
     }
+    public void applySpinBoost(int durationTicks) {
+        entityData.set(BOOST_TICKS_REMAINING, durationTicks);
+    }
+
+    private float getCurrentSpinSpeed() {
+        int boostTicks = entityData.get(BOOST_TICKS_REMAINING);
+        return boostTicks > 0 ? SPIN_DEG_PER_TICK * BOOSTED_SPIN_MULTIPLIER : SPIN_DEG_PER_TICK;
+    }
 
     @Override
     public void tick() {
@@ -59,6 +71,11 @@ public class CinderboltShieldEntity extends Entity {
             Entity e = level().getEntity(getOwnerId());
             if (e instanceof LivingEntity le) owner = le;
         }
+        if (!level().isClientSide()) {
+            int boostTicks = entityData.get(BOOST_TICKS_REMAINING);
+            if (boostTicks > 0) entityData.set(BOOST_TICKS_REMAINING, boostTicks - 1);
+        }
+        accumulatedRotation += getCurrentSpinSpeed();
         if (level().isClientSide()) {
             prevClientRadius = clientRadius;
             clientRadius = lerp(clientRadius, getCurrentRadius(), 0.5f);
@@ -85,7 +102,7 @@ public class CinderboltShieldEntity extends Entity {
                 for (float baseAngle : BASE_ANGLES) {
                     if (rng.nextFloat() > 0.7f) continue;
                     int steps = 16;
-                    float rawAngle = baseAngle - SPIN_DEG_PER_TICK * tickCount;
+                    float rawAngle = baseAngle - accumulatedRotation;
                     float snappedAngle = (float)(Math.round(rawAngle / (360f / steps)) * (360f / steps));
                     float angle = (float) Math.toRadians(snappedAngle);
                     double px = getX() + getCurrentRadius() * Math.cos(angle);
@@ -104,7 +121,7 @@ public class CinderboltShieldEntity extends Entity {
                 SparkEntity[] sparks = { shieldSpark1, shieldSpark2, shieldSpark3 };
                 for (int i = 0; i < BASE_ANGLES.length; i++) {
                     int steps = 16;
-                    float rawAngle = BASE_ANGLES[i] - SPIN_DEG_PER_TICK * tickCount;
+                    float rawAngle = BASE_ANGLES[i] - accumulatedRotation;
                     float snappedAngle = (float)(Math.round(rawAngle / (360f / steps)) * (360f / steps));
                     float angle = (float) Math.toRadians(snappedAngle);
                     double px = getX() + currentRadius * Math.cos(angle);
@@ -154,6 +171,7 @@ public class CinderboltShieldEntity extends Entity {
         builder.define(OWNER_ID, -1);
         builder.define(CONTRACTING, false);
         builder.define(CURRENT_RADIUS, 0f);
+        builder.define(BOOST_TICKS_REMAINING, 0);
     }
     private static float lerp(float from, float to, float t) {
         return from + (to - from) * t;

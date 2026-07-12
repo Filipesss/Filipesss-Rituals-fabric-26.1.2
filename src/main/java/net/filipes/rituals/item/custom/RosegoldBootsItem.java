@@ -14,8 +14,8 @@ public class RosegoldBootsItem extends Item implements RitualsTooltipStyle {
                 .durability(ArmorType.BOOTS.getDurability(2)));
     }
 
-    @Override public int getNameColor()                { return 0xFFB6C1; }
-    @Override public int getTooltipBorderColorTop()    { return 0xFFB6C1; }
-    @Override public int getTooltipBorderColorBottom() { return 0xFF69B4; }
-    @Override public int getTooltipBackgroundColor()   { return 0xFF1A0010; }
+    @Override public int getNameColor()                { return 0xFFFFB6C1; }
+    @Override public int getTooltipBorderColorTop()    { return 0xFFFF80AA; }
+    @Override public int getTooltipBorderColorBottom() { return 0xFF99004D; }
+    @Override public int getTooltipBackgroundColor()   { return 0xE5420d29; }
 }

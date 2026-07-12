@@ -16,6 +16,7 @@ public class ModParticles {
     public static final SimpleParticleType GLASSREAVER_CRIT = FabricParticleTypes.simple();
     public static final SimpleParticleType TEMPORAL_HOURGLASS = FabricParticleTypes.simple();
     public static final SimpleParticleType MOON = FabricParticleTypes.simple();
+    public static final SimpleParticleType CINDERBOLT_REVIVE = FabricParticleTypes.simple();
 
     public static void register() {
         Registry.register(BuiltInRegistries.PARTICLE_TYPE, Identifier.fromNamespaceAndPath("rituals", "lightning_bolt_mini"), LIGHTNING_BOLT_MINI);
@@ -42,6 +43,11 @@ public class ModParticles {
                 BuiltInRegistries.PARTICLE_TYPE,
                 Identifier.fromNamespaceAndPath("rituals", "moon"),
                 MOON
+        );
+        Registry.register(
+                BuiltInRegistries.PARTICLE_TYPE,
+                Identifier.fromNamespaceAndPath("rituals", "cinderbolt_revive"),
+                CINDERBOLT_REVIVE
         );
     }
 }

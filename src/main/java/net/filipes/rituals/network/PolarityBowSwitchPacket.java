@@ -7,6 +7,7 @@ import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.PolarityBowItem;
 import net.filipes.rituals.sound.ModSounds;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -65,6 +66,7 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
 
     public static void handle(PolarityBowSwitchPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof PolarityBowItem)) return;
@@ -159,12 +161,12 @@ public class PolarityBowSwitchPacket implements CustomPacketPayload {
 
                 for (Entity e : affected) {
                     Vec3 dir = state.toRed
-                            ? e.position().subtract(anchor)
-                            : anchor.subtract(e.position());
+                            ? anchor.subtract(e.position())
+                            : e.position().subtract(anchor);
 
                     if (dir.lengthSqr() < 0.05) continue;
 
-                    double strength = state.toRed ? PUSH_STRENGTH : PULL_STRENGTH;
+                    double strength = state.toRed ? PULL_STRENGTH : PUSH_STRENGTH;
                     e.setDeltaMovement(e.getDeltaMovement().add(dir.normalize().scale(strength)));
                     e.hurtMarked = true;
                 }

@@ -29,78 +29,49 @@ public class ModItems {
 
     public static final Item ROSEGOLD_INGOT = registerItem("rosegold_ingot",
             settings -> new Item(settings),
-            new Item.Properties().component(DataComponents.LORE,
-                    new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold")
-                            .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFFFFF)).withItalic(false))))));
+            new Item.Properties());
 
     public static final Item RAW_ROSEGOLD = registerItem("raw_rosegold",
             settings -> new Item(settings),
-            new Item.Properties().component(DataComponents.LORE,
-                    new ItemLore(List.of(Component.translatable("tooltip.rituals.raw_rosegold")
-                            .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFFFFF)).withItalic(false))))));
+            new Item.Properties());
 
     public static final Item ROSEGOLD_PICKAXE = registerItem("rosegold_pickaxe",
             settings -> new RosegoldPickaxeItem(ModToolMaterials.ROSEGOLD, 1.0F, -2.8F, settings),
             new Item.Properties()
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .fireResistant()
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(Component.translatable("tooltip.rituals.handle")
-                                    .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
+                    .fireResistant());
 
     public static final Item LIGHTNING_RAPIER = registerItem("lightning_rapier",
             settings -> new LightningRapierItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.ENCHANTABLE, new Enchantable(15))
-                    );
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
     public static final Item SOLAR_BLADE = registerItem("solar_blade",
-            settings -> new SolarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
+            settings -> new SolarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -2.4F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.lightning_rapier")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
-                            ))));
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
     public static final Item LUNAR_BLADE = registerItem("lunar_blade",
-            settings -> new LunarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
+            settings -> new LunarBladeItem(ModToolMaterials.ROSEGOLD, 1.5F, -2.4F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.lightning_rapier")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
-                            ))));
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
     public static final Item VORTEX_EDGE = registerItem("vortex_edge",
-            settings -> new VortexEdgeItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
+            settings -> new VortexEdgeItem(ModToolMaterials.ROSEGOLD, 3.5F, -2.3F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.lightning_rapier")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
-                            ))));
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 
     public static final Item PULSE_BLASTER = registerItem("pulse_blaster",
             settings -> new PulseBlasterItem(settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.pulse_blaster")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0xFF2626)).withItalic(false))
-                            ))));
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
     public static final Item SHADOWGUARD = registerItem("shadowguard",
             settings -> new ShadowguardItem(settings),
             new Item.Properties()
@@ -128,13 +99,6 @@ public class ModItems {
                             )
                             .build()
                     )
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.shadowguard")
-                                            .withStyle(style -> style
-                                                    .withColor(TextColor.fromRgb(0x9B6DFF))
-                                                    .withItalic(false))
-                            )))
     );
     public static final Item BLIGHTSPEAR = registerItem("blightspear",
             settings -> new BlightspearItem(
@@ -152,64 +116,41 @@ public class ModItems {
             settings -> new RosegoldHelmetItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.HELMET)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
-                    .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
-                                    .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
+                    .fireResistant());
 
     public static final Item ROSEGOLD_CHESTPLATE = registerItem("rosegold_chestplate",
             settings -> new RosegoldChestplateItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.CHESTPLATE)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .fireResistant()
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
-                                    .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
+                    .fireResistant());
 
     public static final Item ROSEGOLD_LEGGINGS = registerItem("rosegold_leggings",
             settings -> new RosegoldLeggingsItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.LEGGINGS)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .fireResistant()
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
-                                    .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
+                    .fireResistant());
 
     public static final Item ROSEGOLD_BOOTS = registerItem("rosegold_boots",
             settings -> new RosegoldBootsItem(ModArmorMaterials.ROSEGOLD, settings),
             new Item.Properties().humanoidArmor(ModArmorMaterials.ROSEGOLD, ArmorType.BOOTS)
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .fireResistant()
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(Component.translatable("tooltip.rituals.rosegold_armor")
-                                    .withStyle(style -> style.withColor(TextColor.fromRgb(0xFFB6C1)).withItalic(false))))));
+                    .fireResistant());
 
     public static final Item POLARITY_BOW = registerItem("polarity_bow",
             settings -> new PolarityBowItem(settings),
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .fireResistant()
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.polarity_bow")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x00FFFF)).withItalic(false))
-                            ))));
+                    .fireResistant());
     public static final Item CINDERBOLT = registerItem("cinderbolt",
             settings -> new CinderboltItem(settings),
             new Item.Properties()
                     .stacksTo(1)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .fireResistant()
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.cinderbolt")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0xFF6400)).withItalic(false))
-                            ))));
+                    .fireResistant());
     public static final Item DEPTHSTRIKE = registerItem("depthstrike",
             settings -> new DepthstrikeItem(settings),
             new Item.Properties()
@@ -218,50 +159,26 @@ public class ModItems {
                     .component(DataComponents.ENCHANTABLE, new Enchantable(25))
                     .fireResistant()
                     .component(DataComponents.ATTRIBUTE_MODIFIERS, TridentItem.createAttributes())
-                    .component(DataComponents.TOOL, TridentItem.createToolProperties())
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.depthstrike")
-                                            .withStyle(style -> style
-                                                    .withColor(TextColor.fromRgb(0x00FFFF))
-                                                    .withItalic(false))
-                            ))));
+                    .component(DataComponents.TOOL, TridentItem.createToolProperties()));
 
     public static final Item PHARATHORN = registerItem("pharathorn",
-            settings -> new PharathornItem(ModToolMaterials.ROSEGOLD, 8F, -3.2F, settings),
+            settings -> new PharathornItem(ModToolMaterials.ROSEGOLD, 7.0F, -3.2F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.lightning_rapier")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
-                            ))));
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
     public static final Item TEMPORAL_GLASSREAVER = registerItem("temporal_glassreaver",
-            settings -> new TemporalGlassreaverItem(ModToolMaterials.ROSEGOLD, 1.5F, -1.8F, settings),
+            settings -> new TemporalGlassreaverItem(ModToolMaterials.ROSEGOLD, 5.5F, -3.0F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.lightning_rapier")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0x9B6DFF)).withItalic(false))
-                            ))));
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
     public static final Item SHADESHATTER = registerItem("shadeshatter",
-            settings -> new ShadeshatterItem(ModToolMaterials.ROSEGOLD, 4.0F, -2.6F, settings),
+            settings -> new ShadeshatterItem(ModToolMaterials.ROSEGOLD, 4.5F, -2.6F, settings),
             new Item.Properties()
                     .stacksTo(1)
                     .fireResistant()
-                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
-                    .component(DataComponents.LORE,
-                            new ItemLore(List.of(
-                                    Component.translatable("tooltip.rituals.shadeshatter")
-                                            .withStyle(style -> style.withColor(TextColor.fromRgb(0xBB55FF)).withItalic(false))
-                            ))));
-
-
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE));
 
     private static Item registerItem(String name, Function<Item.Properties, Item> creator, Item.Properties settings) {
         Identifier id = Identifier.fromNamespaceAndPath(Rituals.MOD_ID, name);

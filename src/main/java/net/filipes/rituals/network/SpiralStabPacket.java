@@ -5,6 +5,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.SpiralStabEntity;
 import net.filipes.rituals.item.custom.PharathornItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -34,6 +35,7 @@ public class SpiralStabPacket implements CustomPacketPayload {
 
     public static void handle(SpiralStabPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(player.getMainHandItem().getItem() instanceof PharathornItem)) return;

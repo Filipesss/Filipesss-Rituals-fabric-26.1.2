@@ -218,6 +218,37 @@ public class LunarBladeOnHitTracker {
                 player.getX(), player.getY() + 1.0, player.getZ(),
                 6, 0.35, 0.35, 0.35, 0.05);
 
+        var random = sl.getRandom();
+        double tx = target.getX();
+        double ty = target.getY() + target.getBbHeight() * 0.5;
+        double tz = target.getZ();
+
+        for (int i = 0; i < 10; i++) {
+            double theta = random.nextDouble() * Math.PI * 2.0;
+            double phi = Math.acos(2.0 * random.nextDouble() - 1.0);
+            double speed = 0.15 + random.nextDouble() * 0.25;
+
+            double vx = Math.sin(phi) * Math.cos(theta) * speed;
+            double vy = Math.cos(phi) * speed + 0.05;
+            double vz = Math.sin(phi) * Math.sin(theta) * speed;
+
+            sl.sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,
+                    tx, ty, tz, 0, vx, vy, vz, 1.0);
+        }
+
+        for (int i = 0; i < 3; i++) {
+            double offsetX = (random.nextDouble() - 0.5) * 0.8;
+            double offsetY = (random.nextDouble() - 0.5) * 0.8;
+            double offsetZ = (random.nextDouble() - 0.5) * 0.8;
+
+            sl.sendParticles(net.filipes.rituals.particle.ModParticles.MOON,
+                    tx + offsetX, ty + offsetY, tz + offsetZ, 0, 0.03, 0.03, 0.03, 0.01);
+        }
+
+        net.filipes.rituals.network.LunarBladeFlashPacket flashPacket =
+                new net.filipes.rituals.network.LunarBladeFlashPacket(player.getUUID());
+        net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, flashPacket);
+
         double spawnAngle  = Math.random() * Math.PI * 2.0;
         double spawnRadius = 0.5 + Math.random() * 0.8;
         double spawnY      = 0.6 + Math.random() * 1.2;

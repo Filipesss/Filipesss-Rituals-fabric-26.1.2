@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.CinderboltItem;
+import net.filipes.rituals.particle.ModParticles;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -43,14 +44,19 @@ public class CinderboltDeathSaveHandler {
 
                 lastSave.put(uuid, now);
                 immunityExpiry.put(uuid, now + IMMUNITY_DURATION_MS);
+                CinderboltShieldHandler.applySpinBoost(player, (int) (IMMUNITY_DURATION_MS / 50));
                 CinderboltSaveTriggeredPacket.send(player);
                 ServerLevel sv = (ServerLevel) player.level();
                 net.minecraft.world.phys.Vec3 pos = player.position();
 
                 net.filipes.rituals.entity.custom.ScreenShakeEntity shake =
                         new net.filipes.rituals.entity.custom.ScreenShakeEntity(
-                                sv, pos, 24f, 0.6f, 20);
+                                sv, pos, 32f, 0.9f, 25);
                 sv.addFreshEntity(shake);
+                sv.playSound(null, pos.x, pos.y, pos.z,
+                        net.minecraft.sounds.SoundEvents.TOTEM_USE, net.minecraft.sounds.SoundSource.PLAYERS,
+                        1.0f, 1.0f);
+
                 double speed = 0.6;
                 for (int i = 0; i < 8; i++) {
                     double angle = Math.PI / 4.0 * i;
@@ -63,6 +69,45 @@ public class CinderboltDeathSaveHandler {
                             Math.cos(angle) * speed, 0.4, Math.sin(angle) * speed);
                     sv.addFreshEntity(spark);
                 }
+
+                double burstRadius = 1.5;
+                for (int i = 0; i < 80; i++) {
+                    double theta = sv.getRandom().nextDouble() * Math.PI * 2.0;
+                    double phi = Math.acos(2.0 * sv.getRandom().nextDouble() - 1.0);
+                    double r = burstRadius * Math.cbrt(sv.getRandom().nextDouble());
+
+                    double offsetX = Math.sin(phi) * Math.cos(theta) * r;
+                    double offsetY = Math.cos(phi) * r;
+                    double offsetZ = Math.sin(phi) * Math.sin(theta) * r;
+
+                    double px = pos.x + offsetX;
+                    double py = pos.y + 1.0 + offsetY;
+                    double pz = pos.z + offsetZ;
+
+                    double outwardSpeed = 0.15 + sv.getRandom().nextDouble() * 0.25;
+                    double vx = (offsetX / r) * outwardSpeed;
+                    double vy = (offsetY / r) * outwardSpeed + 0.12;
+                    double vz = (offsetZ / r) * outwardSpeed;
+
+                    sv.sendParticles(net.filipes.rituals.particle.ModParticles.CINDERBOLT_REVIVE,
+                            px, py, pz, 0, vx, vy, vz, 1.0);
+                }
+
+                for (int i = 0; i < 14; i++) {
+                    double randomAngle = sv.getRandom().nextDouble() * 2.0 * Math.PI;
+                    double randomSpeed = 0.3 + sv.getRandom().nextDouble() * 0.4;
+                    net.filipes.rituals.entity.custom.SparkEntity burstSpark =
+                            new net.filipes.rituals.entity.custom.SparkEntity(
+                                    net.filipes.rituals.entity.ModEntities.SPARK, sv,
+                                    pos.x, pos.y + 1.0, pos.z);
+                    burstSpark.applyPreset(SparkPresets.CINDERBOLT_SHIELD_SPARK);
+                    burstSpark.forcedVelocity = new net.minecraft.world.phys.Vec3(
+                            Math.cos(randomAngle) * randomSpeed,
+                            0.2 + sv.getRandom().nextDouble() * 0.3,
+                            Math.sin(randomAngle) * randomSpeed);
+                    sv.addFreshEntity(burstSpark);
+                }
+
                 double radius = 6.0;
                 net.minecraft.world.phys.AABB box = new net.minecraft.world.phys.AABB(
                         pos.x - radius, pos.y - 2, pos.z - radius,
@@ -80,11 +125,16 @@ public class CinderboltDeathSaveHandler {
                     net.minecraft.world.phys.Vec3 impulse = diff.normalize().scale(strength).add(0, 0.5, 0);
                     target.setDeltaMovement(target.getDeltaMovement().add(impulse));
 
+                    if (target instanceof ServerPlayer targetPlayer) {
+                        targetPlayer.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(
+                                targetPlayer.getId(), targetPlayer.getDeltaMovement()));
+                    }
+
                     net.filipes.rituals.entity.custom.SparkEntity spark =
                             new net.filipes.rituals.entity.custom.SparkEntity(
                                     net.filipes.rituals.entity.ModEntities.SPARK, sv,
                                     pos.x, pos.y + 1.0, pos.z);
-                    spark.applyPreset(net.filipes.rituals.entity.custom.SparkPresets.CINDERBOLT_SHIELD_TRAIL);
+                    spark.applyPreset(SparkPresets.CINDERBOLT_SHIELD_SPARK);
                     spark.forcedVelocity = diff.normalize().scale(1.5).add(0, 0.1, 0);
                     sv.addFreshEntity(spark);
                 }

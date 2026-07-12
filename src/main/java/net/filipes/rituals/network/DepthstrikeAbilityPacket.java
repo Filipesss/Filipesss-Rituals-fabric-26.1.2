@@ -1,6 +1,8 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -29,9 +31,12 @@ public class DepthstrikeAbilityPacket implements CustomPacketPayload {
 
     public static void handle(DepthstrikeAbilityPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (held.getItem() != ModItems.DEPTHSTRIKE) return;
+            int stage = ModDataComponents.getStage(held);
+            if (stage < 3) return;
 
             UUID uuid = player.getUUID();
             long now  = System.currentTimeMillis();

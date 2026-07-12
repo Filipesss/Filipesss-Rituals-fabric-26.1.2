@@ -17,19 +17,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntityRenderer.class)
 public class LivingEntityRendererMixin {
-
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     private void rituals$extractState(LivingEntity entity, LivingEntityRenderState state,
                                       float partialTicks, CallbackInfo ci) {
         if (!(state instanceof ShadowguardStateAccess access)) return;
-
         Minecraft mc = Minecraft.getInstance();
-
         boolean shadowguard = (entity == mc.player && ShadowguardHudOverlay.isActive()) ||
                 ShadowguardItem.isInvisibleFromShadowguard(entity.getUUID());
-
         access.rituals$setShadowguardInvisible(shadowguard);
-
         if (shadowguard) {
             state.isInvisible = true;
             state.isInvisibleToPlayer = true;
@@ -41,7 +36,6 @@ public class LivingEntityRendererMixin {
                                       SubmitNodeCollector submitNodeCollector,
                                       CameraRenderState camera, CallbackInfo ci) {
         if (!(state instanceof ShadowguardStateAccess access)) return;
-
         if (access.rituals$isShadowguardInvisible()) {
             ci.cancel();
         }

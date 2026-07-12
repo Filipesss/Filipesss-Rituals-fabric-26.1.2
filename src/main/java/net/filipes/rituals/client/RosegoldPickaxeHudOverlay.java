@@ -89,7 +89,7 @@ public class RosegoldPickaxeHudOverlay {
                 mc.font,
                 text,
                 (screenWidth - textWidth) / 2,
-                screenHeight - 59,
+                screenHeight - 72,
                 (a << 24) | 0xFFFFFF,
                 true
         );

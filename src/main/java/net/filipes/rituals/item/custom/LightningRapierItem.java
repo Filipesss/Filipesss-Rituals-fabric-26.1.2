@@ -27,17 +27,19 @@ import java.util.List;
 
 public class LightningRapierItem extends Item implements RitualsTooltipStyle, RitualsEnchantable {
 
-    private static final float  WEATHER_BONUS_DAMAGE = 3.0f;
+    private static final float  WEATHER_BONUS_DAMAGE = 6.0f;
     private static final double CHAIN_RADIUS         = 8.0;
-    private static final float  CHAIN_DAMAGE         = 3.0f;
-    private static final int    STUN_DURATION_TICKS  = 60;
+    private static final float  CHAIN_DAMAGE         = 4.0f;
+    private static final int    STUN_DURATION_TICKS  = 10;
     private static final int    STREAK_NEEDED        = 6;
+
 
     public LightningRapierItem(ToolMaterial material, float attackDamage, float attackSpeed, Properties settings) {
         super(settings.sword(material, attackDamage, attackSpeed));
     }
-    private static final EnchantmentPolicy POLICY =
-            EnchantmentPolicy.restricted(Enchantments.SHARPNESS);
+    private static final EnchantmentPolicy POLICY = EnchantmentPolicy.combine(
+            EnchantmentPolicy.restricted(Enchantments.SHARPNESS)
+    );
 
 
     @Override
@@ -49,6 +51,7 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
             ServerLevel serverLevel = (ServerLevel) world;
 
             if (hasWeatherBonus(player, serverLevel)) {
+                target.invulnerableTime = 0;
                 target.hurt(serverLevel.damageSources().lightningBolt(), WEATHER_BONUS_DAMAGE);
             }
 
@@ -62,10 +65,10 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
             }
 
             boolean didChain = !chainedTargets.isEmpty();
-            float pitch = 0.6f + world.getRandom().nextFloat() * 0.7f;
+            float pitch = 0.7f + world.getRandom().nextFloat() * 0.7f;
 
             world.playSound(null, target.getX(), target.getY(), target.getZ(),
-                    didChain ? ModSounds.LIGHTNING_BOLT_3 : ModSounds.LIGHTNING_BOLT,
+                    didChain ? ModSounds.LIGHTNING_BOLT_2 : ModSounds.LIGHTNING_BOLT,
                     SoundSource.PLAYERS, 1.0f, pitch);
 
             if (stage >= 6) {
@@ -83,9 +86,10 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
 
         if (charge >= 6) {
             float bonusDmg = (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE);
+            target.invulnerableTime = 0;
             target.hurt(serverLevel.damageSources().playerAttack(player), bonusDmg);
 
-            spawnLightningStrike(serverLevel, target);
+            spawnLightningStrike(serverLevel, target, player);
 
             setCharge(stack, 0);
             LightningRapierStreakTracker.reset(player.getUUID());
@@ -103,7 +107,7 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
                 LightningRapierStreakTracker.reset(player.getUUID());
 
                 serverLevel.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        ModSounds.LIGHTNING_BOLT_3, SoundSource.PLAYERS, 1.0f, 0.4f);
+                        ModSounds.LIGHTNING_CHARGE, SoundSource.PLAYERS, 0.8f, 0.9f);
             }
         }
     }
@@ -149,13 +153,15 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
                 ModStatusEffects.STUN, STUN_DURATION_TICKS, 0, false, true, true));
     }
 
-    private static void spawnLightningStrike(ServerLevel level, LivingEntity target) {
+    private static void spawnLightningStrike(ServerLevel level, LivingEntity target, ServerPlayer player) {
         LightningStrikeEntity.spawnAt(level,
                 target.getX(), target.getY(), target.getZ(),
                 14f, 15,
                 80, 160, 255,
-                0f, 0f,
-                18);
+                11.0f,
+                3.5f,
+                18,
+                player);
     }
 
     public static int getCharge(ItemStack stack) {
@@ -196,16 +202,8 @@ public class LightningRapierItem extends Item implements RitualsTooltipStyle, Ri
         return POLICY;
     }
 
-
-
-    @Override
-    public Component getName(ItemStack stack) {
-        return Component.translatable(getDescriptionId())
-                .withStyle(s -> s.withColor(getNameColor()).withItalic(false));
-    }
-
-    @Override public int getNameColor()               { return 0x50C8FF; }
-    @Override public int getTooltipBorderColorTop()   { return 0x50C8FF; }
-    @Override public int getTooltipBorderColorBottom(){ return 0x0A2244; }
-    @Override public int getTooltipBackgroundColor()  { return 0xFF001133; }
+    @Override public int getNameColor()               { return 0xfffc12ed; }
+    @Override public int getTooltipBorderColorTop()   { return 0xffeb18f2; }
+    @Override public int getTooltipBorderColorBottom(){ return 0xff851176; }
+    @Override public int getTooltipBackgroundColor()  { return 0xe52e0a29; }
 }

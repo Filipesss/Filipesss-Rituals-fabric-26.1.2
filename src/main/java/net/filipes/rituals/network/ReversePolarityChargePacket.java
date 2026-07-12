@@ -7,6 +7,7 @@ import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.PolarityBowItem;
 import net.filipes.rituals.sound.ModSounds;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -52,6 +53,7 @@ public class ReversePolarityChargePacket implements CustomPacketPayload {
 
     public static void handle(ReversePolarityChargePacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             if (!(player.getMainHandItem().getItem() instanceof PolarityBowItem)) return;
             var held = player.getMainHandItem();

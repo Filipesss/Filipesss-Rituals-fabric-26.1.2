@@ -2,6 +2,7 @@ package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.filipes.rituals.entity.ModEntities;
+import net.filipes.rituals.entity.custom.ThrownDepthstrikeEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -77,6 +78,10 @@ public class ShadeshatterMorphHandler {
             if (player.isRemoved()) return true;
 
             if (player.level().getGameTime() >= m.expiryTick()) {
+                ThrownDepthstrikeEntity inFlight = findActiveThrown(player);
+                if (inFlight != null && !inFlight.hasLandedOrHit()) {
+                    return false;
+                }
                 restoreMorph(player, m, player.level());
                 return true;
             }
@@ -84,6 +89,15 @@ public class ShadeshatterMorphHandler {
             return false;
         });
     }
+    private static ThrownDepthstrikeEntity findActiveThrown(ServerPlayer player) {
+        var found = player.level().getEntities(
+                ModEntities.THROWN_DEPTHSTRIKE,
+                player.getBoundingBox().inflate(128),
+                e -> player.equals(e.getOwner())
+        );
+        return found.isEmpty() ? null : (ThrownDepthstrikeEntity) found.get(0);
+    }
+
 
     private static void onPlayerDisconnect(ServerPlayer player) {
         MorphEntry m = ACTIVE.remove(player.getUUID());
@@ -145,7 +159,11 @@ public class ShadeshatterMorphHandler {
                 e -> player.equals(e.getOwner())
         );
         if (!thrownDepthstrikes.isEmpty()) {
-            thrownDepthstrikes.forEach(e -> e.discard());
+            for (var e : thrownDepthstrikes) {
+                if (e instanceof ThrownDepthstrikeEntity thrown) {
+                    thrown.abandonSilently();
+                }
+            }
             player.getInventory().setItem(m.slot(), m.original().copy());
             player.inventoryMenu.broadcastChanges();
             return;

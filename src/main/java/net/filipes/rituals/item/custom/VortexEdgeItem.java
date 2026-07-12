@@ -34,21 +34,21 @@ public class VortexEdgeItem extends Item implements RitualsTooltipStyle {
 
     @Override
     public int getNameColor() {
-        return 0;
+        return 0xffeda6e3;
     }
 
     @Override
     public int getTooltipBorderColorTop() {
-        return 0;
+        return 0xffeda6e3;
     }
 
     @Override
     public int getTooltipBorderColorBottom() {
-        return 0;
+        return 0xff804277;
     }
 
     @Override
     public int getTooltipBackgroundColor() {
-        return 0xFF550000;
+        return 0xe5382836;
     }
 }

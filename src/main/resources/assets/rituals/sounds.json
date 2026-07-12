@@ -1,6 +1,6 @@
 {
   "pulse_blaster_shot": {
-    "subtitle": "sound.rituals.pulse_blaster_shot",
+    "subtitle": "Blaster Shoots",
     "sounds": ["rituals:pulse_blaster_shot"]
   },
   "lightning_rapier_attack1": {
@@ -40,7 +40,31 @@
     "sounds": ["rituals:lstrike1"]
   },
   "polarity_change": {
-    "subtitle": "Polarity change",
+    "subtitle": "Polarity Change",
     "sounds": ["rituals:polarity_change"]
+  },
+  "ground_stab": {
+    "subtitle": "Stab",
+    "sounds": ["rituals:ground_stab"]
+  },
+  "time_warp": {
+    "subtitle": "Time Warps",
+    "sounds": ["rituals:time_warp"]
+  },
+  "slow_sound": {
+    "subtitle": "Slow Effect",
+    "sounds": ["rituals:slow_sound"]
+  },
+  "shield_place": {
+    "subtitle": "Shield Places",
+    "sounds": ["rituals:shield_place"]
+  },
+  "lightning_chain": {
+    "subtitle": "Lightning Chains",
+    "sounds": ["rituals:lightning_chain"]
+  },
+  "lightning_charge": {
+    "subtitle": "Weapon Charges",
+    "sounds": ["rituals:lightning_charge"]
   }
 }

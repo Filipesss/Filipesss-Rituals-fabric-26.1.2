@@ -23,6 +23,11 @@ public class TooltipLine {
         return builder().literal(text, hexColor).build();
     }
 
+    /** Convenience for a single glyph rendered through the ICONS font (e.g. the clock icon). */
+    public static TooltipLine icon(String glyph, int hexColor) {
+        return builder().literal(glyph, hexColor).font(TooltipFont.ICONS).build();
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -35,7 +40,10 @@ public class TooltipLine {
 
     public enum TooltipFont {
         DEFAULT(null),
-        MINECRAFT_FIVE(Identifier.fromNamespaceAndPath("rituals", "minecraftfive"));
+        MINECRAFT_FIVE(Identifier.fromNamespaceAndPath("rituals", "minecraftfive")),
+        // Maps private-use codepoints (e.g. TooltipRegistry.clockGlyph) to icon textures.
+        // Requires assets/rituals/font/icons.json - see the icons.json example provided alongside this file.
+        ICONS(Identifier.fromNamespaceAndPath("rituals", "icons"));
 
         @Nullable
         private final Identifier id;

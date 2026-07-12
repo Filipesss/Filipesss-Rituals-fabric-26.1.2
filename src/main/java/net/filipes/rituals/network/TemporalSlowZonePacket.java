@@ -9,6 +9,8 @@ import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.entity.custom.TemporalSlowZoneGroundEntity;
 import net.filipes.rituals.item.custom.TemporalGlassreaverItem;
 import net.filipes.rituals.particle.ModParticles;
+import net.filipes.rituals.sound.ModSounds;
+import net.filipes.rituals.util.MuteTracker;
 import net.filipes.rituals.util.TemporalFreezeRegistry;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -17,6 +19,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -51,11 +54,17 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
 
     private static final double PLAYER_MOVEMENT_SPEED_MULT = -0.65;
     private static final double PLAYER_ATTACK_SPEED_MULT = -0.5;
+    private static final double PLAYER_GRAVITY_MULT = -0.75;
+    private static final double PLAYER_JUMP_STRENGTH_MULT = -0.5;
 
     private static final Identifier MOVEMENT_MODIFIER_ID =
             Identifier.fromNamespaceAndPath("rituals", "temporal_slow_movement");
     private static final Identifier ATTACK_SPEED_MODIFIER_ID =
             Identifier.fromNamespaceAndPath("rituals", "temporal_slow_attack_speed");
+    private static final Identifier GRAVITY_MODIFIER_ID =
+            Identifier.fromNamespaceAndPath("rituals", "temporal_slow_gravity");
+    private static final Identifier JUMP_STRENGTH_MODIFIER_ID =
+            Identifier.fromNamespaceAndPath("rituals", "temporal_slow_jump_strength");
 
     private static final class TemporalZone {
         final UUID ownerId;
@@ -68,6 +77,9 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
         final Map<Integer, Integer> particleCooldowns = new HashMap<>();
         final Set<UUID> slowedPlayers = new HashSet<>();
 
+        final Map<UUID, Boolean> playerWasOnGround = new HashMap<>();
+        final Map<UUID, Boolean> playerWasSwinging = new HashMap<>();
+
         TemporalZone(UUID ownerId, ServerLevel level, Vec3 center) {
             this.ownerId = ownerId;
             this.level = level;
@@ -79,10 +91,14 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
 
     public static void handle(TemporalSlowZonePacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof TemporalGlassreaverItem)) return;
             if (ModDataComponents.getStage(held) < REQUIRED_STAGE) return;
+
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    ModSounds.TIME_WARP, SoundSource.PLAYERS, 1.0F, 1.0F);
 
             ACTIVE_ZONES.add(new TemporalZone(player.getUUID(), (ServerLevel) player.level(), player.position()));
 
@@ -111,12 +127,30 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
                             && e.position().closerThan(zone.center, RADIUS));
 
             for (Entity e : nearby) {
+                int id = e.getId();
+                boolean isNewSlow = false;
+
                 if (e instanceof Projectile proj) {
                     Entity shooter = proj.getOwner();
                     if (shooter != null && shooter.getUUID().equals(zone.ownerId)) continue;
-                    slowedProjectiles.add(e.getId());
+                    slowedProjectiles.add(id);
+
+                    if (!TemporalFreezeRegistry.isSlowedProjectile(id)) {
+                        isNewSlow = true;
+                    }
                 } else {
-                    slowed.add(e.getId());
+                    slowed.add(id);
+
+                    if (!TemporalFreezeRegistry.isSlowed(id)) {
+                        isNewSlow = true;
+                    }
+                }
+
+                if (isNewSlow) {
+                    float volume = 0.45F + zone.level.getRandom().nextFloat() * 0.1F;
+                    float pitch = 0.85F + zone.level.getRandom().nextFloat() * 0.3F;
+                    zone.level.playSound(null, e.getX(), e.getY(), e.getZ(),
+                            ModSounds.SLOW_SOUND, SoundSource.NEUTRAL, volume, pitch);
                 }
             }
         }
@@ -135,15 +169,51 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
             Set<UUID> playersInRangeNow = new HashSet<>();
             for (ServerPlayer p : zone.level.getPlayers(p ->
                     !p.getUUID().equals(zone.ownerId) && p.position().closerThan(zone.center, RADIUS))) {
-                playersInRangeNow.add(p.getUUID());
+
+                UUID uuid = p.getUUID();
+                playersInRangeNow.add(uuid);
+
+                if (!zone.slowedPlayers.contains(uuid)) {
+                    float volume = 0.6F + zone.level.getRandom().nextFloat() * 0.1F;
+                    float pitch = 0.75F + zone.level.getRandom().nextFloat() * 0.2F;
+                    zone.level.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            ModSounds.SLOW_SOUND, SoundSource.PLAYERS, volume, pitch);
+                }
+
                 applySlow(p);
-                zone.slowedPlayers.add(p.getUUID());
+                zone.slowedPlayers.add(uuid);
+
+                // Sound Trigger: Player attacks/swings inside the zone
+                boolean isSwinging = p.swinging;
+                boolean wasSwinging = zone.playerWasSwinging.getOrDefault(uuid, false);
+                zone.playerWasSwinging.put(uuid, isSwinging);
+
+                if (isSwinging && !wasSwinging) {
+                    float volume = 0.4F + zone.level.getRandom().nextFloat() * 0.1F;
+                    float pitch = 0.6F + zone.level.getRandom().nextFloat() * 0.25F;
+                    zone.level.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            ModSounds.SLOW_SOUND, SoundSource.PLAYERS, volume, pitch);
+                }
+
+                boolean isOnGround = p.onGround();
+                boolean wasOnGround = zone.playerWasOnGround.getOrDefault(uuid, true);
+                zone.playerWasOnGround.put(uuid, isOnGround);
+
+                if (wasOnGround && !isOnGround && p.getDeltaMovement().y > 0.0) {
+                    float volume = 0.4F + zone.level.getRandom().nextFloat() * 0.1F;
+                    float pitch = 0.65F + zone.level.getRandom().nextFloat() * 0.25F;
+                    zone.level.playSound(null, p.getX(), p.getY(), p.getZ(),
+                            ModSounds.SLOW_SOUND, SoundSource.PLAYERS, volume, pitch);
+                }
             }
+
             for (UUID uuid : new HashSet<>(zone.slowedPlayers)) {
                 if (!playersInRangeNow.contains(uuid)) {
                     ServerPlayer p = server.getPlayerList().getPlayer(uuid);
                     if (p != null) removeSlow(p);
                     zone.slowedPlayers.remove(uuid);
+                    zone.playerWasOnGround.remove(uuid);
+                    zone.playerWasSwinging.remove(uuid);
                 }
             }
 
@@ -225,7 +295,6 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
     }
 
     private static void spawnBurstSpark(TemporalZone zone, Entity e, RandomSource rng) {
-
         double midX = e.getX();
         double midY = e.getY() + (e.getBbHeight() / 2.0);
         double midZ = e.getZ();
@@ -369,6 +438,18 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
                     ATTACK_SPEED_MODIFIER_ID, PLAYER_ATTACK_SPEED_MULT,
                     AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         }
+        var gravityAttr = entity.getAttribute(Attributes.GRAVITY);
+        if (gravityAttr != null && gravityAttr.getModifier(GRAVITY_MODIFIER_ID) == null) {
+            gravityAttr.addTransientModifier(new AttributeModifier(
+                    GRAVITY_MODIFIER_ID, PLAYER_GRAVITY_MULT,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        }
+        var jumpAttr = entity.getAttribute(Attributes.JUMP_STRENGTH);
+        if (jumpAttr != null && jumpAttr.getModifier(JUMP_STRENGTH_MODIFIER_ID) == null) {
+            jumpAttr.addTransientModifier(new AttributeModifier(
+                    JUMP_STRENGTH_MODIFIER_ID, PLAYER_JUMP_STRENGTH_MULT,
+                    AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        }
     }
 
     private static void removeSlow(LivingEntity entity) {
@@ -376,5 +457,9 @@ public record TemporalSlowZonePacket() implements CustomPacketPayload {
         if (speedAttr != null) speedAttr.removeModifier(MOVEMENT_MODIFIER_ID);
         var atkSpeedAttr = entity.getAttribute(Attributes.ATTACK_SPEED);
         if (atkSpeedAttr != null) atkSpeedAttr.removeModifier(ATTACK_SPEED_MODIFIER_ID);
+        var gravityAttr = entity.getAttribute(Attributes.GRAVITY);
+        if (gravityAttr != null) gravityAttr.removeModifier(GRAVITY_MODIFIER_ID);
+        var jumpAttr = entity.getAttribute(Attributes.JUMP_STRENGTH);
+        if (jumpAttr != null) jumpAttr.removeModifier(JUMP_STRENGTH_MODIFIER_ID);
     }
 }

@@ -1,0 +1,10 @@
+{ "replace": false,
+  "values": [
+    "rituals:lightning_rapier",
+    "rituals:lunar_blade",
+    "rituals:solar_blade",
+    "rituals:vortex_edge",
+    "rituals:shadeshatter",
+    "rituals:pharathorn"
+  ]
+}

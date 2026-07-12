@@ -13,22 +13,22 @@ public class TemporalGlassreaverItem extends AxeItem implements RitualsTooltipSt
 
     @Override
     public int getNameColor() {
-        return 0;
+        return 0xFFbb8cf5;
     }
 
     @Override
     public int getTooltipBorderColorTop() {
-        return 0;
+        return 0xFF73f05d;
     }
 
     @Override
     public int getTooltipBorderColorBottom() {
-        return 0;
+        return 0xFFdb4646;
     }
 
     @Override
     public int getTooltipBackgroundColor() {
-        return 0xFF550000;
+        return 0xE509331a;
     }
 
 }

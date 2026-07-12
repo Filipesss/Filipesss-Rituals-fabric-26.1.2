@@ -1,12 +1,16 @@
 package net.filipes.rituals.network;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.filipes.rituals.item.custom.ShadeshatterItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
@@ -25,12 +29,14 @@ public class ShadeshatterSpellPacket implements CustomPacketPayload {
     public  static final long            COOLDOWN_MS      = 4_000L;
 
     private static final int SPAWN_DELAY = 42;
+    private static final int SECOND_CHARGE_DELAY = 22;
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(ShadeshatterSpellPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof ShadeshatterItem)) return;
@@ -40,13 +46,25 @@ public class ShadeshatterSpellPacket implements CustomPacketPayload {
             Long last = SERVER_COOLDOWNS.get(uuid);
             if (last != null && now - last < COOLDOWN_MS) return;
             SERVER_COOLDOWNS.put(uuid, now);
-            player.getCooldowns().addCooldown(stack, 80);
 
-            ServerPlayNetworking.send(player, new ShadeshatterSpellStartPacket());
+            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.BREEZE_CHARGE, SoundSource.PLAYERS, 1.0f, 0.85f + player.getRandom().nextFloat() * 0.1f);
+
+            ShadeshatterSpellStartPacket startPkt = new ShadeshatterSpellStartPacket(player.getId());
+            ServerPlayNetworking.send(player, startPkt);
+            for (ServerPlayer tracker : PlayerLookup.tracking(player)) {
+                ServerPlayNetworking.send(tracker, startPkt);
+            }
+
+            int currentServerTick = ctx.server().getTickCount();
+
+            ShadeshatterSpellHandler.scheduleSecondCharge(
+                    player.getUUID(),
+                    currentServerTick + SECOND_CHARGE_DELAY);
 
             ShadeshatterSpellHandler.schedule(
                     player.getUUID(),
-                    ctx.server().getTickCount() + SPAWN_DELAY);
+                    currentServerTick + SPAWN_DELAY);
         });
     }
 }

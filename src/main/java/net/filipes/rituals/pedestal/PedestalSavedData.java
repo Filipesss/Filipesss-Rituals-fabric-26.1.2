@@ -43,7 +43,7 @@ public class PedestalSavedData extends SavedData {
 
 
     public static final SavedDataType<PedestalSavedData> TYPE = new SavedDataType<>(
-            Identifier.fromNamespaceAndPath("rituals", DATA_KEY), // <-- FIX: Wrap the String in an Identifier
+            Identifier.fromNamespaceAndPath("rituals", DATA_KEY),
             PedestalSavedData::new,
             CODEC,
             DataFixTypes.SAVED_DATA_COMMAND_STORAGE

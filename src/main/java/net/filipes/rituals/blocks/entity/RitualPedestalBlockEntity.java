@@ -1,7 +1,9 @@
 package net.filipes.rituals.blocks.entity;
 
+import net.filipes.rituals.pedestal.PedestalTextHeights;
 import net.filipes.rituals.pedestal.PedestalType;
 import net.filipes.rituals.pedestal.PedestalTypes;
+import net.filipes.rituals.util.RitualsTooltipStyle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
@@ -9,10 +11,14 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
@@ -23,7 +29,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -44,6 +52,7 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
 
     @Nullable private UUID displayEntityUuid = null;
     @Nullable private UUID rewardDisplayUuid = null;
+    private float textYOffset = 1.8f;
 
     private final List<UUID>   floatingItemUuids = new ArrayList<>();
     private final List<String> floatingItemIds   = new ArrayList<>();
@@ -53,12 +62,15 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
     private static final int     END_ROD_PARTICLE_COUNT = 1;
     private static final double  END_ROD_OFFSET         = 0.02;
 
+    private boolean textYOffsetDirty = true;
+
     public RitualPedestalBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.RITUAL_PEDESTAL_BE, pos, state);
     }
 
     public void setPedestalType(String typeId) {
         this.pedestalTypeId = typeId;
+        this.textYOffsetDirty = true;
         setChanged();
     }
 
@@ -87,11 +99,16 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
             Entity existing = serverLevel.getEntity(displayEntityUuid);
             if (existing == null || existing.isRemoved()) displayEntityUuid = null;
         }
+
+        if (textYOffsetDirty) {
+            textYOffset = computeTextYOffset(serverLevel);
+            textYOffsetDirty = false;
+        }
         if (displayEntityUuid == null) {
             Display.TextDisplay display = new Display.TextDisplay(EntityTypes.TEXT_DISPLAY, serverLevel);
             display.setPos(
                     worldPosition.getX() + 0.5,
-                    worldPosition.getY() + 1.8,
+                    worldPosition.getY() + textYOffset,
                     worldPosition.getZ() + 0.5
             );
             display.setBillboardConstraints(Display.BillboardConstraints.CENTER);
@@ -105,9 +122,11 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
 
         if (fulfilled) {
             killAllFloatingItems(serverLevel);
+            repositionTextDisplay(serverLevel);
             return;
         }
-        if (pedestalTypeId != null && !fulfilled) {
+
+        if (pedestalTypeId != null) {
             PedestalType type = PedestalTypes.byId(pedestalTypeId);
             if (type != null) {
                 if (rewardDisplayUuid != null) {
@@ -116,6 +135,7 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
                 }
                 if (rewardDisplayUuid == null) {
                     ItemStack preview = type.createReward(serverLevel.registryAccess());
+
                     Display.ItemDisplay itemDisplay = new Display.ItemDisplay(
                             EntityTypes.ITEM_DISPLAY, serverLevel);
                     itemDisplay.setPos(
@@ -125,34 +145,30 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
                     itemDisplay.setNoGravity(true);
                     itemDisplay.setInvulnerable(true);
                     itemDisplay.setSilent(true);
-                    itemDisplay.setBillboardConstraints(Display.BillboardConstraints.VERTICAL);
+                    itemDisplay.setBillboardConstraints(Display.BillboardConstraints.FIXED);
+                    itemDisplay.setItemTransform(ItemDisplayContext.GROUND);
                     itemDisplay.setItemStack(preview);
+                    itemDisplay.setTransformation(computeSpinTransform(serverLevel));
                     itemDisplay.setTransformationInterpolationDuration(10);
                     serverLevel.addFreshEntity(itemDisplay);
                     rewardDisplayUuid = itemDisplay.getUUID();
                 } else {
                     Entity existing = serverLevel.getEntity(rewardDisplayUuid);
                     if (existing instanceof Display.ItemDisplay itemDisplay && !existing.isRemoved()) {
-                        long time = serverLevel.getGameTime();
-
-                        float baseHeightOffset = 0f; // float distance
-                        float bob = (float)(Math.sin(time * 0.05) * 0.12);
-
-                        com.mojang.math.Transformation transform = new com.mojang.math.Transformation(
-                                new org.joml.Vector3f(0f, baseHeightOffset + bob, 0f),
-                                null,
-                                new org.joml.Vector3f(0.6f, 0.6f, 0.6f),
-                                null
-                        );
-
-                        itemDisplay.setTransformation(transform);
+                        itemDisplay.setBillboardConstraints(Display.BillboardConstraints.FIXED);
+                        itemDisplay.setItemTransform(ItemDisplayContext.GROUND);
+                        itemDisplay.setTransformation(computeSpinTransform(serverLevel));
                         itemDisplay.setTransformationInterpolationDelay(0);
                     }
                 }
             }
         } else {
             killRewardDisplay(serverLevel);
+            textYOffset = 1.8f;
         }
+
+        repositionTextDisplay(serverLevel);
+
 
         LinkedHashMap<String, ItemStack> exemplarMap = new LinkedHashMap<>();
         for (ItemStack stack : items) {
@@ -225,6 +241,43 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
             orbitItemEntity(serverLevel, floating, i, desired);
         }
     }
+    private com.mojang.math.Transformation computeSpinTransform(ServerLevel serverLevel) {
+        long time = serverLevel.getGameTime();
+        float bob = (float) (Math.sin(time * 0.05) * 0.12);
+        double spinAngle = (time * 0.02) % (Math.PI * 2);
+        org.joml.Quaternionf rotation = new org.joml.Quaternionf().rotateY((float) spinAngle);
+
+        return new com.mojang.math.Transformation(
+                new org.joml.Vector3f(0f, bob, 0f),
+                rotation,
+                new org.joml.Vector3f(1f, 1f, 1f),
+                null
+        );
+    }
+    private void broadcastGlobalPortalSound(ServerLevel level) {
+        var soundHolder = BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.END_PORTAL_SPAWN);
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            player.connection.send(new ClientboundSoundPacket(
+                    soundHolder,
+                    SoundSource.MASTER,
+                    player.getX(), player.getY(), player.getZ(),
+                    1.0f, 1.0f,
+                    level.getRandom().nextLong()
+            ));
+        }
+    }
+    private void announceCreation(ServerLevel level, ItemStack reward) {
+        int color = (reward.getItem() instanceof RitualsTooltipStyle style)
+                ? style.getNameColor()
+                : 0xFFFFAA00;
+
+        Component message = Component.literal("")
+                .append(reward.getHoverName().copy())
+                .append(Component.literal(" has been created..."))
+                .withStyle(s -> s.withColor(TextColor.fromRgb(color)));
+
+        level.getServer().getPlayerList().broadcastSystemMessage(message, false);
+    }
 
     private void doFulfill(ServerLevel level) {
         PedestalType type = PedestalTypes.byId(pedestalTypeId);
@@ -258,17 +311,20 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
         rewardEntity.setDeltaMovement(0, 0.25, 0);
         level.addFreshEntity(rewardEntity);
 
-        level.playSound(null, worldPosition,
-                SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.BLOCKS, 1.0f, 1.0f);
         level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING,
                 worldPosition.getX() + 0.5,
                 worldPosition.getY() + 1.5,
                 worldPosition.getZ() + 0.5,
-                60, 0.6, 0.6, 0.6, 0.15);
+                120, 0.9, 0.9, 0.9, 0.2);
+
+        broadcastGlobalPortalSound(level);
+        announceCreation(level, reward);
 
         killAllFloatingItems(level);
         killRewardDisplay(level);
         fulfilled = true;
+        textYOffset = 1.8f;
+        repositionTextDisplay(level);
         super.setChanged();
         updateDisplayText();
         BlockState state = level.getBlockState(worldPosition);
@@ -284,6 +340,13 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
         level.addFreshEntity(e);
 
     }
+    private void repositionTextDisplay(ServerLevel serverLevel) {
+        if (displayEntityUuid == null) return;
+        Entity e = serverLevel.getEntity(displayEntityUuid);
+        if (e instanceof Display.TextDisplay td) {
+            td.setPos(worldPosition.getX() + 0.5, worldPosition.getY() + textYOffset, worldPosition.getZ() + 0.5);
+        }
+    }
 
     private Component buildDisplayText() {
         if (pedestalTypeId != null) {
@@ -291,17 +354,20 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
             if (type != null) {
                 if (fulfilled) return Component.literal("§6✦ Fulfilled ✦");
 
-                StringBuilder sb = new StringBuilder();
-                sb.append("§e[").append(type.id().replace('_', ' ')).append("]§r");
+                Component header = (level != null)
+                        ? type.createReward(level.registryAccess()).getStyledHoverName()
+                        : Component.literal(type.id());
+
+                MutableComponent sb = Component.literal("").append(header);
                 for (Map.Entry<Item, Integer> req : type.requirements().entrySet()) {
                     int have = countItem(req.getKey());
                     int need = req.getValue();
                     String mark = have >= need ? "§a✔" : "§c✘";
                     String name = new ItemStack(req.getKey()).getHoverName().getString();
-                    sb.append("\n").append(mark).append(" §f").append(name)
-                            .append(": ").append(Math.min(have, need)).append("/").append(need);
+                    sb.append(Component.literal("\n" + mark + " §f" + name + ": "
+                            + Math.min(have, need) + "/" + need));
                 }
-                return Component.literal(sb.toString());
+                return sb;
             }
         }
 
@@ -414,11 +480,10 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
     public void setChanged() {
         super.setChanged();
 
-        // Check if a typed, unfulfilled pedestal now has all requirements
         if (pedestalTypeId != null && !fulfilled && !pendingFulfillment) {
             PedestalType type = PedestalTypes.byId(pedestalTypeId);
             if (type != null && type.isSatisfied(items)) {
-                pendingFulfillment = true; // resolved on next tick (needs ServerLevel)
+                pendingFulfillment = true;
             }
         }
 
@@ -467,6 +532,7 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
 
         String rawType = input.getStringOr("PedestalType", "");
         pedestalTypeId = rawType.isEmpty() ? null : rawType;
+        textYOffsetDirty = true;
         fulfilled = input.getIntOr("Fulfilled", 0) != 0;
 
         String raw = input.getStringOr("DisplayEntityUUID", "");
@@ -498,6 +564,10 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
         return saveWithoutMetadata(registries);
+    }
+    private float computeTextYOffset(ServerLevel serverLevel) {
+        if (pedestalTypeId == null) return 1.8f;
+        return PedestalTextHeights.get(pedestalTypeId);
     }
 
     public ItemStack insertStack(ItemStack stack) {

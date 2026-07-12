@@ -19,6 +19,10 @@ public class TemporalMuteHudOverlay {
 
     private static long activeUntil = 0;
 
+    public static void clear() {
+        activeUntil = 0;
+    }
+
     public static void trigger() {
         activeUntil = System.currentTimeMillis() + DURATION_MS;
     }

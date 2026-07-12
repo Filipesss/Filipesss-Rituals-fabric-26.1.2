@@ -1,6 +1,8 @@
 package net.filipes.rituals.item.custom;
 
 import net.filipes.rituals.component.ModDataComponents;
+import net.filipes.rituals.enchantment.EnchantmentPolicy;
+import net.filipes.rituals.enchantment.RitualsEnchantable;
 import net.filipes.rituals.item.ModToolMaterials;
 import net.filipes.rituals.util.RitualsTooltipStyle;
 import net.minecraft.core.BlockPos;
@@ -13,15 +15,22 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class RosegoldPickaxeItem extends Item implements RitualsTooltipStyle {
+public class RosegoldPickaxeItem extends Item implements RitualsTooltipStyle, RitualsEnchantable {
 
     public enum MiningMode { NONE, FLAT_3X3, CUBE_3X3X3 }
+    private static final EnchantmentPolicy POLICY =
+            EnchantmentPolicy.layered()
+                    .stage(1, Integer.MAX_VALUE).allow(Enchantments.EFFICIENCY)
+                    .stage(2, Integer.MAX_VALUE).allow(Enchantments.SILK_TOUCH)
+                    .stage(2, Integer.MAX_VALUE).allow(Enchantments.FORTUNE)
+                    .build();
 
     public RosegoldPickaxeItem(ToolMaterial material, float attackDamage, float attackSpeed, Properties properties) {
         super(properties.pickaxe(material, attackDamage, attackSpeed)
@@ -66,7 +75,7 @@ public class RosegoldPickaxeItem extends Item implements RitualsTooltipStyle {
                     if (!offset.equals(center)) result.add(offset);
                 }
             }
-        } else { // CUBE_3X3X3
+        } else {
             for (int x = -1; x <= 1; x++)
                 for (int y = -1; y <= 1; y++)
                     for (int z = -1; z <= 1; z++) {
@@ -77,25 +86,13 @@ public class RosegoldPickaxeItem extends Item implements RitualsTooltipStyle {
         return result;
     }
 
-    @Override
-    public Component getName(ItemStack stack) {
-        int stage = getStage(stack);
-        MutableComponent nameComponent = Component.literal("")
-                .append(Component.translatable(getDescriptionId())
-                        .withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getNameColor())).withItalic(false)));
-        if (stage > 1) {
-            nameComponent
-                    .append(Component.literal(" [").withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getBracketColor()))))
-                    .append(Component.literal("★".repeat(stage - 1)).withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getStarColor()))))
-                    .append(Component.literal("]").withStyle(Style.EMPTY.withColor(TextColor.fromRgb(getBracketColor()))));
-        }
-        return nameComponent;
-    }
-
     @Override public int getNameColor()                { return 0xFFFFB6C1; }
     @Override public int getTooltipBorderColorTop()    { return 0xFFFF80AA; }
     @Override public int getTooltipBorderColorBottom() { return 0xFF99004D; }
-    @Override public int getTooltipBackgroundColor()   { return 0xE51A0510; }
-    public int getStarColor()                          { return 0xFFFFAE00; }
-    public int getBracketColor()                       { return 0xFFFFAE00; }
+    @Override public int getTooltipBackgroundColor()   { return 0xE5420d29; }
+
+    @Override
+    public EnchantmentPolicy getEnchantmentPolicy() {
+        return POLICY;
+    }
 }

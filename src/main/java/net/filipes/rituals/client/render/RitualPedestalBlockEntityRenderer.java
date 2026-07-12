@@ -82,18 +82,17 @@ public class RitualPedestalBlockEntityRenderer
         for (FormattedCharSequence line : state.lines) {
             float x = -font.width(line) / 2f;
 
-            // Defers text rendering securely to the engine queue without interrupting the batched passes
             collector.submitText(
                     poseStack,
                     x,
                     y,
                     line,
-                    false, // shadow
+                    false,
                     Font.DisplayMode.SEE_THROUGH,
-                    0xF000F0, // max light coordinates
-                    0xFFFFFFFF, // white text color (ARGB)
-                    0, // background color
-                    0  // outline color
+                    0xF000F0,
+                    0xFFFFFFFF,
+                    0,
+                    0
             );
             y += font.lineHeight + 1;
         }

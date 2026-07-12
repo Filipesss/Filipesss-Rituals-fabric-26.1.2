@@ -1,10 +1,12 @@
 package net.filipes.rituals.entity.custom;
 
 import net.filipes.rituals.component.ModDataComponents;
+import net.filipes.rituals.sound.ModSounds;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -31,7 +33,7 @@ public class DashStabEntity extends Entity {
     public static final int RETRACT_TICKS = 3;
     public static final int STAGGER_TICKS = 3;
 
-    private static final float DAMAGE_MULTIPLIER = 0.55f;
+    private static final float DAMAGE_MULTIPLIER = 1.25f;
     private static final float STAB_HIT_RADIUS   = 0.85f;
 
     private static final EntityDataAccessor<Integer> OWNER_ID =
@@ -94,6 +96,13 @@ public class DashStabEntity extends Entity {
             StabData s = stabs.get(i);
 
             if (tickCount - 1 != s.spawnTick) continue;
+
+            float volume = 0.3F + level().getRandom().nextFloat() * 0.1F;
+            float pitch = 0.85F + level().getRandom().nextFloat() * 0.3F;
+
+            level().playSound(null, s.originX, s.originY, s.originZ,
+                    ModSounds.GROUND_STAB, SoundSource.NEUTRAL, volume, pitch);
+
             if (damagedStabs.contains(i)) continue;
             damagedStabs.add(i);
 

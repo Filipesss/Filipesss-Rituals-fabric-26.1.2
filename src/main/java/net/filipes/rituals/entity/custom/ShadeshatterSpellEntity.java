@@ -25,6 +25,10 @@ public class ShadeshatterSpellEntity extends ThrowableProjectile {
     private static final float DAMAGE         = 18.0f;
     private static final int   SPARK_DELAY    = 5;
 
+    private static final double TRAIL_RADIUS_MIN = 0.18;
+    private static final double TRAIL_RADIUS_MAX = 0.38;
+    private static final int    TRAIL_PARTICLES_PER_TICK = 2;
+
     private boolean hasImpacted   = false;
     private int     tickSpark     = -1;
     private double  impactX, impactY, impactZ;
@@ -58,28 +62,59 @@ public class ShadeshatterSpellEntity extends ThrowableProjectile {
         super.tick();
 
         if (!level().isClientSide()) {
-            //ServerLevel serverLevel = (ServerLevel) level();
+            ServerLevel serverLevel = (ServerLevel) level();
 
             if (tickSpark >= 0 && tickCount >= tickSpark) {
                 tickSpark = -1;
-                spawnDelayedSparks((ServerLevel) level());
+                spawnDelayedSparks(serverLevel);
                 discard();
                 return;
             }
+
             setDeltaMovement(getDeltaMovement().add(0, -0.015, 0));
-            /*if (!hasImpacted) {
-                serverLevel.sendParticles(
-                        ModParticles.LIGHTNING_BOLT_MINI,
-                        this.getX(), this.getY() + 0.1, this.getZ(),
-                        1,
-                        0.2, 0.2, 0.2,
-                        0.04          
-                );
-            }*/
+
+            if (!hasImpacted) {
+                spawnOrbitalTrail(serverLevel);
+            }
 
             if (!hasImpacted && tickCount >= MAX_LIFETIME) {
                 discard();
             }
+        }
+    }
+
+    private void spawnOrbitalTrail(ServerLevel level) {
+        Vec3 motion = getDeltaMovement();
+        if (motion.lengthSqr() < 1.0E-4) return;
+
+        Vec3 dir = motion.normalize();
+
+        Vec3 arbitrary = Math.abs(dir.y) < 0.99 ? new Vec3(0.0, 1.0, 0.0) : new Vec3(1.0, 0.0, 0.0);
+        Vec3 right = dir.cross(arbitrary).normalize();
+        Vec3 up    = dir.cross(right).normalize();
+
+        double cx = getX();
+        double cy = getY();
+        double cz = getZ();
+
+        for (int i = 0; i < TRAIL_PARTICLES_PER_TICK; i++) {
+            double theta  = random.nextDouble() * Math.PI * 2.0;
+            double radius = TRAIL_RADIUS_MIN + random.nextDouble() * (TRAIL_RADIUS_MAX - TRAIL_RADIUS_MIN);
+
+            Vec3 offset = right.scale(Math.cos(theta) * radius)
+                    .add(up.scale(Math.sin(theta) * radius));
+
+            double px = cx + offset.x;
+            double py = cy + offset.y;
+            double pz = cz + offset.z;
+
+            level.sendParticles(
+                    ModParticles.LIGHTNING_BOLT_MINI,
+                    px, py, pz,
+                    1,
+                    0.0, 0.0, 0.0,
+                    0.0
+            );
         }
     }
 
@@ -184,7 +219,6 @@ public class ShadeshatterSpellEntity extends ThrowableProjectile {
             level.addFreshEntity(spark);
         }
     }
-
 
     @Override
     protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {}

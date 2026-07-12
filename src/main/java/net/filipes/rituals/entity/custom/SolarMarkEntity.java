@@ -188,7 +188,7 @@ public class SolarMarkEntity extends Entity implements Scalable {
             stormcell.setOwner(ownerLiving);
         }
 
-        stormcell.setDamageMultiplier(0.65f);
+        stormcell.setDamageMultiplier(0.95f);
         stormcell.setBounceMode(true);
 
         Vec3 toTarget = markedLiving.getBoundingBox().getCenter()

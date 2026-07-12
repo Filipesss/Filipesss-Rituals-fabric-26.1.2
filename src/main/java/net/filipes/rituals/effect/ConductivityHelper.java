@@ -32,7 +32,7 @@ public class ConductivityHelper {
 
     public static void applyLevelOne(LivingEntity target) {
         MobEffectInstance current = target.getEffect(ModStatusEffects.CONDUCTIVITY);
-        if (current != null) return; // already has it, don't touch it
+        if (current != null) return;
         target.addEffect(new MobEffectInstance(
                 ModStatusEffects.CONDUCTIVITY,
                 DURATIONS[0],

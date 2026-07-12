@@ -16,27 +16,24 @@ public class MoonParticle extends SingleQuadParticle {
     protected MoonParticle(ClientLevel level, double x, double y, double z,
                            double vx, double vy, double vz,
                            FabricSpriteSet spriteSet, RandomSource random) {
-        // Grab the first/only available sprite in the set
+
         super(level, x, y, z, 0.0D, 0.0D, 0.0D, spriteSet.get(random));
 
         this.friction = 0.98F;
         this.gravity = 0.0F;
 
-        // Making it a slow particle by cutting the initial velocity significantly
         this.xd = vx * 0.15D;
         this.yd = vy * 0.15D;
         this.zd = vz * 0.15D;
 
         this.quadSize *= 1.2F;
-        this.lifetime = 60 + random.nextInt(20); // Lasts slightly longer since it's slow
+        this.lifetime = 60 + random.nextInt(20);
         this.hasPhysics = false;
 
-        // Zeroed out entirely so it locks to the raw PNG orientation
         this.rotationSpeed = 0.0F;
         this.roll = 0.0F;
         this.oRoll = 0.0F;
 
-        // Pure white/silver tint for a moon vibe
         this.setColor(0.9F + random.nextFloat() * 0.1F, 0.9F + random.nextFloat() * 0.1F, 1.0F);
 
         this.tick();
@@ -47,7 +44,7 @@ public class MoonParticle extends SingleQuadParticle {
         super.tick();
         this.oRoll = this.roll;
         this.roll += rotationSpeed;
-        // Removed setSprite() so it stays on moon_particle_0 permanently
+
     }
 
     @Override
@@ -65,7 +62,7 @@ public class MoonParticle extends SingleQuadParticle {
 
     @Override
     public int getLightCoords(float partialTick) {
-        return 15728880; // Full bright glow
+        return 15728880;
     }
 
     public static class Factory implements ParticleProvider<SimpleParticleType> {

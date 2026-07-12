@@ -6,6 +6,7 @@ import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.BlightspearItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -37,6 +38,7 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
 
     public static class TetherInstance {
         public final UUID targetUuid;
+        public final UUID ownerUuid;
         public final Vec3 rootPos;
         public final ResourceKey<Level> dimension;
         public final long startTick;
@@ -46,11 +48,13 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
         public final SparkEntity orbitSpark;
         public final SparkEntity radiusSpark;
         public double hookPhase = 0.0;
+        public int ticksAtBoundary = 0;
 
-        public TetherInstance(UUID targetUuid, Vec3 rootPos, ResourceKey<Level> dimension,
+        public TetherInstance(UUID targetUuid, UUID ownerUuid, Vec3 rootPos, ResourceKey<Level> dimension,
                               long startTick, long expiryTick, SparkEntity hookSpark,
                               SparkEntity orbitSpark, SparkEntity radiusSpark) {
             this.targetUuid = targetUuid;
+            this.ownerUuid = ownerUuid;
             this.rootPos = rootPos;
             this.dimension = dimension;
             this.startTick = startTick;
@@ -69,6 +73,7 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
 
     public static void handle(BlightTetherPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             if (!(player.getMainHandItem().getItem() instanceof BlightspearItem)) return;
             var held = player.getMainHandItem();
@@ -81,7 +86,7 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
             if (targetEntity instanceof LivingEntity target && target.isAlive()) {
                 Vec3 rootPosition = target.position();
                 long start = level.getGameTime();
-                long durationTicks = 100; // 5 seconds
+                long durationTicks = 100;
                 long expiry = start + durationTicks;
 
                 Vec3 rawKnockbackDir = target.position().subtract(player.position());
@@ -113,7 +118,7 @@ public record BlightTetherPacket(int targetId) implements CustomPacketPayload {
                 radiusSpark.maxLifetime = 120;
                 level.addFreshEntity(radiusSpark);
 
-                ACTIVE_TETHERS.add(new TetherInstance(target.getUUID(), rootPosition, level.dimension(), start, expiry, hook, orbit, radiusSpark));
+                ACTIVE_TETHERS.add(new TetherInstance(target.getUUID(), player.getUUID(), rootPosition, level.dimension(), start, expiry, hook, orbit, radiusSpark));
 
                 level.playSound(null, rootPosition.x, rootPosition.y, rootPosition.z,
                         SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 1.5f, 0.5f);

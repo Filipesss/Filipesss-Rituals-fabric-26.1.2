@@ -5,6 +5,8 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.ModEntities;
 import net.filipes.rituals.entity.custom.TemporalShieldEntity;
 import net.filipes.rituals.item.custom.TemporalGlassreaverItem;
+import net.filipes.rituals.sound.ModSounds; // Added sound import
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -35,6 +37,7 @@ public class TemporalShieldPacket implements CustomPacketPayload {
 
     public static void handle(TemporalShieldPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof TemporalGlassreaverItem)) return;
@@ -58,6 +61,9 @@ public class TemporalShieldPacket implements CustomPacketPayload {
             shield.setYRot(player.getYRot());
             shield.setXRot(player.getXRot());
             level.addFreshEntity(shield);
+
+            level.playSound(null, spawnPos.x, spawnPos.y, spawnPos.z,
+                    ModSounds.SHIELD_PLACE, SoundSource.PLAYERS, 1.0f, 1.0f);
 
             level.playSound(null, spawnPos.x, spawnPos.y, spawnPos.z,
                     SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 0.5f);

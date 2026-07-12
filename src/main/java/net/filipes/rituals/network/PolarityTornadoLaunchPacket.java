@@ -5,6 +5,7 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.PolarityTornadoBlueEntity;
 import net.filipes.rituals.entity.custom.PolarityTornadoRedEntity;
 import net.filipes.rituals.item.custom.PolarityBowItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -31,6 +32,7 @@ public class PolarityTornadoLaunchPacket implements CustomPacketPayload {
 
     public static void handle(PolarityTornadoLaunchPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             var held = player.getMainHandItem();
             if (!(player.getMainHandItem().getItem() instanceof PolarityBowItem)) return;

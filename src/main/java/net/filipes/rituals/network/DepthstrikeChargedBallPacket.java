@@ -1,13 +1,17 @@
 package net.filipes.rituals.network;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.entity.custom.DepthstrikeChargedBallEntity;
 import net.filipes.rituals.item.ModItems;
+import net.filipes.rituals.item.custom.DepthstrikeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,8 +33,12 @@ public class DepthstrikeChargedBallPacket implements CustomPacketPayload {
 
     public static void handle(DepthstrikeChargedBallPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
-            if (player.getMainHandItem().getItem() != ModItems.DEPTHSTRIKE) return;
+            ItemStack stack = player.getMainHandItem();
+            if (!(stack.getItem() instanceof DepthstrikeItem)) return;
+            int stage = ModDataComponents.getStage(stack);
+            if (stage < 6) return;
 
             UUID uuid = player.getUUID();
             long now  = System.currentTimeMillis();

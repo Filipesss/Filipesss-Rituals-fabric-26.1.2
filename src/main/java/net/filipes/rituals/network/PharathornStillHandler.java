@@ -19,10 +19,11 @@ public class PharathornStillHandler {
     private static final Identifier ARMOR_MODIFIER_ID =
             Identifier.fromNamespaceAndPath("rituals", "pharathorn_standing_armor");
 
-    private static final int TICKS_PER_ARMOR_POINT = 20; // 1 armor per second
-    private static final int MAX_ARMOR_BONUS = 20;
+    private static final int DELAY_TICKS        = 60;
+    private static final int TICKS_PER_ARMOR_POINT = 20;
+    private static final int MAX_ARMOR_BONUS     = 20;
 
-    private static final Map<UUID, Integer> stillTicks = new HashMap<>();
+    private static final Map<UUID, Integer> ticksSinceAttack = new HashMap<>();
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -32,7 +33,7 @@ public class PharathornStillHandler {
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) ->
-                stillTicks.remove(handler.player.getUUID())
+                ticksSinceAttack.remove(handler.player.getUUID())
         );
     }
 
@@ -42,27 +43,27 @@ public class PharathornStillHandler {
 
         if (!holdingPharathorn || ModDataComponents.getStage(mainHand) < 4) {
             removeModifier(player);
-            stillTicks.remove(player.getUUID());
+            ticksSinceAttack.remove(player.getUUID());
             return;
         }
 
-        var delta = player.getDeltaMovement();
-        boolean isStill = Math.abs(delta.x) < 0.001
-                && Math.abs(delta.z) < 0.001
-                && player.onGround();
-
         UUID id = player.getUUID();
+        int ticks = ticksSinceAttack.getOrDefault(id, 0) + 1;
+        ticksSinceAttack.put(id, ticks);
 
-        if (isStill) {
-            int ticks = stillTicks.getOrDefault(id, 0) + 1;
-            stillTicks.put(id, ticks);
+        int ticksPastDelay = Math.max(0, ticks - DELAY_TICKS);
+        int armorBonus = Math.min(ticksPastDelay / TICKS_PER_ARMOR_POINT, MAX_ARMOR_BONUS);
 
-            int armorBonus = Math.min(ticks / TICKS_PER_ARMOR_POINT, MAX_ARMOR_BONUS);
+        if (armorBonus > 0) {
             applyModifier(player, armorBonus);
         } else {
-            stillTicks.put(id, 0);
             removeModifier(player);
         }
+    }
+
+    public static void onAttack(ServerPlayer player) {
+        ticksSinceAttack.put(player.getUUID(), 0);
+        removeModifier(player);
     }
 
     private static void applyModifier(ServerPlayer player, int bonus) {
@@ -81,7 +82,8 @@ public class PharathornStillHandler {
 
     public static int getArmorBonus(ServerPlayer player) {
         UUID id = player.getUUID();
-        int ticks = stillTicks.getOrDefault(id, 0);
-        return Math.min(ticks / TICKS_PER_ARMOR_POINT, MAX_ARMOR_BONUS);
+        int ticks = ticksSinceAttack.getOrDefault(id, 0);
+        int ticksPastDelay = Math.max(0, ticks - DELAY_TICKS);
+        return Math.min(ticksPastDelay / TICKS_PER_ARMOR_POINT, MAX_ARMOR_BONUS);
     }
 }

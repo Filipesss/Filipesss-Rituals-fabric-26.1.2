@@ -3,8 +3,7 @@
 	"credit": "Made with Blockbench",
 	"texture_size": [64, 64],
 	"textures": {
-		"0": "rituals:item/shadeshatter_idle_0",
-		"particle": "shadeshatter_idle_0"
+		"0": "rituals:item/shadeshatter_idle_0"
 	},
 	"elements": [
 		{

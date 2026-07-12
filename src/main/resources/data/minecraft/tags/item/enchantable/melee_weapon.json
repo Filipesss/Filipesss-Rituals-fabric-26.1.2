@@ -1,0 +1,12 @@
+{ "replace": false,
+  "values": [
+    "rituals:lightning_rapier",
+    "rituals:blightspear",
+    "rituals:shadowguard",
+    "rituals:lunar_blade",
+    "rituals:solar_blade",
+    "rituals:vortex_edge",
+    "rituals:shadeshatter",
+    "rituals:pharathorn"
+  ]
+}

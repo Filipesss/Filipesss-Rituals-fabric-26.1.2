@@ -13,7 +13,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow; // Changed from Arrow
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class ReversePolarityArrowEntity extends Arrow {
+public class ReversePolarityArrowEntity extends AbstractArrow {
 
     public static final double BASE_DAMAGE      = 2.0;
     public static final float  SPEED_MULTIPLIER = 1.2f;
@@ -47,10 +47,9 @@ public class ReversePolarityArrowEntity extends Arrow {
         super(type, level);
     }
 
-    public ReversePolarityArrowEntity(Level level, LivingEntity shooter, ItemStack weapon) {
-        this(ModEntities.REVERSE_POLARITY_ARROW, level);
-        this.setOwner(shooter);
-        this.setPos(shooter.getX(), shooter.getEyeY() - 0.1, shooter.getZ());
+    public ReversePolarityArrowEntity(Level level, LivingEntity shooter, ItemStack arrowStack, ItemStack weapon) {
+
+        super(ModEntities.REVERSE_POLARITY_ARROW, shooter, level, arrowStack.copyWithCount(1), weapon);
         this.setBaseDamage(BASE_DAMAGE);
         this.comboEnabled = ModDataComponents.getStage(weapon) >= 3;
     }
@@ -69,7 +68,6 @@ public class ReversePolarityArrowEntity extends Arrow {
         super.onHitEntity(result);
         if (this.level().isClientSide()) return;
 
-        // Stage-gated combo progression
         if (this.comboEnabled && this.getOwner() instanceof Player player && result.getEntity() instanceof LivingEntity) {
             PolarityBowItem.incrementCombo(player);
         }

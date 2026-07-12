@@ -71,7 +71,8 @@ public class PulseBlasterBeamEntity extends Projectile {
                     : 1.0f;
 
             if (target instanceof LivingEntity livingTarget) {
-                livingTarget.invulnerableTime = 0;
+                boolean overcharged = (owner != null) && PulseBlasterItem.isOvercharged(owner.getUUID());
+                livingTarget.invulnerableTime = overcharged ? 1 : 0;
             }
 
             target.hurtServer(

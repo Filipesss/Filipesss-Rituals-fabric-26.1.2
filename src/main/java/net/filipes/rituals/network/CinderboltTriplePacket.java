@@ -3,6 +3,7 @@ package net.filipes.rituals.network;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.item.custom.CinderboltItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -29,6 +30,7 @@ public class CinderboltTriplePacket implements CustomPacketPayload {
 
     public static void handle(CinderboltTriplePacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
             ItemStack stack = player.getMainHandItem();
             if (!(stack.getItem() instanceof CinderboltItem)) return;

@@ -130,7 +130,6 @@ public class PharathornMarkEntity extends Entity implements Scalable {
             team.setNameTagVisibility(net.minecraft.world.scores.Team.Visibility.NEVER);
         }
 
-        // If the target is already on a different glow team, move it cleanly.
         PlayerTeam currentTeam = scoreboard.getPlayersTeam(targetName);
         if (currentTeam != null && currentTeam != team) {
             scoreboard.removePlayerFromTeam(targetName, currentTeam);

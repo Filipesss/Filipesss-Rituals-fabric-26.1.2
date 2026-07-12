@@ -7,6 +7,7 @@ import net.filipes.rituals.entity.custom.ScreenShakeEntity;
 import net.filipes.rituals.entity.custom.SparkEntity;
 import net.filipes.rituals.entity.custom.SparkPresets;
 import net.filipes.rituals.item.custom.VortexEdgeItem;
+import net.filipes.rituals.util.MuteTracker;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -51,11 +52,14 @@ public record VortexSlamPacket() implements CustomPacketPayload {
 
     public static void handle(VortexSlamPacket pkt, ServerPlayNetworking.Context ctx) {
         ServerPlayer player = ctx.player();
+        if (MuteTracker.isMuted(player.getUUID())) return;
         ctx.server().execute(() -> {
+            if (ACTIVE_SLAMS.containsKey(player.getUUID())) return;
+
             var held = player.getMainHandItem();
             if (!(held.getItem() instanceof VortexEdgeItem)) return;
             int stage = ModDataComponents.getStage(held);
-            if (stage < 5) return;
+            if (stage < 6) return;
 
             if (!player.onGround()) {
                 ACTIVE_SLAMS.put(player.getUUID(), new SlamState(player.getY()));
@@ -93,7 +97,7 @@ public record VortexSlamPacket() implements CustomPacketPayload {
         var random = level.getRandom();
 
         double radius = 4.0 + (distance * 0.2);
-        float damage = (float) (distance * 1.5);
+        float damage = (float) (distance * 2.7);
         double knockbackStrength = 0.8 + (distance * 0.05);
 
         AABB boundingBox = player.getBoundingBox().inflate(radius);

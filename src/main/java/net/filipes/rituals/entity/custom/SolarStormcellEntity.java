@@ -48,12 +48,12 @@ public class SolarStormcellEntity extends Entity {
     private final Set<UUID> hitUUIDs     = new HashSet<>();
     private boolean resonanceActive = false;
     private int     bonusChains     = 0;
-    private float damageMultiplier = 1.0f;
+    private float damageMultiplier = 1.124f;
 
     private static final float SPEED                 = 1.5f;
     private static final float TURN_RATE             = 0.75f;
     private static final float SPARK_Y_OFFSET        = 0.35f;
-    private static final float CHAIN_DAMAGE          = 10.0f;
+    private static final float CHAIN_DAMAGE          = 19.0f;
     private static final float CHAIN_DAMAGE_FALLOFF  = 0.10f;
     private static final int   MAX_CHAINS            = 7;
     private static final int   MAX_FLIGHT_TICKS      = 80;
