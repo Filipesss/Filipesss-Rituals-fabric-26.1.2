@@ -3,9 +3,9 @@
 	"id": "rituals",
 	"version": "${version}",
 	"name": "Rituals",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Aesthetic custom weapons with progression",
 	"authors": [
-		"Filipes!"
+		"Filipes"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
