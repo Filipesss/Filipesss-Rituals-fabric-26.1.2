@@ -93,8 +93,8 @@ public class AmethystHourglassScreen extends AbstractContainerScreen<AmethystHou
 
         ItemStack preview = ModDataComponents.withStage(input, recipe.getResultStage());
 
-        float scale = 2.5f;
-        int scaledSize = (int)(16 * scale); // 40px
+        int scale = 2;
+        int scaledSize = 16 * scale;
 
         int ix = leftPos + PREVIEW_X + (PREVIEW_W - scaledSize) / 2;
         int iy = topPos  + PREVIEW_Y + (PREVIEW_H - scaledSize) / 2;
