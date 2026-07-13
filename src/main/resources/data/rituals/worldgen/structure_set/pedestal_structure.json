@@ -1,0 +1,11 @@
+{
+  "structures": [
+    { "structure": "rituals:pedestal_structure", "weight": 1 }
+  ],
+  "placement": {
+    "type": "rituals:scattered",
+    "salt": 918273,
+    "count": 18,
+    "radius_blocks": 5000
+  }
+}

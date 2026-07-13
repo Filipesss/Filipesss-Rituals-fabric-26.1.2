@@ -1,7 +1,6 @@
 package net.filipes.rituals;
 
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -17,7 +16,6 @@ import net.filipes.rituals.component.ModDataComponents;
 import net.filipes.rituals.config.RitualConfig;
 import net.filipes.rituals.effect.ModStatusEffects;
 import net.filipes.rituals.entity.ModEntities;
-import net.filipes.rituals.entity.client.DeathLaserEntityRenderer;
 import net.filipes.rituals.entity.custom.*;
 import net.filipes.rituals.event.PlayerKillListener;
 import net.filipes.rituals.item.ModItemGroups;
@@ -32,11 +30,13 @@ import net.filipes.rituals.tooltip.TooltipRegistry;
 import net.filipes.rituals.upgrade.KillUpgradeRegistry;
 import net.filipes.rituals.upgrade.UpgradeRecipeRegistry;
 import net.filipes.rituals.util.RosegoldPickaxeUsageEvent;
-import net.filipes.rituals.worldgen.RitualWorldGen;
-import net.minecraft.client.renderer.entity.EntityRenderers;
-import net.minecraft.core.component.DataComponents;
+import net.filipes.rituals.worldgen.ScatteredStructurePlacement;
+import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -48,7 +48,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomModelData;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -85,8 +84,6 @@ public class Rituals implements ModInitializer {
 	public void onInitialize() {
 		RitualConfig.load();
 
-		ServerLifecycleEvents.SERVER_STARTED.register(server ->
-				RitualWorldGen.placeAllPedestals(server));
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
 				RitualCommands.register(dispatcher));
@@ -95,10 +92,17 @@ public class Rituals implements ModInitializer {
 		TooltipRegistry.init();
 		ModTooltips.register();
 		ModDataComponents.register();
+		//RitualWorldGen.register();
 		UpgradeRecipeRegistry.registerAll();
 		ModItems.registerModItems();
 		ModStatusEffects.registerModStatusEffects();
 		ModBlockEntities.registerModBlockEntities();
+		Registry.register(
+				BuiltInRegistries.STRUCTURE_PLACEMENT,
+				Identifier.fromNamespaceAndPath(MOD_ID, "scattered"),
+				ScatteredStructurePlacement.TYPE
+		);
+
 		ModItemGroups.registerItemGroups();
 		ModEntities.registerModEntities();
 		ModParticles.register();

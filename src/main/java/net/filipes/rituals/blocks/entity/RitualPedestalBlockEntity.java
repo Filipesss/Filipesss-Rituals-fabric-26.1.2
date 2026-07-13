@@ -1,5 +1,7 @@
 package net.filipes.rituals.blocks.entity;
 
+import net.filipes.rituals.config.RitualConfig;
+import net.filipes.rituals.pedestal.PedestalSavedData;
 import net.filipes.rituals.pedestal.PedestalTextHeights;
 import net.filipes.rituals.pedestal.PedestalType;
 import net.filipes.rituals.pedestal.PedestalTypes;
@@ -88,12 +90,15 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
 
     public void tick(Level world) {
         if (!(world instanceof ServerLevel serverLevel)) return;
+        tryClaimPedestalType(serverLevel);
 
         if (pendingFulfillment) {
             pendingFulfillment = false;
             doFulfill(serverLevel);
             return;
         }
+
+
 
         if (displayEntityUuid != null) {
             Entity existing = serverLevel.getEntity(displayEntityUuid);
@@ -410,6 +415,21 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
         }
     }
 
+    public void tryClaimPedestalType(ServerLevel serverLevel) {
+        if (pedestalTypeId != null || fulfilled) return;
+
+        PedestalSavedData data = PedestalSavedData.getOrCreate(serverLevel);
+        data.ensureTargetsGenerated(serverLevel.getSeed(), RitualConfig.PEDESTAL_SPAWN_RADIUS);
+
+        String claimed = data.claimNearestUnplacedType(worldPosition);
+        if (claimed != null) {
+            data.recordPlaced(claimed, worldPosition);
+            setPedestalType(claimed);
+        } else {
+            serverLevel.removeBlock(worldPosition, false);
+        }
+    }
+
     private void killDisplayEntity() {
         if (level instanceof ServerLevel sl && displayEntityUuid != null) {
             Entity e = sl.getEntity(displayEntityUuid);
@@ -475,6 +495,7 @@ public class RitualPedestalBlockEntity extends BlockEntity implements Container 
 
     @Override public boolean stillValid(Player player) { return Container.stillValidBlockEntity(this, player); }
     @Override public void clearContent() { items.clear(); setChanged(); }
+
 
     @Override
     public void setChanged() {

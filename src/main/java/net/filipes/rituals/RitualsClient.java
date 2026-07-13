@@ -190,8 +190,8 @@ public class RitualsClient implements ClientModInitializer {
         CooldownManager.register("pulse_blaster_shotgun",   "Shotgun Blast", 40_000,  0xFF6600);
         CooldownManager.register("pulse_blaster_overcharge","Overcharge",    55_000, 0xFFCC00);
         CooldownManager.register("pulse_blaster_death_laser", "Death Laser", 75_000, 0xFF2200);
-        CooldownManager.register("cinderbolt_triple", "Triple Load", 50_000, 0xFF4400);
-        CooldownManager.register("fire_cinderbolt_beam", "Triple Load", 70_000, 0xFF4400);
+        CooldownManager.register("cinderbolt_triple", "Crescendo of Bolts", 50_000, 0xFF4400);
+        CooldownManager.register("fire_cinderbolt_beam", "Fire Beam", 70_000, 0xFF4400);
         CooldownManager.register("cinderbolt_death_save", "Last Stand", 1_200_000, 0xFF4400);
         CooldownManager.register("twins_action_two", "Total Eclipse", 55_000, 0xAADDFF);
         CooldownManager.register("lunar_mark", "Lunar Mark", 40_000, 0xAADDFF);
