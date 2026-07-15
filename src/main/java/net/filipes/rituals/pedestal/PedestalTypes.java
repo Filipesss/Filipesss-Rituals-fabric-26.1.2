@@ -144,7 +144,7 @@ public class PedestalTypes {
     public static final PedestalType LUNAR_BLADE = register(new PedestalType(
             "lunar_blade_pedestal",
             Map.ofEntries(
-                    Map.entry(Items.ECHO_SHARD, 4),
+                    Map.entry(Items.ECHO_SHARD, 3),
                     Map.entry(Items.NETHER_STAR, 1),
                     Map.entry(Items.AMETHYST_SHARD, 32),
                     Map.entry(Items.AMETHYST_BLOCK, 64),
@@ -162,7 +162,7 @@ public class PedestalTypes {
     public static final PedestalType VORTEX_EDGE = register(new PedestalType(
             "vortex_edge_pedestal",
             Map.ofEntries(
-                    Map.entry(Items.ECHO_SHARD, 6),
+                    Map.entry(Items.ECHO_SHARD, 4),
                     Map.entry(Items.SCULK_CATALYST, 24),
                     Map.entry(Items.SCULK_SHRIEKER, 32),
                     Map.entry(ModItems.ROSEGOLD_INGOT, 4),
@@ -239,7 +239,7 @@ public class PedestalTypes {
                     Map.entry(Items.PLAYER_HEAD, 2),
                     Map.entry(Items.NETHERITE_INGOT, 4),
                     Map.entry(Items.IRON_BLOCK, 16),
-                    Map.entry(Items.ECHO_SHARD, 6),
+                    Map.entry(Items.ECHO_SHARD, 4),
                     Map.entry(Items.CRYING_OBSIDIAN, 16),
                     Map.entry(Items.HONEYCOMB_BLOCK, 8)
             ),
@@ -330,7 +330,7 @@ public class PedestalTypes {
                     Map.entry(Items.AMETHYST_SHARD, 48),
                     Map.entry(Items.AMETHYST_BLOCK, 64),
                     Map.entry(Items.CALIBRATED_SCULK_SENSOR, 16),
-                    Map.entry(Items.ECHO_SHARD, 8),
+                    Map.entry(Items.ECHO_SHARD, 5),
                     Map.entry(Items.RECOVERY_COMPASS, 1),
                     Map.entry(Items.PLAYER_HEAD, 2),
                     Map.entry(ModBlocks.item(ModBlocks.ROSEGOLD_BLOCK), 2)
