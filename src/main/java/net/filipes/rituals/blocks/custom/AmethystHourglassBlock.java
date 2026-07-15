@@ -1,6 +1,7 @@
 package net.filipes.rituals.blocks.custom;
 
 import net.filipes.rituals.screen.AmethystHourglassScreenHandler;
+import net.filipes.rituals.util.RitualsTooltipStyle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
@@ -11,7 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class AmethystHourglassBlock extends Block {
+public class AmethystHourglassBlock extends Block implements RitualsTooltipStyle {
 
     private static final Component TITLE = Component.translatable("block.rituals.amethyst_hourglass");
 
@@ -29,5 +30,25 @@ public class AmethystHourglassBlock extends Block {
             ));
         }
         return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public int getNameColor() {
+        return 0xffd84dff;
+    }
+
+    @Override
+    public int getTooltipBorderColorTop() {
+        return 0xffd84dff;
+    }
+
+    @Override
+    public int getTooltipBorderColorBottom() {
+        return 0xFF7e139c;
+    }
+
+    @Override
+    public int getTooltipBackgroundColor() {
+        return 0xe52b0736;
     }
 }

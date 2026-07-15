@@ -3,6 +3,7 @@ package net.filipes.rituals.blocks;
 import net.filipes.rituals.Rituals;
 import net.filipes.rituals.blocks.custom.AmethystHourglassBlock;
 import net.filipes.rituals.blocks.custom.RitualPedestalBlock;
+import net.filipes.rituals.item.custom.AmethystHourglassBlockItem;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -55,7 +56,12 @@ public class ModBlocks {
                 Identifier.fromNamespaceAndPath(Rituals.MOD_ID, name));
         AmethystHourglassBlock block = new AmethystHourglassBlock(properties.setId(key));
         Registry.register(BuiltInRegistries.BLOCK, key, block);
-        registerBlockItem(name, block);
+
+        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM,
+                Identifier.fromNamespaceAndPath(Rituals.MOD_ID, name));
+        BlockItem item = new AmethystHourglassBlockItem(block, new Item.Properties().setId(itemKey));
+        Registry.register(BuiltInRegistries.ITEM, itemKey, item);
+
         return block;
     }
 
