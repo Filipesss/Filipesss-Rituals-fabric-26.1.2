@@ -7,7 +7,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.levelgen.Heightmap;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -34,19 +33,15 @@ public class ItemEntityVoidTeleportMixin {
         double y;
         double z;
 
-        if (serverLevel.dimension() == Level.NETHER) {
-            x = 0.5;
-            y = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, 0, 0) + 1.0;
-            z = 0.5;
-        } else if (serverLevel.dimension() == Level.END) {
-
+        if (serverLevel.dimension() == Level.END) {
             x = 100.5;
             y = 50.0;
             z = 0.5;
         } else {
+            // Covers Overworld and Nether alike
             x = 0.5;
             z = 0.5;
-            y = serverLevel.getHeight(Heightmap.Types.MOTION_BLOCKING, 0, 0) + 1.0;
+            y = rituals$findSafeSurfaceY(serverLevel, 0, 0) + 0.0;
         }
 
         self.setDeltaMovement(0, 0, 0);
@@ -54,5 +49,25 @@ public class ItemEntityVoidTeleportMixin {
         self.teleportTo(x, y, z);
 
         ci.cancel();
+    }
+
+    private static int rituals$findSafeSurfaceY(ServerLevel level, int x, int z) {
+        int top = level.getMaxY();
+        int bottom = level.getMinY();
+
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x, top, z);
+        for (int y = top; y > bottom; y--) {
+            pos.setY(y);
+            if (!level.getBlockState(pos).isAir()) {
+                boolean spaceAbove = level.getBlockState(pos.above()).isAir()
+                        && level.getBlockState(pos.above(2)).isAir();
+                if (spaceAbove) {
+                    return y + 1;
+                }
+            }
+        }
+
+        // Fallback: nothing safe found (shouldn't normally happen), just use build height top
+        return top;
     }
 }

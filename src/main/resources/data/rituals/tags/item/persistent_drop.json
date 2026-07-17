@@ -18,6 +18,7 @@
     "rituals:rosegold_chestplate",
     "rituals:rosegold_leggings",
     "rituals:rosegold_boots",
-    "rituals:shadeshatter"
+    "rituals:shadeshatter",
+    "minecraft:player_head"
   ]
 }

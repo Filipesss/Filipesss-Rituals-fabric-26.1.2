@@ -39,6 +39,7 @@
   "key.rituals.action_three": "Action 3",
 
   "item.rituals.upgrade.kill_upgrade": "Their blood makes you stronger...",
+  "tooltip.minecraft.mace": "Something makes you feel weaker...",
 
   "effect.rituals.conductivity": "Condictivity",
   "effect.rituals.stun": "Stun",

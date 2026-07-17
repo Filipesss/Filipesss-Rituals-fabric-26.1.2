@@ -9,10 +9,15 @@ public class TooltipStyleHolder {
     public static RitualsTooltipStyle currentStyle = null;
 
     public static void set(@Nullable ItemStack stack) {
-        if (stack != null && stack.getItem() instanceof RitualsTooltipStyle style) {
+        if (stack == null) {
+            currentStyle = null;
+            return;
+        }
+
+        if (stack.getItem() instanceof RitualsTooltipStyle style) {
             currentStyle = style;
         } else {
-            currentStyle = null;
+            currentStyle = RitualsTooltipRegistry.get(stack.getItem());
         }
     }
 

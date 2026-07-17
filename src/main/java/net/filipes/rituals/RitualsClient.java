@@ -26,6 +26,8 @@ import net.filipes.rituals.network.*;
 import net.filipes.rituals.particle.*;
 import net.filipes.rituals.screen.AmethystHourglassScreen;
 import net.filipes.rituals.screen.ModMenuTypes;
+import net.filipes.rituals.util.RitualsTooltipRegistry;
+import net.filipes.rituals.util.RitualsTooltipStyle;
 import net.filipes.rituals.util.TooltipStyleHolder;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -35,6 +37,7 @@ import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.special.SpecialModelRenderers;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.Items;
 import org.lwjgl.glfw.GLFW;
 
 @Environment(EnvType.CLIENT)
@@ -92,6 +95,20 @@ public class RitualsClient implements ClientModInitializer {
         ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipType, lines) -> {
             TooltipStyleHolder.clear();
             TooltipStyleHolder.set(stack);
+        });
+
+        RitualsTooltipRegistry.register(Items.PLAYER_HEAD, new RitualsTooltipStyle() {
+            @Override
+            public int getNameColor() { return 0xffffb114; }
+
+            @Override
+            public int getTooltipBorderColorTop() { return 0xffffb114; }
+
+            @Override
+            public int getTooltipBorderColorBottom() { return 0xff8c6619; }
+
+            @Override
+            public int getTooltipBackgroundColor() { return 0xe5382705; }
         });
 
 
